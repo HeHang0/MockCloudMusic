@@ -15,7 +15,7 @@
         <GradientStop Offset="1" Color="#4ea017"/>
     </LinearGradientBrush>
 
-    <!--Slider模板-->
+    <!--Sliderģ��-->
     <Style x:Key="Slider_RepeatButton" TargetType="RepeatButton">
         <Setter Property="Focusable" Value="false" />
 

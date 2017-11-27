@@ -15,6 +15,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Timers;
+using MusicCollection.Pages;
 
 namespace MusicCollection
 {
@@ -87,7 +88,7 @@ namespace MusicCollection
 
         private void Move_MouseMove(object sender, MouseEventArgs e)
         {
-            if (e.LeftButton == System.Windows.Input.MouseButtonState.Pressed)
+            if (e.LeftButton == MouseButtonState.Pressed && !SearchTextBox.IsFocused)
             {
                 DragMove();
             }
@@ -216,5 +217,16 @@ namespace MusicCollection
             ContentBar.Height = Height-100;
         }
 
+        private void Window_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            NoFocusButton.Focus();
+            PageFrame.Content = new LocalMusicPage();
+
+        }
+
+        private void LocalMusicLabel_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            PageFrame.Content = new LocalMusicPage();
+        }
     }
 }
