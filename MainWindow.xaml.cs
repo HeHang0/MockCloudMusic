@@ -89,7 +89,7 @@ namespace MusicCollection
         {
             if (e.LeftButton == System.Windows.Input.MouseButtonState.Pressed)
             {
-                DragMove();
+                //DragMove();
             }
         }
 

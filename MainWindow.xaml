@@ -37,7 +37,9 @@
                     <Image Width="18" Height="18" Source="Resources/images/exit.png"/>
                 </Button>
                 <Image x:Name="image" Height="40" Width="121" Source="Resources/images/logoandtitle.png" Canvas.Top="6" Canvas.Left="14"/>
-                <TextBox x:Name="SearchTextBox" Width="218" Height="22" Canvas.Left="255" Canvas.Top="15" TextWrapping="Wrap" Background="#FFA82828" BorderBrush="{x:Null}">
+                <TextBox x:Name="SearchTextBox" Width="218" Height="22" Canvas.Left="255" Canvas.Top="15" 
+                         TextWrapping="Wrap" Background="#FFA82828" BorderBrush="{x:Null}"
+                         Foreground="White" SelectionBrush="#FF0EBCFD" VerticalContentAlignment="Center">
                     <TextBox.Resources>
                         <Style TargetType="{x:Type Border}">
                             <Setter Property="CornerRadius" Value="10"/>
