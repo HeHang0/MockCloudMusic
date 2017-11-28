@@ -55,6 +55,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -75,6 +76,7 @@
     </ApplicationDefinition>
     <Compile Include="MusicManager\LocalMusic.cs" />
     <Compile Include="MusicManager\Music.cs" />
+    <Compile Include="MusicManager\MusicInfoHelper.cs" />
     <Compile Include="Pages\LocalMusicPage.xaml.cs">
       <DependentUpon>LocalMusicPage.xaml</DependentUpon>
     </Compile>

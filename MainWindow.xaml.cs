@@ -19,6 +19,7 @@ using MusicCollection.Pages;
 using MusicCollection.MusicManager;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
+using System.Collections.ObjectModel;
 
 namespace MusicCollection
 {
@@ -28,7 +29,7 @@ namespace MusicCollection
     public partial class MainWindow : Window
     {
         private BSoundPlayer bsp = new BSoundPlayer();
-        public List<Music> FileList = new List<Music>();
+        public ObservableCollection<Music> CurrentMusicList = new ObservableCollection<Music>();
         int CurrentIndex = -1;
         Timer timer = new System.Timers.Timer();
         public MainWindow()
@@ -40,8 +41,7 @@ namespace MusicCollection
         
         private void InitMusic()
         {
-
-
+            var content = "C:\\Users\\HeHang\\Music\\";
             if (!File.Exists("LocalMusicFolderList.json"))
             {
                 File.WriteAllText("LocalMusicFolderList.json", JsonConvert.SerializeObject(new List<string>() { content }));
@@ -52,18 +52,27 @@ namespace MusicCollection
                 File.WriteAllText("CurrentMusicList.json", JsonConvert.SerializeObject(new List<Music>()));
             }
 
+
             var CurrentMusicListStr = File.ReadAllText("CurrentMusicList.json");
-            FileList.AddRange(JsonConvert.DeserializeObject<List<Music>>(CurrentMusicListStr));
-            if (FileList.Count == 0)
+            var list = JsonConvert.DeserializeObject<List<Music>>(CurrentMusicListStr);
+            if (list.Count() == 0)
             {
-                var content = "C:\\Users\\HeHang\\Music\\";
+                CurrentMusicList.Add(new Music(content + "刘珂矣 - 半壶纱.mp3"));
+            }
+            foreach (var item in list)
+            {
+                this.CurrentMusicList.Add(item);
+            }
+            if (this.CurrentMusicList.Count == 0)
+            {
+
                 DirectoryInfo TheFolder = new DirectoryInfo(content);
                 foreach (FileInfo NextFile in TheFolder.GetFiles())
                 {
                     var pattern = @".*(\.[mp3]|[flac]|[wma]|[wav]|[ape])$";
                     if (Regex.IsMatch(NextFile.Name, pattern, RegexOptions.IgnoreCase))
                     {
-                        FileList.Add(new Music() { Url = content + NextFile.Name });
+                        this.CurrentMusicList.Add(new Music(content + NextFile.Name));
                     }
                 }
             }
@@ -89,7 +98,7 @@ namespace MusicCollection
             else if (bsp.IsStop)
             {
                 Dispatcher.Invoke(new Action(() => {
-                    if (++CurrentIndex >= FileList.Count)
+                    if (++CurrentIndex >= CurrentMusicList.Count)
                     {
                         CurrentIndex = 0;
                     }
@@ -141,16 +150,16 @@ namespace MusicCollection
         private void Play()
         {
             
-            if (CurrentIndex >= 0 && CurrentIndex < FileList.Count)
+            if (CurrentIndex >= 0 && CurrentIndex < CurrentMusicList.Count)
             {
-                bsp.FileName = FileList[CurrentIndex];
+                bsp.FileName = CurrentMusicList[CurrentIndex].Url;
                 bsp.Play();
                 ToTalTimeLabel.Content = bsp.TotalTime.ToString(@"mm\:ss");
             }
-            else if (FileList.Count > 0)
+            else if (CurrentMusicList.Count > 0)
             {
                 CurrentIndex = 0;
-                bsp.FileName = FileList[CurrentIndex];
+                bsp.FileName = CurrentMusicList[CurrentIndex].Url;
                 bsp.Play();
                 ToTalTimeLabel.Content = bsp.TotalTime.ToString(@"mm\:ss");
             }
@@ -161,7 +170,7 @@ namespace MusicCollection
         {
             if (--CurrentIndex < 0)
             {
-                CurrentIndex = FileList.Count - 1;
+                CurrentIndex = CurrentMusicList.Count - 1;
             }
             bsp.Stop();
             Play();
@@ -170,7 +179,7 @@ namespace MusicCollection
 
         private void NextMusicButton_Click(object sender, RoutedEventArgs e)
         {
-            if (++CurrentIndex >= FileList.Count)
+            if (++CurrentIndex >= CurrentMusicList.Count)
             {
                 CurrentIndex = 0;
             }

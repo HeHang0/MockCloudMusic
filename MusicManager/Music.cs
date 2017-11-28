@@ -11,19 +11,20 @@ namespace MusicCollection.MusicManager
     {
         public Music()
         {
-
+           
         }
         public Music(string url)
         {
-            ShellClass sh = new ShellClass();
-            Folder dir = sh.NameSpace(System.IO.Path.GetDirectoryName(""));
-            FolderItem item = dir.ParseName(System.IO.Path.GetFileName(""));
-            Title = dir.GetDetailsOf(item, 21);
-            //Info[1] = dir.GetDetailsOf(item, 20);
-            Info[6] = dir.GetDetailsOf(item, 14);
-            Info[3] = dir.GetDetailsOf(item, 27);
-            Info[3] = Info[3].Substring(Info[3].IndexOf(":") + 1);
-            Info[4] = dir.GetDetailsOf(item, 1);
+            var info = MusicInfoHelper.GetInfo(url);
+            Title = info[MusicInfoHelper.MusicInfos.Title];
+            Singer = info[MusicInfoHelper.MusicInfos.Singer];
+            Album = info[MusicInfoHelper.MusicInfos.Album];
+            Year = info[MusicInfoHelper.MusicInfos.Year];
+            Size = info[MusicInfoHelper.MusicInfos.Size];
+            AlbumImageUrl = info[MusicInfoHelper.MusicInfos.AlbumImageUrl];
+            Url = url;
+            var audioFileReader = new NAudio.Wave.AudioFileReader(url);
+            Duration = audioFileReader.TotalTime;
         }
         /// <summary>
         /// 音乐标题
@@ -46,12 +47,22 @@ namespace MusicCollection.MusicManager
         public TimeSpan Duration { get; set; }
 
         /// <summary>
+        /// 年份
+        /// </summary>
+        public string Year { get; set; }
+
+        /// <summary>
         /// 音乐大小
         /// </summary>
-        public double Size { get; set; }
+        public string Size { get; set; }
+
         /// <summary>
         /// 本地路径
         /// </summary>
         public string Url { get; set; }
+        /// <summary>
+        /// 专辑图
+        /// </summary>
+        public string AlbumImageUrl { get; set; }
     }
 }

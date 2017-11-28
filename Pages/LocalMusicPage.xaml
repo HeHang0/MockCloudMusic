@@ -25,15 +25,15 @@
         <Button x:Name="RefreshLocalListButton" Style="{StaticResource AllHarfCircularButton}" Content="匹配音乐" Click="RefreshLocalListButton_Click" Foreground="#FF333333" HorizontalAlignment="Left" Margin="165,69,0,0" VerticalAlignment="Top" Width="92" Background="White" Height="25" BorderBrush="#FFE1E1E2"/>
 
         <DataGrid x:Name="LocalMusicDataGrid" HorizontalAlignment="Left" Margin="0,110,0,0" VerticalAlignment="Top" 
-                  AlternatingRowBackground="#FFE4E4E6" BorderThickness="0"
-                  Height="459" Width="822" Background="{x:Null}" BorderBrush="{x:Null}"
-                  ItemsSource="{Binding SelectedServer.MusicManage.DTUList}" >
+                  AlternatingRowBackground="#FFE4E4E6" BorderThickness="0" AutoGenerateColumns="False" CanUserAddRows="False"
+                  Height="459" Width="822" Background="{x:Null}" BorderBrush="{x:Null}" LoadingRow="LocalMusicDataGrid_LoadingRow"
+                  ItemsSource="{Binding}" >
             <DataGrid.Columns>
                 <DataGridTextColumn Header="" Width="50" CanUserSort="False"/>
-                <DataGridTextColumn Header="音乐标题" Width="250*" Binding="{Binding TiTle}"/>
+                <DataGridTextColumn Header="音乐标题" Width="250*" Binding="{Binding Title}"/>
                 <DataGridTextColumn Header="歌手" Width="180*" Binding="{Binding Singer}"/>
                 <DataGridTextColumn Header="专辑" Width="150*" Binding="{Binding Album}"/>
-                <DataGridTextColumn Header="时长" Width="80*" Binding="{Binding Duration}"/>
+                <DataGridTextColumn Header="时长" Width="80*" Binding="{Binding Duration, StringFormat={}{0:mm\\:ss}}" />
                 <DataGridTextColumn Header="大小" Width="110*" Binding="{Binding Size}"/>
             </DataGrid.Columns>
         </DataGrid>

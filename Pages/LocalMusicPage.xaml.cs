@@ -25,20 +25,18 @@ namespace MusicCollection.Pages
             var content = "";
             try
             {
-                content = System.IO.File.ReadAllText(configPath);
+                content = File.ReadAllText(configPath);
             }
             catch (System.Exception)
-            {
-                
-            }
-            
+            {                
+            }            
+            //List<string> list = new List<string> { "asdasda", "阿德飒飒啊大苏打", "32322a3s2d13" };
+            //var jsonList = JsonConvert.SerializeObject(list);
+            //File.WriteAllText("LocalMusicFolderList.json", jsonList);
+            //var str = File.ReadAllText("LocalMusicFolderList.json");
 
-            List<string> list = new List<string> { "asdasda", "阿德飒飒啊大苏打", "32322a3s2d13" };
-            var jsonList = JsonConvert.SerializeObject(list);
-            File.WriteAllText("LocalMusicFolderList.json", jsonList);
-
-            var str = File.ReadAllText("LocalMusicFolderList.json");
-            List<string> newList = JsonConvert.DeserializeObject<List<string>>(str);
+            List<string> FolderList = JsonConvert.DeserializeObject<List<string>>(content);
+            LocalMusicDataGrid.DataContext = ParentWindow.CurrentMusicList;
         }
 
         private void Page_SizeChanged(object sender, System.Windows.SizeChangedEventArgs e)
@@ -52,6 +50,11 @@ namespace MusicCollection.Pages
         private void RefreshLocalListButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
 
+        }
+
+        private void LocalMusicDataGrid_LoadingRow(object sender, DataGridRowEventArgs e)
+        {
+            e.Row.Header = e.Row.GetIndex() + 1;
         }
     }
 }
