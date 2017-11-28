@@ -5,24 +5,36 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:MusicCollection.Pages"
       mc:Ignorable="d" 
-      
-      d:DesignHeight="569" d:DesignWidth="822">
-
+      d:DesignHeight="570" d:DesignWidth="822" MinHeight="570" MinWidth="822" SizeChanged="Page_SizeChanged"
+      TextOptions.TextFormattingMode="Display">
+    <Page.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="..\Resources\GlassButton.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Page.Resources>
     <Grid>
         <Label x:Name="label" Content="本地音乐" HorizontalAlignment="Left" Margin="40,22,0,0" VerticalAlignment="Top" FontSize="18" Opacity="0.7"/>
 
-        <GridSplitter Background="#E1E1E2" HorizontalAlignment="Left" Height="1" Margin="0,52,0,0" VerticalAlignment="Top" Width="822"/>
+        <GridSplitter Name="GridSplitter1" Background="#E1E1E2" HorizontalAlignment="Left" Height="1" Margin="0,52,0,0" VerticalAlignment="Top" Width="822"/>
 
-        <GridSplitter Background="#E1E1E2" HorizontalAlignment="Left" Height="1" Margin="0,109,0,0" VerticalAlignment="Top" Width="822"/>
-        <Button x:Name="PlayAllButton" Content="播放全部" HorizontalAlignment="Left" Margin="47,69,0,0" VerticalAlignment="Top" Width="75" Background="White" BorderBrush="#FFE1E1E2" Height="25"/>
-        <DataGrid x:Name="dataGrid" HorizontalAlignment="Left" Margin="0,110,0,0" VerticalAlignment="Top" Height="459" Width="822" Background="{x:Null}" BorderBrush="{x:Null}" AlternatingRowBackground="#FFE4E4E6" BorderThickness="0">
+        <GridSplitter Name="GridSplitter2" Background="#E1E1E2" HorizontalAlignment="Left" Height="1" Margin="0,109,0,0" VerticalAlignment="Top" Width="822"/>
+        <Button x:Name="PlayAllLocalButton" HorizontalAlignment="Left" Style="{StaticResource LeftHarfCircularButton}" Content="播放全部" Foreground="#FF333333" Margin="30,69,0,0" VerticalAlignment="Top" Width="91" Background="White" BorderBrush="#FFE1E1E2" Height="25"/>
+        <Button x:Name="LocalAddToListButton" Style="{StaticResource RightHarfCircularButton}" Content="+" FontSize="22" FontWeight="Thin" Foreground="#FF333333" HorizontalAlignment="Left" Padding="0,-4,0,0"  Margin="120,69,0,0" VerticalAlignment="Top" Width="32" Background="White" Height="25" BorderBrush="#FFE1E1E2"/>
+        <Button x:Name="RefreshLocalListButton" Style="{StaticResource AllHarfCircularButton}" Content="匹配音乐" Click="RefreshLocalListButton_Click" Foreground="#FF333333" HorizontalAlignment="Left" Margin="165,69,0,0" VerticalAlignment="Top" Width="92" Background="White" Height="25" BorderBrush="#FFE1E1E2"/>
+
+        <DataGrid x:Name="LocalMusicDataGrid" HorizontalAlignment="Left" Margin="0,110,0,0" VerticalAlignment="Top" 
+                  AlternatingRowBackground="#FFE4E4E6" BorderThickness="0"
+                  Height="459" Width="822" Background="{x:Null}" BorderBrush="{x:Null}"
+                  ItemsSource="{Binding SelectedServer.MusicManage.DTUList}" >
             <DataGrid.Columns>
-                <DataGridTextColumn Header="" Width="50" Binding="{Binding Name}"/>
-                <DataGridTextColumn Header="音乐标题" Width="250" Binding="{Binding Name}"/>
-                <DataGridTextColumn Header="歌手" Width="180" Binding="{Binding Age}"/>
-                <DataGridCheckBoxColumn Header="专辑" Width="150" Binding="{Binding Pass}"/>
-                <DataGridHyperlinkColumn Header="时长" Width="80" Binding="{Binding Email}"/>
-                <DataGridHyperlinkColumn Header="大小" Width="110" Binding="{Binding Email}"/>
+                <DataGridTextColumn Header="" Width="50" CanUserSort="False"/>
+                <DataGridTextColumn Header="音乐标题" Width="250*" Binding="{Binding TiTle}"/>
+                <DataGridTextColumn Header="歌手" Width="180*" Binding="{Binding Singer}"/>
+                <DataGridTextColumn Header="专辑" Width="150*" Binding="{Binding Album}"/>
+                <DataGridTextColumn Header="时长" Width="80*" Binding="{Binding Duration}"/>
+                <DataGridTextColumn Header="大小" Width="110*" Binding="{Binding Size}"/>
             </DataGrid.Columns>
         </DataGrid>
 

@@ -22,12 +22,19 @@
         <Canvas>
             <Canvas Name="ContentBar" Width="200" Height="569" Canvas.Left="0"  Background="#FFF5F5F7" Canvas.Top="50">
                 <Label x:Name="MyMusicLabel" Content="我的音乐" Canvas.Top="0" IsEnabled="False" Canvas.Left="5"/>
-                <Label x:Name="LocalMusicLabel" MouseDoubleClick="LocalMusicLabel_MouseLeftButtonDown" MouseLeftButtonDown="LocalMusicLabel_MouseLeftButtonDown" Cursor="Hand" Canvas.Top="25" VerticalContentAlignment="Center" IsEnabled="False" Width="200" Height="33" Background="#e6e7ea">
+                <!--<Label x:Name="LocalMusicLabel" Cursor="Hand" Canvas.Top="25" VerticalContentAlignment="Center" IsEnabled="False" Width="200" Height="33" Background="#e6e7ea">
                     <Grid>
                         <Image Source="Resources/images/logo.png" Margin="0,0,35,0"></Image>
                         <Label Content="我的音乐" Margin="35,0,-14,0"/>
                     </Grid>
-                </Label>
+                </Label>-->
+                <Button Name="LocalMusicButton" Click="LocalMusicButton_Click" Width="200" Height="33" Canvas.Left="0" Canvas.Top="25">
+                    <Grid>
+                        <Image Source="Resources/images/logo.png" Margin="-58,0,102,0"></Image>
+                        <Label Content="我的音乐" VerticalContentAlignment="Center" Margin="-18,0,39,0"/>
+                    </Grid>
+                </Button>
+                
             </Canvas>
             <Canvas Name="TitleBar" Canvas.Top="0" Height="50" MouseMove="Move_MouseMove" Background="#FFC62F2F" Width="1022">
                 <Button x:Name="MinButton" Click="MinButton_Click" Style="{StaticResource MouseOverOpacity}" Height="30" Canvas.Right="60" Canvas.Top="10" Width="30" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}">
@@ -48,16 +55,14 @@
                          VerticalContentAlignment="Center" TextWrapping="Wrap" Background="#FFA82828" Foreground="White" Cursor="IBeam">
                 </TextBox>
             </Canvas>
-            <Frame Name="PageFrame" Canvas.Left="200" Canvas.Top="50" Height="569" Width="822" Background="#FAFAFA" NavigationUIVisibility="Hidden">
-                
-            </Frame>
+            <Frame Name="PageFrame" Canvas.Left="200" Canvas.Top="50" Height="570" Width="822" Background="#FAFAFA" NavigationUIVisibility="Hidden" SizeChanged="PageFrame_SizeChanged"/>
 
             <Canvas Name="PlayBar" Height="50" Background="#FFF5F5F7" Canvas.Bottom="0" Width="1022" Margin="1">
                 <Button Name="LastMusicButton" Click="LastMusicButton_Click" Style="{StaticResource CircularButton}" Width="30" Height="30" Background="#E83C3C" Canvas.Left="20" Canvas.Bottom="10">
                     <Image Width="18" Height="18" Source="Resources/images/rw.png"/>
                 </Button>
 
-                <Button Name="PlayMusicButton" Click="PlayMusicButton_Click" Style="{StaticResource CircularButton}"  Width="30" Height="30" Background="#E83C3C" Canvas.Left="70" Canvas.Bottom="10">
+                <Button Name="PlayMusicButton" Click="PlayMusicButton_Click" Style="{StaticResource CircularButton}" Width="30" Height="30" Background="#E83C3C" Canvas.Left="70" Canvas.Bottom="10">
                     <Image Name="PlayImage" Width="18" Height="18" Source="Resources/images/play.png"/>
                 </Button>
                 <Button Name="PauseMusicButton" Click="PlayMusicButton_Click" Style="{StaticResource CircularButton}" Visibility="Hidden"  Width="30" Height="30" Background="#E83C3C" Canvas.Left="70" Canvas.Bottom="10">

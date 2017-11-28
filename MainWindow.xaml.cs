@@ -16,6 +16,9 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Timers;
 using MusicCollection.Pages;
+using MusicCollection.MusicManager;
+using System.Text.RegularExpressions;
+using Newtonsoft.Json;
 
 namespace MusicCollection
 {
@@ -25,7 +28,7 @@ namespace MusicCollection
     public partial class MainWindow : Window
     {
         private BSoundPlayer bsp = new BSoundPlayer();
-        List<string> FileList = new List<string>();
+        public List<Music> FileList = new List<Music>();
         int CurrentIndex = -1;
         Timer timer = new System.Timers.Timer();
         public MainWindow()
@@ -37,15 +40,34 @@ namespace MusicCollection
         
         private void InitMusic()
         {
-            var content = "C:\\Users\\HeHang\\Music\\";
-            DirectoryInfo TheFolder = new DirectoryInfo(content);
-            foreach (FileInfo NextFile in TheFolder.GetFiles())
+
+
+            if (!File.Exists("LocalMusicFolderList.json"))
             {
-                if (NextFile.Name.Contains(".mp3"))
+                File.WriteAllText("LocalMusicFolderList.json", JsonConvert.SerializeObject(new List<string>() { content }));
+            }
+
+            if (!File.Exists("CurrentMusicList.json"))
+            {
+                File.WriteAllText("CurrentMusicList.json", JsonConvert.SerializeObject(new List<Music>()));
+            }
+
+            var CurrentMusicListStr = File.ReadAllText("CurrentMusicList.json");
+            FileList.AddRange(JsonConvert.DeserializeObject<List<Music>>(CurrentMusicListStr));
+            if (FileList.Count == 0)
+            {
+                var content = "C:\\Users\\HeHang\\Music\\";
+                DirectoryInfo TheFolder = new DirectoryInfo(content);
+                foreach (FileInfo NextFile in TheFolder.GetFiles())
                 {
-                    FileList.Add(content + NextFile.Name);
+                    var pattern = @".*(\.[mp3]|[flac]|[wma]|[wav]|[ape])$";
+                    if (Regex.IsMatch(NextFile.Name, pattern, RegexOptions.IgnoreCase))
+                    {
+                        FileList.Add(new Music() { Url = content + NextFile.Name });
+                    }
                 }
             }
+
         }
         private void InitTimer()
         {
@@ -90,7 +112,7 @@ namespace MusicCollection
         {
             if (e.LeftButton == MouseButtonState.Pressed && !SearchTextBox.IsFocused)
             {
-                //DragMove();
+                DragMove();
             }
         }
 
@@ -111,8 +133,8 @@ namespace MusicCollection
             {
                 Play();
             }
-                PlayMusicButton.Visibility = Visibility.Hidden;
-                PauseMusicButton.Visibility = Visibility.Visible;
+            PlayMusicButton.Visibility = Visibility.Hidden;
+            PauseMusicButton.Visibility = Visibility.Visible;
 
         }
 
@@ -215,18 +237,32 @@ namespace MusicCollection
             TitleBar.Width = Width;
             PlayBar.Width = Width;
             ContentBar.Height = Height-100;
+            PageFrame.Height = Height - 100;
+            PageFrame.Width = Width - 200;
         }
 
         private void Window_MouseDown(object sender, MouseButtonEventArgs e)
         {
             NoFocusButton.Focus();
-            PageFrame.Content = new LocalMusicPage();
-
         }
 
-        private void LocalMusicLabel_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        private void LocalMusicButton_Click(object sender, RoutedEventArgs e)
         {
-            PageFrame.Content = new LocalMusicPage();
+            if (LocalMusic == null)
+            {
+                LocalMusic = new LocalMusicPage(this);
+            }
+            PageFrame.Content = LocalMusic;
+        }
+        private LocalMusicPage LocalMusic;
+
+        private void PageFrame_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (PageFrame.Content != null)
+            {
+                (PageFrame.Content as Page).Height = PageFrame.Height;
+                (PageFrame.Content as Page).Width = PageFrame.Width;
+            }            
         }
     }
 }

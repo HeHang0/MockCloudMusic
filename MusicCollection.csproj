@@ -49,6 +49,10 @@
       <HintPath>packages\NAudio.1.8.3\lib\net35\NAudio.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
@@ -69,6 +73,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="MusicManager\LocalMusic.cs" />
+    <Compile Include="MusicManager\Music.cs" />
     <Compile Include="Pages\LocalMusicPage.xaml.cs">
       <DependentUpon>LocalMusicPage.xaml</DependentUpon>
     </Compile>
@@ -158,6 +164,17 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="logo.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <COMReference Include="Shell32">
+      <Guid>{50A7E9B0-70EF-11D1-B75A-00A0C90564FE}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </COMReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
