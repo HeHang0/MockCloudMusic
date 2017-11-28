@@ -21,15 +21,21 @@
 
         <GridSplitter Name="GridSplitter2" Background="#E1E1E2" HorizontalAlignment="Left" Height="1" Margin="0,109,0,0" VerticalAlignment="Top" Width="822"/>
         <Button x:Name="PlayAllLocalButton" HorizontalAlignment="Left" Style="{StaticResource LeftHarfCircularButton}" Content="播放全部" Foreground="#FF333333" Margin="30,69,0,0" VerticalAlignment="Top" Width="91" Background="White" BorderBrush="#FFE1E1E2" Height="25"/>
-        <Button x:Name="LocalAddToListButton" Style="{StaticResource RightHarfCircularButton}" Content="+" FontSize="22" FontWeight="Thin" Foreground="#FF333333" HorizontalAlignment="Left" Padding="0,-4,0,0"  Margin="120,69,0,0" VerticalAlignment="Top" Width="32" Background="White" Height="25" BorderBrush="#FFE1E1E2"/>
+        <Button x:Name="LocalAddToListButton" Style="{StaticResource RightHarfCircularButton}" Content="+" FontSize="22" FontWeight="Thin" Foreground="#FF333333" HorizontalAlignment="Left" Padding="0,-6,0,0"  Margin="120,69,0,0" VerticalAlignment="Top" Width="32" Background="White" Height="25" BorderBrush="#FFE1E1E2"/>
         <Button x:Name="RefreshLocalListButton" Style="{StaticResource AllHarfCircularButton}" Content="匹配音乐" Click="RefreshLocalListButton_Click" Foreground="#FF333333" HorizontalAlignment="Left" Margin="165,69,0,0" VerticalAlignment="Top" Width="92" Background="White" Height="25" BorderBrush="#FFE1E1E2"/>
 
         <DataGrid x:Name="LocalMusicDataGrid" HorizontalAlignment="Left" Margin="0,110,0,0" VerticalAlignment="Top" 
                   AlternatingRowBackground="#FFE4E4E6" BorderThickness="0" AutoGenerateColumns="False" CanUserAddRows="False"
                   Height="459" Width="822" Background="{x:Null}" BorderBrush="{x:Null}" LoadingRow="LocalMusicDataGrid_LoadingRow"
-                  ItemsSource="{Binding}" >
+                  ItemsSource="{Binding}" HeadersVisibility="Column">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="" Width="50" CanUserSort="False"/>
+                <DataGridTemplateColumn  Header="" Width="50" CanUserSort="False">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type DataGridRow}}, Path=Header}" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10,0,0,0"></TextBlock>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
                 <DataGridTextColumn Header="音乐标题" Width="250*" Binding="{Binding Title}"/>
                 <DataGridTextColumn Header="歌手" Width="180*" Binding="{Binding Singer}"/>
                 <DataGridTextColumn Header="专辑" Width="150*" Binding="{Binding Album}"/>
