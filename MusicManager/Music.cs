@@ -14,13 +14,18 @@ namespace MusicCollection.MusicManager
         }
         public Music(string url)
         {
-            var info = MusicInfoHelper.GetInfo(url);
-            Title = info[MusicInfoHelper.MusicInfos.Title];
-            Singer = info[MusicInfoHelper.MusicInfos.Singer];
-            Album = info[MusicInfoHelper.MusicInfos.Album];
-            Year = info[MusicInfoHelper.MusicInfos.Year];
-            Size = info[MusicInfoHelper.MusicInfos.Size];
-            AlbumImageUrl = info[MusicInfoHelper.MusicInfos.AlbumImageUrl];
+            var info = MusicInfoHelper.ReadMp3(url);
+            try
+            {
+                Title = info[MusicInfoHelper.MusicInfos.Title];
+                Singer = info[MusicInfoHelper.MusicInfos.Singer];
+                Album = info[MusicInfoHelper.MusicInfos.Album];
+                Size = info[MusicInfoHelper.MusicInfos.Size];
+                AlbumImageUrl = info[MusicInfoHelper.MusicInfos.AlbumImageUrl];
+            }
+            catch (Exception)
+            {                
+            }
             Url = url;
             var audioFileReader = new NAudio.Wave.AudioFileReader(url);
             Duration = audioFileReader.TotalTime;
@@ -44,12 +49,7 @@ namespace MusicCollection.MusicManager
         /// 音乐时长
         /// </summary>
         public TimeSpan Duration { get; set; }
-
-        /// <summary>
-        /// 年份
-        /// </summary>
-        public string Year { get; set; }
-
+        
         /// <summary>
         /// 音乐大小
         /// </summary>
