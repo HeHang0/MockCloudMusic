@@ -15,7 +15,9 @@
         </ResourceDictionary>
     </Page.Resources>
     <Grid>
-        <Label x:Name="label" Content="本地音乐" HorizontalAlignment="Left" Margin="40,22,0,0" VerticalAlignment="Top" FontSize="18" Opacity="0.7"/>
+        <Label Content="本地音乐" HorizontalAlignment="Left" Margin="40,22,0,0" VerticalAlignment="Top" FontSize="18" Opacity="0.7"/>
+        <Label Content="3首音乐，" HorizontalAlignment="Left" Margin="122,29,0,0" VerticalAlignment="Top" Opacity="0.7"/>
+        <Label Content="选择目录" HorizontalAlignment="Left" Margin="178,29,0,0" VerticalAlignment="Top" Opacity="0.7" Cursor="Hand" Foreground="#FF005DFF"/>
 
         <GridSplitter Name="GridSplitter1" Background="#E1E1E2" HorizontalAlignment="Left" Height="1" Margin="0,52,0,0" VerticalAlignment="Top" Width="822"/>
 
@@ -24,10 +26,24 @@
         <Button x:Name="LocalAddToListButton" Style="{StaticResource RightHarfCircularButton}" Content="+" FontSize="22" FontWeight="Thin" Foreground="#FF333333" HorizontalAlignment="Left" Padding="0,-6,0,0"  Margin="120,69,0,0" VerticalAlignment="Top" Width="32" Background="White" Height="25" BorderBrush="#FFE1E1E2"/>
         <Button x:Name="RefreshLocalListButton" Style="{StaticResource AllHarfCircularButton}" Content="匹配音乐" Click="RefreshLocalListButton_Click" Foreground="#FF333333" HorizontalAlignment="Left" Margin="165,69,0,0" VerticalAlignment="Top" Width="92" Background="White" Height="25" BorderBrush="#FFE1E1E2"/>
 
-        <DataGrid x:Name="LocalMusicDataGrid" HorizontalAlignment="Left" Margin="0,110,0,0" VerticalAlignment="Top" 
-                  AlternatingRowBackground="#FFE4E4E6" BorderThickness="0" AutoGenerateColumns="False" CanUserAddRows="False"
-                  Height="459" Width="822" Background="{x:Null}" BorderBrush="{x:Null}" LoadingRow="LocalMusicDataGrid_LoadingRow"
-                  ItemsSource="{Binding}" HeadersVisibility="Column">
+        <DataGrid x:Name="LocalMusicDataGrid" HorizontalAlignment="Left" Margin="0,110,0,0" VerticalAlignment="Top" ColumnDisplayIndexChanged="LocalMusicDataGrid_ColumnDisplayIndexChanged"
+                  AlternatingRowBackground="#FFE4E4E6" BorderThickness="0" AutoGenerateColumns="False" CanUserAddRows="False" Opacity="0.7"
+                  Height="459" Width="822" Background="{x:Null}" BorderBrush="{x:Null}" LoadingRow="LocalMusicDataGrid_LoadingRow" GridLinesVisibility="None"
+                  ItemsSource="{Binding}" HeadersVisibility="Column" IsReadOnly="True" MouseDoubleClick="LocalMusicDataGrid_MouseDoubleClick">
+            <DataGrid.RowStyle>
+                <Style TargetType = "{x:Type DataGridRow}" >
+                    <Setter Property="Height" Value="28"/>
+                    <Setter Property="Background" Value="{x:Null}"/>
+                </Style>
+            </DataGrid.RowStyle>
+            <DataGrid.ColumnHeaderStyle>
+                <Style TargetType = "{x:Type DataGridColumnHeader}" >
+                    <Setter Property="Height" Value="28"/>
+                    <Setter Property="Background" Value="{x:Null}"/>
+                    <Setter Property="BorderBrush" Value="{x:Null}"/>
+                    <Setter Property="BorderThickness" Value="0"/>
+                </Style>
+            </DataGrid.ColumnHeaderStyle>
             <DataGrid.Columns>
                 <DataGridTemplateColumn  Header="" Width="50" CanUserSort="False">
                     <DataGridTemplateColumn.CellTemplate>
@@ -36,11 +52,11 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTextColumn Header="音乐标题" Width="250*" Binding="{Binding Title}"/>
-                <DataGridTextColumn Header="歌手" Width="180*" Binding="{Binding Singer}"/>
-                <DataGridTextColumn Header="专辑" Width="150*" Binding="{Binding Album}"/>
-                <DataGridTextColumn Header="时长" Width="80*" Binding="{Binding Duration, StringFormat={}{0:mm\\:ss}}" />
-                <DataGridTextColumn Header="大小" Width="110*" Binding="{Binding Size}"/>
+                <DataGridTextColumn Header="音乐标题" Width="250*" Binding="{Binding Title, Mode=OneWay}"/>
+                <DataGridTextColumn Header="歌手" Width="180*" Binding="{Binding Singer, Mode=OneWay}"/>
+                <DataGridTextColumn Header="专辑" Width="150*" Binding="{Binding Album, Mode=OneWay}"/>
+                <DataGridTextColumn Header="时长" Width="80*" Binding="{Binding Duration, Mode=OneWay, StringFormat={}{0:mm\\:ss}}" />
+                <DataGridTextColumn Header="大小" Width="110*" Binding="{Binding Size, Mode=OneWay}"/>
             </DataGrid.Columns>
         </DataGrid>
 

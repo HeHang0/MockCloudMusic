@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Shell32;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -8,44 +9,39 @@ namespace MusicCollection.MusicManager
 {
     public class MusicInfoHelper
     {
-        //public static Dictionary<MusicInfos, string> GetInfo(string path)
-        //{
-        //    string tags = string.Empty;
-        //    FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read);
-        //    byte[] buffer = new byte[10];
-        //    string mp3ID = "";
-
-        //    fs.Seek(0, SeekOrigin.Begin);
-        //    fs.Read(buffer, 0, 10);
-        //    int size = (buffer[6] & 0x7F) * 0x200000 + (buffer[7] & 0x7F) * 0x400 + (buffer[8] & 0x7F) * 0x80 + (buffer[9] & 0x7F);
-        //    mp3ID = Encoding.Default.GetString(buffer, 0, 3);
-        //    if (mp3ID.Equals("ID3", StringComparison.OrdinalIgnoreCase))
-        //    {
-        //        //如果有扩展标签头就跨过 10个字节
-        //        if ((buffer[5] & 0x40) == 0x40)
-        //        {
-        //            fs.Seek(10, SeekOrigin.Current);
-        //            size -= 10;
-        //        }
-        //        //tags = ReadFrame(fs, size);
-        //    }
-        //    var Info = GetOthersInfo(fs);
-        //    fs.Close();
-        //    Info.Add(MusicInfos.AlbumImageUrl, tags);
-        //    return Info;
-        //}
-        public static Dictionary<MusicInfos, string> ReadMp3(string path)
+        [STAThread]
+        public static Dictionary<MusicInfos, string> GetInfo(string path)
         {
-            Dictionary<MusicInfos, string> tags = new Dictionary<MusicInfos, string>();
+            var Info = new Dictionary<MusicInfos, string>();
+            ShellClass sh = new ShellClass();
+            Folder dir = sh.NameSpace(Path.GetDirectoryName(path));
+            FolderItem item = dir.ParseName(Path.GetFileName(path));
+            StringBuilder sb = new StringBuilder();
+            for (int i = -1; i < 50; i++)
+            {
+                sb.Append(i.ToString());
+                sb.Append(":");
+                sb.Append(dir.GetDetailsOf(item, i));
+                sb.Append("\r\n");
+            }
+            Info.Add(MusicInfos.Title, dir.GetDetailsOf(item, 21));
+            Info.Add(MusicInfos.Singer, dir.GetDetailsOf(item, 13));
+            Info.Add(MusicInfos.Album, dir.GetDetailsOf(item, 14));
+            Info.Add(MusicInfos.Size, dir.GetDetailsOf(item, 1));
+            Info.Add(MusicInfos.BitRate, dir.GetDetailsOf(item, 28));
+            Info.Add(MusicInfos.Duration, dir.GetDetailsOf(item, 27));
+            Info.Add(MusicInfos.AlbumImageUrl, ReadMp3(path));
+            return Info;
+        }
+        private static string ReadMp3(string path)
+        {
             FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read);
             byte[] buffer = new byte[10];
-            // fs.Read(buffer, 0, 128);
             string mp3ID = "";
-
+            string tags = "";
             fs.Seek(0, SeekOrigin.Begin);
             fs.Read(buffer, 0, 10);
             int size = (buffer[6] & 0x7F) * 0x200000 + (buffer[7] & 0x7F) * 0x400 + (buffer[8] & 0x7F) * 0x80 + (buffer[9] & 0x7F);
-            //int size = (buffer[6] & 0x7F) * 0X200000 * (buffer[7] & 0x7f) * 0x400 + (buffer[8] & 0x7F) * 0x80 + (buffer[9]);
             mp3ID = Encoding.Default.GetString(buffer, 0, 3);
             if (mp3ID.Equals("ID3", StringComparison.OrdinalIgnoreCase))
             {
@@ -55,34 +51,17 @@ namespace MusicCollection.MusicManager
                     fs.Seek(10, SeekOrigin.Current);
                     size -= 10;
                 }
-                tags = ReadFrame(fs, size);
+                tags = ReadFrame(fs, size, path);
             }
-            var length = fs.Length * 1.0/1024;
-            if (length < 1000)
-            {
-                tags.Add(MusicInfos.Size, Math.Round(length,2) + "KB");
-            }
-            else
-            {
-                tags.Add(MusicInfos.Size, Math.Round(length/1024, 1) + "MB");
-            }
+            fs.Close();
             return tags;
         }
-        public static Dictionary<MusicInfos, string> ReadFrame(FileStream fs, int size, string imageUrl = "")
+        private static string ReadFrame(FileStream fs, int size,string path, string imageUrl = "")
         {
-            var dic = new Dictionary<MusicInfos, string>();
-            string[] ID3V2 = new string[6];
             byte[] buffer = new byte[10];
             while (size > 0)
             {
-                //fs.Read(buffer, 0, 1);
-                //if (buffer[0] == 0)
-                //{
-                //    size--;
-                //    continue;
-                //}
-                //fs.Seek(-1, SeekOrigin.Current);
-                //size++;
+
                 //读取标签帧头的10个字节
                 fs.Read(buffer, 0, 10);
                 size -= 10;
@@ -101,20 +80,7 @@ namespace MusicCollection.MusicManager
                 byte[] bFrame = new byte[frmSize];
                 fs.Read(bFrame, 0, frmSize);
                 size -= frmSize;
-                string str = GetFrameInfoByEcoding(bFrame, bFrame[0], frmSize - 1);
-                if (FramID.CompareTo("TIT2") == 0)
-                {
-                    dic.Add(MusicInfos.Title, str);
-                }
-                else if (FramID.CompareTo("TPE1") == 0)
-                {
-                    dic.Add(MusicInfos.Singer, str);
-                }
-                else if (FramID.CompareTo("TALB") == 0)
-                {
-                    dic.Add(MusicInfos.Album, str);
-                }
-                else if (FramID.CompareTo("APIC") == 0)
+                if (FramID.CompareTo("APIC") == 0)
                 {
                     int i = 0;
                     while (true)
@@ -138,79 +104,26 @@ namespace MusicCollection.MusicManager
                     {
                         Directory.CreateDirectory(imageUrl + "AlbumImage\\");
                     }
-                    var url = imageUrl + "AlbumImage\\" + DateTime.Now.ToString("yyyyMMddHHmmssfff") + (new Random(DateTime.Now.Millisecond).Next());
+                    path = path.GetHashCode().ToString();
+                    var url = imageUrl + "AlbumImage\\" + path;
                     FileStream save = new FileStream(url, FileMode.Create);
                     img.Save(save, System.Drawing.Imaging.ImageFormat.Png);
-                    dic.Add(MusicInfos.AlbumImageUrl, url);
+                    save.Close();
+                    if (imageUrl == "")
+                    {
+                        return System.Windows.Forms.Application.StartupPath + "\\" + url;
+                    }
+                    else
+                    {
+                        return url;
+                    }
+                    ;
                 }
 
 
             }
-            return dic;
+            return "";
         }
-        public static string GetFrameInfoByEcoding(byte[] b, byte conde, int length)
-        {
-            string str = "";
-            switch (conde)
-            {
-                case 0:
-                    str = Encoding.GetEncoding("ISO-8859-1").GetString(b, 1, length);
-                    break;
-                case 1:
-                    str = Encoding.GetEncoding("UTF-16LE").GetString(b, 1, length);
-                    break;
-                case 2:
-                    str = Encoding.GetEncoding("UTF-16BE").GetString(b, 1, length);
-                    break;
-                case 3:
-                    str = Encoding.UTF8.GetString(b, 1, length);
-                    break;
-            }
-            return str;
-        }
-
-        //private static Dictionary<MusicInfos, string> GetOthersInfo(FileStream fs)
-        //{
-        //    byte[] b = new byte[128];
-        //    string title = string.Empty;
-        //    string singer = string.Empty;
-        //    string album = string.Empty;
-        //    string year = string.Empty;
-        //    string comm = string.Empty;
-        //    string length = string.Empty;
-        //    //FileStream fs = new FileStream(path, FileMode.Open);
-        //    fs.Seek(-128, SeekOrigin.End); //查找
-        //    fs.Read(b, 0, 128); //读取
-
-        //    string sFlag = Encoding.Default.GetString(b, 0, 3);
-        //    if (sFlag.Equals("TAG"))
-        //    {
-        //        title = Encoding.Default.GetString(b, 3, 30).Trim(' ');
-
-        //        singer = Encoding.Default.GetString(b, 33, 30).Trim(' ');
-
-        //        album = Encoding.Default.GetString(b, 63, 30).Trim(' ');
-
-        //        year = Encoding.Default.GetString(b, 93, 4).Trim(' ');
-
-        //        comm = Encoding.Default.GetString(b, 97, 30).Trim(' ');
-
-        //        if (fs.Length * 1.0 / 1024 < 1024)
-        //        {
-        //            length = Math.Round(fs.Length * 1.0 / 1024, 0) + "KB";
-        //        }
-        //        else
-        //        {
-        //            length = Math.Round(fs.Length * 1.0 / (1024 * 1024), 2) + "MB";
-        //        }
-        //        //Console.WriteLine("Comm:" + comm);
-        //    }
-        //    fs.Close();
-        //    Dictionary<MusicInfos, string> InfoDic = new Dictionary<MusicInfos, string>();
-
-
-        //    return InfoDic;
-        //}
-        public enum MusicInfos { Title, Singer, Album, Duration, Year, Size, AlbumImageUrl };
+        public enum MusicInfos { Title, Singer, Album, Duration, BitRate, Size, AlbumImageUrl };
     }
 }
