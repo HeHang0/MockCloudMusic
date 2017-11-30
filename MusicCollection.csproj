@@ -77,6 +77,7 @@
     <Compile Include="MusicManager\LocalMusic.cs" />
     <Compile Include="MusicManager\Music.cs" />
     <Compile Include="MusicManager\MusicInfoHelper.cs" />
+    <Compile Include="MusicManager\MusicObservableCollection.cs" />
     <Compile Include="Pages\LocalMusicPage.xaml.cs">
       <DependentUpon>LocalMusicPage.xaml</DependentUpon>
     </Compile>
