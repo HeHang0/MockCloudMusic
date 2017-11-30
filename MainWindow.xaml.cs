@@ -28,9 +28,9 @@ namespace MusicCollection
     /// </summary>
     public partial class MainWindow : Window
     {
-        private BSoundPlayer bsp = new BSoundPlayer();
+        public BSoundPlayer bsp = new BSoundPlayer();
         public ObservableCollection<Music> CurrentMusicList = new ObservableCollection<Music>();
-        int CurrentIndex = -1;
+        public int CurrentIndex = -1;
         Timer timer = new System.Timers.Timer();
         public MainWindow()
         {
@@ -42,23 +42,19 @@ namespace MusicCollection
         private void InitMusic()
         {
             var content = "C:\\Users\\HeHang\\Music\\";
-            if (!File.Exists("LocalMusicFolderList.json"))
-            {
-                File.WriteAllText("LocalMusicFolderList.json", JsonConvert.SerializeObject(new List<string>() { content }));
-            }
 
             if (!File.Exists("CurrentMusicList.json"))
             {
-                File.WriteAllText("CurrentMusicList.json", JsonConvert.SerializeObject(new List<Music>()));
+                File.WriteAllText("CurrentMusicList.json", JsonConvert.SerializeObject(new ObservableCollection<Music>()));
             }
 
 
             var CurrentMusicListStr = File.ReadAllText("CurrentMusicList.json");
             var list = JsonConvert.DeserializeObject<List<Music>>(CurrentMusicListStr);
-            if (list.Count() == 0)
-            {
-                CurrentMusicList.Add(new Music(content + "刘珂矣 - 半壶纱.mp3"));
-            }
+            //if (list.Count() == 0)
+            //{
+            //    CurrentMusicList.Add(new Music(content + "刘珂矣 - 半壶纱.mp3"));
+            //}
             foreach (var item in list)
             {
                 this.CurrentMusicList.Add(item);
@@ -142,28 +138,53 @@ namespace MusicCollection
             {
                 Play();
             }
-            PlayMusicButton.Visibility = Visibility.Hidden;
-            PauseMusicButton.Visibility = Visibility.Visible;
-
         }
 
-        private void Play()
+        public void Play()
         {
             
             if (CurrentIndex >= 0 && CurrentIndex < CurrentMusicList.Count)
             {
                 bsp.FileName = CurrentMusicList[CurrentIndex].Url;
+
                 bsp.Play();
+                SetMiniLable(CurrentMusicList[CurrentIndex]);
                 ToTalTimeLabel.Content = bsp.TotalTime.ToString(@"mm\:ss");
+                timer.Start();
             }
             else if (CurrentMusicList.Count > 0)
             {
                 CurrentIndex = 0;
                 bsp.FileName = CurrentMusicList[CurrentIndex].Url;
                 bsp.Play();
+                SetMiniLable(CurrentMusicList[CurrentIndex]);
                 ToTalTimeLabel.Content = bsp.TotalTime.ToString(@"mm\:ss");
+                timer.Start();
             }
-            timer.Start();
+
+            if (CurrentIndex >= 0)
+            {
+                PlayMusicButton.Visibility = Visibility.Hidden;
+                PauseMusicButton.Visibility = Visibility.Visible;
+            }
+        }
+
+        private void SetMiniLable(Music music)
+        {
+            try
+            {
+                BitmapImage bi = new BitmapImage();
+                bi.BeginInit();
+                bi.UriSource = new Uri(music.AlbumImageUrl, UriKind.RelativeOrAbsolute);
+                bi.EndInit();
+                CurrentMusicImageMini.Source = bi;
+            }
+            catch (Exception)
+            {
+                
+            }
+            CurrentMusicTitleMini.Content = music.Title;
+            CurrentMusicSingerMini.Content = music.Singer;
         }
 
         private void LastMusicButton_Click(object sender, RoutedEventArgs e)
@@ -194,9 +215,14 @@ namespace MusicCollection
 
         private void MusicSlider_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-            var CurrentSeconds = (int)(bsp.TotalTime.TotalSeconds * MusicSlider.Value / 10);
-            bsp.CurrentTime = new TimeSpan(0, 0, CurrentSeconds);
-            timer.Start();
+            if (CurrentIndex >= 0)
+            {
+                var CurrentSeconds = (int)(bsp.TotalTime.TotalSeconds * MusicSlider.Value / 10);
+                bsp.CurrentTime = new TimeSpan(0, 0, CurrentSeconds);
+                timer.Start();
+                PlayMusicButton.Visibility = Visibility.Hidden;
+                PauseMusicButton.Visibility = Visibility.Visible;
+            }
         }        
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -248,6 +274,8 @@ namespace MusicCollection
             ContentBar.Height = Height-100;
             PageFrame.Height = Height - 100;
             PageFrame.Width = Width - 200;
+            GridSplitter1.Height = Height - 100;
+            GridSplitter2.Width = Width;
         }
 
         private void Window_MouseDown(object sender, MouseButtonEventArgs e)
@@ -272,6 +300,21 @@ namespace MusicCollection
                 (PageFrame.Content as Page).Height = PageFrame.Height;
                 (PageFrame.Content as Page).Width = PageFrame.Width;
             }            
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            File.WriteAllText("CurrentMusicList.json", JsonConvert.SerializeObject(CurrentMusicList));
+        }
+
+        private void CurrentMusicImageMini_MouesOver(object sender, MouseEventArgs e)
+        {
+            CurrentMusicClickMini.Visibility = Visibility.Visible;
+        }
+
+        private void CurrentMusicImageMini_MouesLeave(object sender, MouseEventArgs e)
+        {
+            CurrentMusicClickMini.Visibility = Visibility.Hidden;
         }
     }
 }

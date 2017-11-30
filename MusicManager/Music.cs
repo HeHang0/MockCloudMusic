@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MusicCollection.MusicManager
 {
@@ -14,21 +10,18 @@ namespace MusicCollection.MusicManager
         }
         public Music(string url)
         {
-            var info = MusicInfoHelper.ReadMp3(url);
-            try
-            {
-                Title = info[MusicInfoHelper.MusicInfos.Title];
-                Singer = info[MusicInfoHelper.MusicInfos.Singer];
-                Album = info[MusicInfoHelper.MusicInfos.Album];
-                Size = info[MusicInfoHelper.MusicInfos.Size];
-                AlbumImageUrl = info[MusicInfoHelper.MusicInfos.AlbumImageUrl];
-            }
-            catch (Exception)
-            {                
-            }
+            var info = MusicInfoHelper.GetInfo(url);
+
+            Title = info[MusicInfoHelper.MusicInfos.Title];
+            Singer = info[MusicInfoHelper.MusicInfos.Singer];
+            Album = info[MusicInfoHelper.MusicInfos.Album];
+            Size = info[MusicInfoHelper.MusicInfos.Size];
+            BitRate = info[MusicInfoHelper.MusicInfos.BitRate];
+            AlbumImageUrl = info[MusicInfoHelper.MusicInfos.AlbumImageUrl];
+            var time = new TimeSpan();
+            TimeSpan.TryParse(info[MusicInfoHelper.MusicInfos.Duration], out time);
+            Duration = time;
             Url = url;
-            var audioFileReader = new NAudio.Wave.AudioFileReader(url);
-            Duration = audioFileReader.TotalTime;
         }
         /// <summary>
         /// 音乐标题
@@ -54,6 +47,11 @@ namespace MusicCollection.MusicManager
         /// 音乐大小
         /// </summary>
         public string Size { get; set; }
+
+        /// <summary>
+        /// 比特率
+        /// </summary>
+        public string BitRate { get; set; }
 
         /// <summary>
         /// 本地路径
