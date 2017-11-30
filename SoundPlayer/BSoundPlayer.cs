@@ -120,7 +120,6 @@ namespace MusicCollection.SoundPlayer
             }
         }
 
-
         public void Stop()
         {
             if (wavePlayer != null)

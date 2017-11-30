@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace MusicCollection.MusicManager
@@ -30,11 +31,48 @@ namespace MusicCollection.MusicManager
             Info.Add(MusicInfos.Size, dir.GetDetailsOf(item, 1));
             Info.Add(MusicInfos.BitRate, dir.GetDetailsOf(item, 28));
             Info.Add(MusicInfos.Duration, dir.GetDetailsOf(item, 27));
-            Info.Add(MusicInfos.AlbumImageUrl, ReadMp3(path));
+            Info.Add(MusicInfos.AlbumImageUrl, GetImage(path));
             return Info;
+        }
+        private static string GetImage(string path)
+        {
+            var mp3 = path;
+            path = path.GetHashCode().ToString();
+            if (!Directory.Exists("AlbumImage\\"))//如果不存在就创建文件夹
+            {
+                Directory.CreateDirectory("AlbumImage\\");
+            }
+            var url = "AlbumImage\\" + path;
+            if (!File.Exists(url))
+            {
+                TagLib.File file = TagLib.File.Create(mp3);
+                if (file.Tag.Pictures.Count() > 0)
+                {
+                    try
+                    {
+                        MemoryStream stream = new MemoryStream(file.Tag.Pictures[0].Data.Data);
+                        Image img = Image.FromStream(stream);
+                        img.Save(url, System.Drawing.Imaging.ImageFormat.Png);
+                    }
+                    catch (Exception)
+                    {
+                        return "";
+                    }
+                }
+                else
+                {
+                    return "";
+                }                
+            }            
+            return System.Windows.Forms.Application.StartupPath + "\\" + url; ;
         }
         private static string ReadMp3(string path)
         {
+            var url = "AlbumImage\\" + path.GetHashCode().ToString();
+            if (File.Exists(url))
+            {
+                return System.Windows.Forms.Application.StartupPath + "\\" + url;
+            }
             FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read);
             byte[] buffer = new byte[10];
             string mp3ID = "";
@@ -56,7 +94,7 @@ namespace MusicCollection.MusicManager
             fs.Close();
             return tags;
         }
-        private static string ReadFrame(FileStream fs, int size,string path, string imageUrl = "")
+        private static string ReadFrame(FileStream fs, int size,string path)
         {
             byte[] buffer = new byte[10];
             while (size > 0)
@@ -98,26 +136,19 @@ namespace MusicCollection.MusicManager
                     byte[] imge = new byte[frmSize - i];
                     fs.Seek(-frmSize + i, SeekOrigin.Current);
                     fs.Read(imge, 0, imge.Length);
+
                     MemoryStream ms = new MemoryStream(imge);
-                    Image img = Image.FromStream(ms);
-                    if (Directory.Exists(imageUrl + "AlbumImage\\") == false)//如果不存在就创建file文件夹
+                    Image img = Image.FromStream(ms, true);
+                    if (Directory.Exists("AlbumImage\\") == false)//如果不存在就创建文件夹
                     {
-                        Directory.CreateDirectory(imageUrl + "AlbumImage\\");
+                        Directory.CreateDirectory("AlbumImage\\");
                     }
                     path = path.GetHashCode().ToString();
-                    var url = imageUrl + "AlbumImage\\" + path;
+                    var url = "AlbumImage\\" + path;
                     FileStream save = new FileStream(url, FileMode.Create);
                     img.Save(save, System.Drawing.Imaging.ImageFormat.Png);
                     save.Close();
-                    if (imageUrl == "")
-                    {
-                        return System.Windows.Forms.Application.StartupPath + "\\" + url;
-                    }
-                    else
-                    {
-                        return url;
-                    }
-                    ;
+                    return System.Windows.Forms.Application.StartupPath + "\\" + url;
                 }
 
 

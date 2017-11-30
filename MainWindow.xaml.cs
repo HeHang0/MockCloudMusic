@@ -29,37 +29,44 @@ namespace MusicCollection
     public partial class MainWindow : Window
     {
         public BSoundPlayer bsp = new BSoundPlayer();
-        public ObservableCollection<Music> CurrentMusicList = new ObservableCollection<Music>();
+        public MusicObservableCollection CurrentMusicList = new MusicObservableCollection();
         public int CurrentIndex = -1;
         Timer timer = new System.Timers.Timer();
+        private LocalMusicPage LocalMusic;
         public MainWindow()
         {
             InitializeComponent();
             InitMusic();
             InitTimer();
+            InitPages();
         }
-        
+
+        private void InitPages()
+        {
+            LocalMusic = new LocalMusicPage(this);
+        }
+
         private void InitMusic()
         {
             var content = "C:\\Users\\HeHang\\Music\\";
 
             if (!File.Exists("CurrentMusicList.json"))
             {
-                File.WriteAllText("CurrentMusicList.json", JsonConvert.SerializeObject(new ObservableCollection<Music>()));
+                File.WriteAllText("CurrentMusicList.json", JsonConvert.SerializeObject(new MusicObservableCollection()));
             }
 
 
             var CurrentMusicListStr = File.ReadAllText("CurrentMusicList.json");
-            var list = JsonConvert.DeserializeObject<List<Music>>(CurrentMusicListStr);
+            var list = JsonConvert.DeserializeObject<MusicObservableCollection>(CurrentMusicListStr);
             //if (list.Count() == 0)
             //{
             //    CurrentMusicList.Add(new Music(content + "刘珂矣 - 半壶纱.mp3"));
             //}
             foreach (var item in list)
             {
-                this.CurrentMusicList.Add(item);
+                CurrentMusicList.Add(item);
             }
-            if (this.CurrentMusicList.Count == 0)
+            if (CurrentMusicList.Count == 0)
             {
 
                 DirectoryInfo TheFolder = new DirectoryInfo(content);
@@ -71,6 +78,11 @@ namespace MusicCollection
                         this.CurrentMusicList.Add(new Music(content + NextFile.Name));
                     }
                 }
+            }
+            if (CurrentMusicList.Count > 0)
+            {
+                Play();
+                Pause() ;
             }
 
         }
@@ -125,24 +137,29 @@ namespace MusicCollection
         {
             if (bsp.IsPlaying)
             {
-                bsp.Pause();
-                PlayMusicButton.Visibility = Visibility.Visible;
-                PauseMusicButton.Visibility = Visibility.Hidden;
+                Pause();
                 return;
             }
             else if (bsp.IsPause)
             {
                 bsp.Play();
+                PlayMusicButton.Visibility = Visibility.Hidden;
+                PauseMusicButton.Visibility = Visibility.Visible;
             }
             else
             {
                 Play();
             }
         }
+        public void Pause()
+        {
+            bsp.Pause();
+            PlayMusicButton.Visibility = Visibility.Visible;
+            PauseMusicButton.Visibility = Visibility.Hidden;
+        }
 
         public void Play()
-        {
-            
+        {            
             if (CurrentIndex >= 0 && CurrentIndex < CurrentMusicList.Count)
             {
                 bsp.FileName = CurrentMusicList[CurrentIndex].Url;
@@ -171,18 +188,16 @@ namespace MusicCollection
 
         private void SetMiniLable(Music music)
         {
-            try
+            var url = music.AlbumImageUrl;
+            if (url == "")
             {
-                BitmapImage bi = new BitmapImage();
-                bi.BeginInit();
-                bi.UriSource = new Uri(music.AlbumImageUrl, UriKind.RelativeOrAbsolute);
-                bi.EndInit();
-                CurrentMusicImageMini.Source = bi;
+                url = "logo.ico";
             }
-            catch (Exception)
-            {
-                
-            }
+            BitmapImage bi = new BitmapImage();
+            bi.BeginInit();
+            bi.UriSource = new Uri(url, UriKind.RelativeOrAbsolute);
+            bi.EndInit();
+            CurrentMusicImageMini.Source = bi;
             CurrentMusicTitleMini.Content = music.Title;
             CurrentMusicSingerMini.Content = music.Singer;
         }
@@ -220,6 +235,7 @@ namespace MusicCollection
                 var CurrentSeconds = (int)(bsp.TotalTime.TotalSeconds * MusicSlider.Value / 10);
                 bsp.CurrentTime = new TimeSpan(0, 0, CurrentSeconds);
                 timer.Start();
+                bsp.Play();
                 PlayMusicButton.Visibility = Visibility.Hidden;
                 PauseMusicButton.Visibility = Visibility.Visible;
             }
@@ -285,13 +301,12 @@ namespace MusicCollection
 
         private void LocalMusicButton_Click(object sender, RoutedEventArgs e)
         {
-            if (LocalMusic == null)
-            {
-                LocalMusic = new LocalMusicPage(this);
-            }
+            //if (LocalMusic == null)
+            //{
+            //    LocalMusic = new LocalMusicPage(this);
+            //}
             PageFrame.Content = LocalMusic;
         }
-        private LocalMusicPage LocalMusic;
 
         private void PageFrame_SizeChanged(object sender, SizeChangedEventArgs e)
         {
@@ -304,6 +319,7 @@ namespace MusicCollection
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            timer.Close();
             File.WriteAllText("CurrentMusicList.json", JsonConvert.SerializeObject(CurrentMusicList));
         }
 
