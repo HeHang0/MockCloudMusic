@@ -61,8 +61,6 @@ namespace MusicCollection.Pages
                     }
                 }
             }
-
-
             LocalMusicDataGrid.DataContext = LocalMusicList;
         }
 
@@ -78,10 +76,7 @@ namespace MusicCollection.Pages
         }
         
         private void RefreshLocalListButton_Click(object sender, System.Windows.RoutedEventArgs e)
-        {
-            //Thread t1 = new Thread(new ThreadStart(RefreshLocalList));
-            //t1.IsBackground = true;
-            //t1.Start();            
+        {           
             RefreshLocalList();
         }
 
@@ -99,10 +94,7 @@ namespace MusicCollection.Pages
                             LocalMusicList.Add(new Music(item + NextFile.Name));
                         }
                     }
-                }
-            //Dispatcher.Invoke(new Action(() => {
-            //}));
-            
+                }            
         }
 
         private void LocalMusicDataGrid_LoadingRow(object sender, DataGridRowEventArgs e)
@@ -148,8 +140,10 @@ namespace MusicCollection.Pages
 
         private void PlayAllLocalButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
+            ParentWindow.CurrentMusicList.Clear();
+            ParentWindow.CurrentIndex = -1;
             AllLocalMusicAddToList();
-
+            ParentWindow.Play();
         }
 
         private void LocalAddToListButton_Click(object sender, System.Windows.RoutedEventArgs e)

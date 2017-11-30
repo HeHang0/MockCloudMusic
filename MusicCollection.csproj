@@ -185,6 +185,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="packages\TagLib\lib\taglib-sharp.dll" />
+    <Resource Include="Resources\images\currentmusiclistcount_icon.png" />
+    <Resource Include="Resources\images\vol_close.png" />
+    <Resource Include="Resources\images\vol_open.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

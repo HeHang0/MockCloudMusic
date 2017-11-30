@@ -75,7 +75,7 @@ namespace MusicCollection
                     var pattern = @".*(\.[mp3]|[flac]|[wma]|[wav]|[ape])$";
                     if (Regex.IsMatch(NextFile.Name, pattern, RegexOptions.IgnoreCase))
                     {
-                        this.CurrentMusicList.Add(new Music(content + NextFile.Name));
+                        CurrentMusicList.Add(new Music(content + NextFile.Name));
                     }
                 }
             }
@@ -84,7 +84,7 @@ namespace MusicCollection
                 Play();
                 Pause() ;
             }
-
+            CurrentMusicListCountLable.DataContext = CurrentMusicList;
         }
         private void InitTimer()
         {
@@ -163,7 +163,6 @@ namespace MusicCollection
             if (CurrentIndex >= 0 && CurrentIndex < CurrentMusicList.Count)
             {
                 bsp.FileName = CurrentMusicList[CurrentIndex].Url;
-
                 bsp.Play();
                 SetMiniLable(CurrentMusicList[CurrentIndex]);
                 ToTalTimeLabel.Content = bsp.TotalTime.ToString(@"mm\:ss");
@@ -183,6 +182,7 @@ namespace MusicCollection
             {
                 PlayMusicButton.Visibility = Visibility.Hidden;
                 PauseMusicButton.Visibility = Visibility.Visible;
+                Title = CurrentMusicList[CurrentIndex].Title + " - " + CurrentMusicList[CurrentIndex].Singer;
             }
         }
 
@@ -221,11 +221,6 @@ namespace MusicCollection
             }
             bsp.Stop();
             Play();
-        }
-
-        private void SoundChangeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            bsp.Volume = (float)SoundChangeSlider.Value / 10;
         }
 
         private void MusicSlider_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
@@ -331,6 +326,43 @@ namespace MusicCollection
         private void CurrentMusicImageMini_MouesLeave(object sender, MouseEventArgs e)
         {
             CurrentMusicClickMini.Visibility = Visibility.Hidden;
+        }
+
+        private void SoundChangeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            bsp.Volume = (float)SoundChangeSlider.Value / 10;
+            if (SoundChangeSlider.Value == 0)
+            {
+                VolOpenButton.Visibility = Visibility.Hidden;
+                VolCloseButton.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                if (VolOpenButton.Visibility == Visibility.Hidden || VolCloseButton.Visibility == Visibility.Visible)
+                {
+                    VolOpenButton.Visibility = Visibility.Visible;
+                    VolCloseButton.Visibility = Visibility.Hidden;
+                }
+            }
+        }
+
+        private void VolOpenButton_Click(object sender, RoutedEventArgs e)
+        {
+            SoundChangeSliderValue = SoundChangeSlider.Value;
+            SoundChangeSlider.Value = 0;
+            VolOpenButton.Visibility = Visibility.Hidden;
+            VolCloseButton.Visibility = Visibility.Visible;
+        }
+        private double SoundChangeSliderValue;
+        private void VolCloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (SoundChangeSliderValue == 0)
+            {
+                SoundChangeSliderValue = 10;
+            }
+            SoundChangeSlider.Value = SoundChangeSliderValue;
+            VolOpenButton.Visibility = Visibility.Visible;
+            VolCloseButton.Visibility = Visibility.Hidden;
         }
     }
 }

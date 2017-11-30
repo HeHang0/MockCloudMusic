@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:MusicCollection"
         mc:Ignorable="d"
         Icon="logo.ico"
-        Title="MainWindow" Height="670" Width="1022" MinHeight="670" MinWidth="1022" Loaded="Window_Loaded" MouseDown="Window_MouseDown" Closing="Window_Closing"
+        Title="假的云音乐" Height="670" Width="1022" MinHeight="670" MinWidth="1022" Loaded="Window_Loaded" MouseDown="Window_MouseDown" Closing="Window_Closing"
         SizeChanged="Window_SizeChanged" WindowStartupLocation="CenterScreen" AllowsTransparency="True" WindowStyle="None">
     <Window.Resources>
         <ResourceDictionary>
@@ -44,7 +44,7 @@
                     </TextBlock>
                     <Label x:Name="CurrentMusicTitleMini" Cursor="Hand" Content="" Canvas.Left="55" Canvas.Top="8"/>
                     <Label x:Name="CurrentMusicSingerMini" Cursor="Hand" Content="" Opacity="0.7" Canvas.Left="55" Canvas.Bottom="3"/>
-                    
+
                     <GridSplitter x:Name="GridSplitter3" Height="1" Canvas.Top="0" Canvas.Left="0" Background="#E1E1E2" Width="200"/>
                 </Canvas>
                 <GridSplitter x:Name="GridSplitter1" Height="569" Canvas.Top="0" Canvas.Right="0" Background="#E1E1E2" Width="1"/>
@@ -71,25 +71,38 @@
             <Frame Name="PageFrame" Canvas.Left="200" Canvas.Top="50" Height="570" Width="822" Background="#FAFAFA" NavigationUIVisibility="Hidden" SizeChanged="PageFrame_SizeChanged"/>
 
             <Canvas Name="PlayBar" Height="50" Background="#FFF5F5F7" Canvas.Bottom="0" Width="1022" Margin="1">
-                <Button Name="LastMusicButton" Click="LastMusicButton_Click" Style="{StaticResource CircularButton}" Width="30" Height="30" Background="#E83C3C" Canvas.Left="20" Canvas.Bottom="10">
+                <Button Name="LastMusicButton" Click="LastMusicButton_Click" Style="{StaticResource CircularButton}" Width="30" Height="30" Background="#E83C3C" Canvas.Left="28" Canvas.Bottom="10" Canvas.Top="10">
                     <Image Width="18" Height="18" Source="Resources/images/rw.png"/>
                 </Button>
 
-                <Button Name="PlayMusicButton" Click="PlayMusicButton_Click" Style="{StaticResource CircularButton}" Width="30" Height="30" Background="#E83C3C" Canvas.Left="70" Canvas.Bottom="10">
+                <Button Name="PlayMusicButton" Click="PlayMusicButton_Click" Style="{StaticResource CircularButton}" Width="35" Height="35" Background="#E83C3C" Canvas.Left="82" Canvas.Bottom="7" Canvas.Top="8">
                     <Image Name="PlayImage" Width="18" Height="18" Source="Resources/images/play.png"/>
                 </Button>
-                <Button Name="PauseMusicButton" Click="PlayMusicButton_Click" Style="{StaticResource CircularButton}" Visibility="Hidden"  Width="30" Height="30" Background="#E83C3C" Canvas.Left="70" Canvas.Bottom="10">
+                <Button Name="PauseMusicButton" Click="PlayMusicButton_Click" Style="{StaticResource CircularButton}" Visibility="Hidden"  Width="35" Height="35" Background="#E83C3C" Canvas.Left="82" Canvas.Bottom="7">
                     <Image Name="PauseImage" Width="18" Height="18" Source="Resources/images/suspend.png"/>
                 </Button>
 
-                <Button Name="NextMusicButton" Click="NextMusicButton_Click" Style="{StaticResource CircularButton}" Width="30" Height="30" Background="#E83C3C" Canvas.Left="120" Canvas.Bottom="10">
+                <Button Name="NextMusicButton" Click="NextMusicButton_Click" Style="{StaticResource CircularButton}" Width="30" Height="30" Background="#E83C3C" Canvas.Left="140" Canvas.Bottom="10" Canvas.Top="10">
                     <Image Width="18" Height="18" Source="Resources/images/ff.png"/>
                 </Button>
 
-                <Label x:Name="CurrentTimeLabel" Content="00:00" Canvas.Left="175" Canvas.Top="14"/>
-                <Slider x:Name="MusicSlider" BorderBrush="{x:Null}" Canvas.Left="220" Canvas.Top="18" Width="400" Cursor="Hand" Foreground="#FFF00F0F" IsMoveToPointEnabled="True"/>
-                <Label x:Name="ToTalTimeLabel" Content="00:00" Canvas.Right="355" Canvas.Top="14"/>
-                <Slider x:Name="SoundChangeSlider" ValueChanged="SoundChangeSlider_ValueChanged" Value="10" Canvas.Right="205" Canvas.Top="18" Width="100" Cursor="Hand" Background="#FFF5F5F7" IsMoveToPointEnabled="True"/>
+                <Label x:Name="CurrentTimeLabel" Content="00:00" Canvas.Left="198" Canvas.Top="14"/>
+                <Slider x:Name="MusicSlider" BorderBrush="{x:Null}" Canvas.Left="247" Canvas.Top="18" Width="439" Cursor="Hand" Foreground="#FFF00F0F" IsMoveToPointEnabled="True"/>
+                <Label x:Name="ToTalTimeLabel" Content="00:00" Canvas.Right="355" Canvas.Top="14" Canvas.Left="688"/>
+                <Button x:Name="VolOpenButton" Click="VolOpenButton_Click"  Style="{StaticResource MouseOverOpacity}" Height="30" Canvas.Right="205" Canvas.Top="12" Width="30" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}" Canvas.Left="733">
+                    <Image Width="23" Height="25" Source="Resources/images/vol_open.png" Margin="11,2,-4,2"/>
+                </Button>
+                <Button x:Name="VolCloseButton" Click="VolCloseButton_Click" Style="{StaticResource MouseOverOpacity}" Height="30" Visibility="Hidden" Canvas.Right="205" Canvas.Top="12" Width="30" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}" Canvas.Left="733">
+                    <Image Width="23" Height="25" Source="Resources/images/vol_close.png" Margin="11,2,-4,2"/>
+                </Button>
+                <Slider x:Name="SoundChangeSlider" ValueChanged="SoundChangeSlider_ValueChanged" Value="10" Canvas.Right="205" Canvas.Top="18" Width="100" Cursor="Hand" Background="#FFF5F5F7" IsMoveToPointEnabled="True" Canvas.Left="766"/>
+                <Button x:Name="PlayAllLocalButton" HorizontalAlignment="Left" Style="{StaticResource LeftHarfCircularButton}" Content="播放全部" Foreground="#FF333333" Margin="30,69,0,0" VerticalAlignment="Top"  Canvas.Right="205" Canvas.Top="18" Width="91" Background="White" BorderBrush="#FFE1E1E2" Height="25"/>
+                <Button x:Name="button" Canvas.Right="15" Canvas.Top="18" Width="45" Height="16" BorderThickness="0" Style="{StaticResource HarfCircularButton}" Background="#E1E1E2">
+                    <Grid>
+                        <Label Name="CurrentMusicListCountLable" Margin="5,-8,-5,-8" FontSize="11" Content="{Binding Count}"></Label>
+                    </Grid>
+                </Button>
+                <Image Source="Resources/images/currentmusiclistcount_icon.png" Canvas.Right="40" Canvas.Top="13" Cursor="Hand"/>
                 <GridSplitter x:Name="GridSplitter2" Height="1" Canvas.Top="0" Canvas.Left="0" Background="#E1E1E2" Width="1023"/>
             </Canvas>
         </Canvas>

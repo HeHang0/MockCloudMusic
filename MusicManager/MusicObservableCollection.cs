@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace MusicCollection.MusicManager
 {
-    public class MusicObservableCollection: ObservableCollection<Music>
+    public class MusicObservableCollection: ObservableCollection<Music>, INotifyPropertyChanged
     {
         public new int Add(Music music)
         {
@@ -16,7 +18,7 @@ namespace MusicCollection.MusicManager
             {
                 return index;
             }
-            else
+            else if (File.Exists(music.Url))
             {
                 base.Add(music);
                 index = this.Count - 1;
