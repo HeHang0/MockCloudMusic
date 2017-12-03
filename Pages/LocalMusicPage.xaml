@@ -3,9 +3,10 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:gif="http://wpfanimatedgif.codeplex.com"
       xmlns:local="clr-namespace:MusicCollection.Pages"
       mc:Ignorable="d" 
-      d:DesignHeight="570" d:DesignWidth="822" MinHeight="570" MinWidth="822" SizeChanged="Page_SizeChanged"
+      d:DesignHeight="570" d:DesignWidth="822"
       TextOptions.TextFormattingMode="Display">
     <Page.Resources>
         <ResourceDictionary>
@@ -14,41 +15,74 @@
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Page.Resources>
+
     <Grid>
         <Label Content="本地音乐" HorizontalAlignment="Left" Margin="40,22,0,0" VerticalAlignment="Top" FontSize="18" Opacity="0.7"/>
-        <Label Content="3首音乐，" HorizontalAlignment="Left" Margin="122,29,0,0" VerticalAlignment="Top" Opacity="0.7"/>
-        <Label Content="选择目录" HorizontalAlignment="Left" Margin="178,29,0,0" VerticalAlignment="Top" Opacity="0.7" Cursor="Hand" Foreground="#FF005DFF"/>
-
-        <GridSplitter Name="GridSplitter1" Background="#E1E1E2" HorizontalAlignment="Left" Height="1" Margin="0,52,0,0" VerticalAlignment="Top" Width="822"/>
-
-        <GridSplitter Name="GridSplitter2" Background="#E1E1E2" HorizontalAlignment="Left" Height="1" Margin="0,109,0,0" VerticalAlignment="Top" Width="822"/>
+        <Label Name="LocalMusicCountLable" Content="{Binding}" HorizontalAlignment="Left" Margin="122,29,0,0" VerticalAlignment="Top" Opacity="0.7"/>
+        <!--<Label Content="  首音乐，" HorizontalAlignment="Left" Margin="122,29,0,0" VerticalAlignment="Top" Opacity="0.7"/>-->
+        <Label Content="选择目录" Name="SelectContent" MouseDown="SelectContent_MouseDown" HorizontalAlignment="Left" Margin="188,29,0,0" VerticalAlignment="Top" Opacity="0.7" Cursor="Hand" Foreground="#FF005DFF"/>
+        <Canvas Name="RefreshMusicCavas" Margin="389,0,312,518" Visibility="Hidden">
+            <Image gif:ImageBehavior.AnimatedSource="..\Resources\images\loading.gif" Height="18" Canvas.Left="0" Canvas.Bottom="3" Width="18"/>
+            <Label Content="正在匹配" Canvas.Left="20" Canvas.Bottom="-4" Opacity="0.7"/>
+            <Label Name="RefreshMusicCountLable" Canvas.Left="71" Canvas.Bottom="-4" Opacity="0.7"/>
+        </Canvas>
+        <GridSplitter Background="#E1E1E2" Margin="0,52,0,0" Height="1" HorizontalAlignment="Stretch" VerticalAlignment="Top"/>
         <Button x:Name="PlayAllLocalButton" Click="PlayAllLocalButton_Click" HorizontalAlignment="Left" Style="{StaticResource LeftHarfCircularButton}" Content="播放全部" Foreground="#FF333333" Margin="30,69,0,0" VerticalAlignment="Top" Width="91" Background="White" BorderBrush="#FFE1E1E2" Height="25"/>
         <Button x:Name="LocalAddToListButton" Click="LocalAddToListButton_Click" Style="{StaticResource RightHarfCircularButton}" Content="+" FontSize="22" FontWeight="Thin" Foreground="#FF333333" HorizontalAlignment="Left" Padding="0,-6,0,0"  Margin="120,69,0,0" VerticalAlignment="Top" Width="32" Background="White" Height="25" BorderBrush="#FFE1E1E2"/>
         <Button x:Name="RefreshLocalListButton" Style="{StaticResource AllHarfCircularButton}" Content="匹配音乐" Click="RefreshLocalListButton_Click" Foreground="#FF333333" HorizontalAlignment="Left" Margin="165,69,0,0" VerticalAlignment="Top" Width="92" Background="White" Height="25" BorderBrush="#FFE1E1E2"/>
 
-        <DataGrid x:Name="LocalMusicDataGrid" HorizontalAlignment="Left" Margin="0,110,0,0" VerticalAlignment="Top" ColumnDisplayIndexChanged="LocalMusicDataGrid_ColumnDisplayIndexChanged"
-                  AlternatingRowBackground="#FFE4E4E6" BorderThickness="0" AutoGenerateColumns="False" CanUserAddRows="False" Opacity="0.7"
-                  Height="459" Width="822" Background="{x:Null}" BorderBrush="{x:Null}" LoadingRow="LocalMusicDataGrid_LoadingRow" GridLinesVisibility="None"
-                  ItemsSource="{Binding}" HeadersVisibility="Column" IsReadOnly="True" MouseDoubleClick="LocalMusicDataGrid_MouseDoubleClick">
+        <Image Source="..\Resources\images\search.png" Cursor="IBeam" Margin="0,72,54,0" HorizontalAlignment="Right" Width="18" Height="18" VerticalAlignment="Top"/>
+        <TextBox x:Name="SearchTextBox" Style="{StaticResource SearchTextBox}" Keyboard.KeyUp="SearchTextBox_KeyUp" Padding="8,0" BorderBrush="#E1E1E2" BorderThickness="1" Background="{x:Null}" Height="25" Canvas.Left="255" Canvas.Top="15"
+                         VerticalContentAlignment="Center" TextWrapping="Wrap" Foreground="Black" Cursor="IBeam" Margin="0,69,45,0" HorizontalAlignment="Right" Width="165" VerticalAlignment="Top"/>
+
+        <DataGrid x:Name="LocalMusicDataGrid" Margin="0,110,0,0" SelectionMode="Single" AlternationCount="2"
+                  BorderThickness="0" AutoGenerateColumns="False" CanUserAddRows="False" Opacity="0.7" Background="{x:Null}" BorderBrush="{x:Null}" LoadingRow="LocalMusicDataGrid_LoadingRow" GridLinesVisibility="None"
+                  ItemsSource="{Binding}" HeadersVisibility="Column" IsReadOnly="True">
+            <!--MouseDoubleClick="LocalMusicDataGrid_MouseDoubleClick"-->
             <DataGrid.RowStyle>
                 <Style TargetType = "{x:Type DataGridRow}" >
                     <Setter Property="Height" Value="28"/>
-                    <Setter Property="Background" Value="{x:Null}"/>
+                    <EventSetter Event="MouseDoubleClick" Handler="LocalMusicDataGrid_MouseDoubleClick"/>
+                    <!--<Setter Property="Background" Value="{x:Null}"/>-->
+                    <Style.Triggers>
+                        <!--隔行换色-->
+                        <Trigger Property="AlternationIndex" Value="0" >
+                            <Setter Property="Background" Value="#fafafa" />
+                        </Trigger>
+                        <Trigger Property="AlternationIndex" Value="1" >
+                            <Setter Property="Background" Value="#f5f5f7" />
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="#ecedee"/>
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter Property="Background" Value="#e4e4e6"/>
+                        </Trigger>
+                    </Style.Triggers>
                 </Style>
             </DataGrid.RowStyle>
             <DataGrid.ColumnHeaderStyle>
                 <Style TargetType = "{x:Type DataGridColumnHeader}" >
+                    <Setter Property="Padding" Value="10,5,5,5"/>
                     <Setter Property="Height" Value="28"/>
-                    <Setter Property="Background" Value="{x:Null}"/>
-                    <Setter Property="BorderBrush" Value="{x:Null}"/>
-                    <Setter Property="BorderThickness" Value="0"/>
+                    <Setter Property="Background" Value="#FAFAFA"/>
+                    <Setter Property="BorderBrush" Value="#E1E1E2"/>
+                    <Setter Property="BorderThickness" Value="0.7"/>
                 </Style>
             </DataGrid.ColumnHeaderStyle>
+            <DataGrid.CellStyle>
+                <Style TargetType = "{x:Type DataGridCell}" >
+                    <Setter Property="Margin" Value="8,5"/>
+                    <Setter Property="Background" Value="{x:Null}"/>
+                    <Setter Property="BorderBrush" Value="{x:Null}"/>
+                    <Setter Property="Foreground" Value="Black"/>
+                </Style>
+            </DataGrid.CellStyle>
             <DataGrid.Columns>
                 <DataGridTemplateColumn  Header="" Width="50" CanUserSort="False">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type DataGridRow}}, Path=Header}" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10,0,0,0"></TextBlock>
+                            <TextBlock Text="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type DataGridRow}}, Path=Header}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,5,0"></TextBlock>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>

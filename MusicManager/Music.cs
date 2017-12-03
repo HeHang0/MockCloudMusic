@@ -6,8 +6,21 @@ namespace MusicCollection.MusicManager
     {
         public Music()
         {
-           
+
         }
+        public Music(Music music)
+        {
+            Title = music.Title;
+            Singer = music.Singer;
+            Album = music.Album;
+            Size = music.Size;
+            BitRate = music.BitRate;
+            AlbumImageUrl = music.AlbumImageUrl;
+            Duration = music.Duration;
+            Url = music.Url;
+            LyricUrl = music.LyricUrl;
+        }
+
         public Music(string url)
         {
             var info = MusicInfoHelper.GetInfo(url);
@@ -18,6 +31,7 @@ namespace MusicCollection.MusicManager
             Size = info[MusicInfoHelper.MusicInfos.Size];
             BitRate = info[MusicInfoHelper.MusicInfos.BitRate];
             AlbumImageUrl = info[MusicInfoHelper.MusicInfos.AlbumImageUrl];
+            LyricUrl = info[MusicInfoHelper.MusicInfos.LyricUrl];
             var time = new TimeSpan();
             TimeSpan.TryParse(info[MusicInfoHelper.MusicInfos.Duration], out time);
             Duration = time;
@@ -61,5 +75,9 @@ namespace MusicCollection.MusicManager
         /// 专辑图
         /// </summary>
         public string AlbumImageUrl { get; set; }
+        /// <summary>
+        /// 歌词路径
+        /// </summary>
+        public string LyricUrl { get; set; }
     }
 }

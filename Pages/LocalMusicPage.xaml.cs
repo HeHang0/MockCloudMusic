@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System;
 using System.Windows;
+using System.Linq;
 
 namespace MusicCollection.Pages
 {
@@ -16,8 +17,8 @@ namespace MusicCollection.Pages
     /// </summary>
     public partial class LocalMusicPage : Page
     {
-        private ObservableCollection<string> FolderList = new ObservableCollection<string>();
-        public MusicObservableCollection LocalMusicList = new MusicObservableCollection();
+        public ObservableCollection<string> FolderList = new ObservableCollection<string>();
+        public MusicObservableCollection<Music> LocalMusicList = new MusicObservableCollection<Music>();
         public MainWindow ParentWindow { get; private set; }
         public LocalMusicPage(MainWindow ParentWindow)
         {
@@ -28,27 +29,70 @@ namespace MusicCollection.Pages
 
         private void Init()
         {
-            var configPath = "LocalMusicFolderList.json";
+            var LocalMusicFolderListPath = "LocalMusicFolderList.json";
+            var LocalMusicListPath = "LocalMusicList.json";
 
-            if (!File.Exists(configPath))
+            if (!File.Exists(LocalMusicFolderListPath))
             {
-                File.WriteAllText(configPath, JsonConvert.SerializeObject(new ObservableCollection<string>()));
+                File.WriteAllText(LocalMusicFolderListPath, JsonConvert.SerializeObject(new ObservableCollection<string>()));
+            }
+            if (!File.Exists(LocalMusicListPath))
+            {
+                File.WriteAllText(LocalMusicListPath, JsonConvert.SerializeObject(new MusicObservableCollection<Music>()));
             }
 
-            var content = "";
+            var LocalMusicFolderListContent = "";
+            var LocalMusicListContent = "";
             try
             {
-                content = File.ReadAllText(configPath);
+                LocalMusicFolderListContent = File.ReadAllText(LocalMusicFolderListPath);
+                LocalMusicListContent = File.ReadAllText(LocalMusicListPath);
             }
             catch (System.Exception)
             {                
             }
 
-            FolderList = JsonConvert.DeserializeObject<ObservableCollection<string>>(content);
+            FolderList = JsonConvert.DeserializeObject<ObservableCollection<string>>(LocalMusicFolderListContent);
             if (FolderList.Count == 0)
             {
-                FolderList.Add("C:\\Users\\HeHang\\Music\\");
+                FolderList.Add(Environment.GetFolderPath(Environment.SpecialFolder.MyMusic) + "\\");
             }
+            LocalMusicList = JsonConvert.DeserializeObject<MusicObservableCollection<Music>>(LocalMusicListContent);
+            if (LocalMusicList.Count == 0)
+            {
+                RefreshLocalList();
+            }            
+
+            LocalMusicDataGrid.DataContext = LocalMusicList;
+            LocalMusicCountLable.Content = LocalMusicList.Count + "首音乐";
+            LocalMusicList.OnCountChange += LocalMusicList_OnCountChange;
+        }
+
+        private void LocalMusicList_OnCountChange(object sender)
+        {
+            LocalMusicCountLable.Content = LocalMusicList.Count + "首音乐";
+        }
+        
+        private void RefreshLocalListButton_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            RefreshLocalList();
+        }
+
+        private void RefreshLocalList()
+        {
+            Thread thread = new Thread(new ThreadStart(RefreshLocalListThread));
+            thread.IsBackground = true;
+            thread.Start();
+        }
+        
+        private void RefreshLocalListThread()
+        {
+            Dispatcher.Invoke(new Action(() =>
+            {
+                LocalMusicList.Clear();
+                RefreshMusicCavas.Visibility = Visibility.Visible;
+            }));
+            var count = 0;
             foreach (var item in FolderList)
             {
                 DirectoryInfo TheFolder = new DirectoryInfo(item);
@@ -57,78 +101,78 @@ namespace MusicCollection.Pages
                     var pattern = ".*\\.(mp3|flac|wma|wav|ape)$";
                     if (Regex.IsMatch(NextFile.Name, pattern, RegexOptions.IgnoreCase))
                     {
-                        LocalMusicList.Add(new Music(item + NextFile.Name));
+                        count++;
                     }
                 }
             }
-            LocalMusicDataGrid.DataContext = LocalMusicList;
-        }
-
-        private void Page_SizeChanged(object sender, System.Windows.SizeChangedEventArgs e)
-        {
-            if (Height > 0 && Width > 0)
+            foreach (var item in FolderList)
             {
-                LocalMusicDataGrid.Height = Height;
-                LocalMusicDataGrid.Width = Width;
-                GridSplitter1.Width = Width;
-                GridSplitter2.Width = Width;
-            }
-        }
-        
-        private void RefreshLocalListButton_Click(object sender, System.Windows.RoutedEventArgs e)
-        {           
-            RefreshLocalList();
-        }
-
-        private void RefreshLocalList()
-        {
-                LocalMusicList.Clear();
-                foreach (var item in FolderList)
+                DirectoryInfo TheFolder = new DirectoryInfo(item);
+                foreach (FileInfo NextFile in TheFolder.GetFiles())
                 {
-                    DirectoryInfo TheFolder = new DirectoryInfo(item);
-                    foreach (FileInfo NextFile in TheFolder.GetFiles())
+                    var pattern = ".+?(\\.mp3|\\.wav|\\.flac|\\.wma|\\.ape|\\.m4a)$";
+                    if (Regex.IsMatch(NextFile.Name, pattern, RegexOptions.IgnoreCase))
                     {
-                        var pattern = ".*\\.(mp3|flac|wma|wav|ape)$";
-                        if (Regex.IsMatch(NextFile.Name, pattern, RegexOptions.IgnoreCase))
+                        if (Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
                         {
-                            LocalMusicList.Add(new Music(item + NextFile.Name));
+                            var music = new Music(item + NextFile.Name);
+                            Dispatcher.Invoke(new Action(() => {
+                                LocalMusicList.Add(music);
+                            }));
                         }
+                        else
+                        {
+                            object[] args = new object[] { LocalMusicList, item, NextFile.Name };
+                            Thread staThread = new Thread(new ParameterizedThreadStart(RefreshLocalListSTA));
+                            staThread.SetApartmentState(ApartmentState.STA);
+                            staThread.Start(args);
+                            staThread.Join();
+                        }
+                        Dispatcher.Invoke(new Action(() =>
+                        {
+                            RefreshMusicCountLable.Content = LocalMusicList.Count + "/" + count;
+                        }));
                     }
-                }            
+                }
+            }
+            Dispatcher.Invoke(new Action(() => {
+                RefreshMusicCavas.Visibility = Visibility.Hidden;
+            }));
+        }
+        private void RefreshLocalListSTA(object o)
+        {
+            object[] args = (object[])o;
+            var list = (MusicObservableCollection<Music>)args[0];
+            var item = (string)args[1];
+            var Name = (string)args[2];
+            var music = new Music(item + Name);
+            Dispatcher.Invoke(new Action(() =>
+            {
+                list.Add(music);
+            }));
         }
 
         private void LocalMusicDataGrid_LoadingRow(object sender, DataGridRowEventArgs e)
         {
             e.Row.Header = e.Row.GetIndex() + 1;
+            if ((int)e.Row.Header < 10)
+            {
+                e.Row.Header = "0" + e.Row.Header;
+            }
         }
 
         private void LocalMusicDataGrid_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            DataGrid datagrid = sender as DataGrid;
-
-            var aP = e.GetPosition(datagrid);
-            var obj = datagrid.InputHitTest(aP);
-            DependencyObject target = obj as DependencyObject;
-
-            while (target != null)
+            if (sender != null)
             {
-                if (target is DataGridRow)
-                {
-                    break;
-                }
-                target = System.Windows.Media.VisualTreeHelper.GetParent(target);
-            }
-
-            if (target != null)
-            {
-                var music = (target as DataGridRow).Item as Music;
+                DataGridRow dgr = sender as DataGridRow;
+                var music = dgr.Item as Music;
                 if (music != null)
                 {
                     ParentWindow.CurrentIndex = ParentWindow.CurrentMusicList.Add(music);
                     ParentWindow.bsp.Stop();
-                    ParentWindow.Play();
+                    ParentWindow.Play(music);
                 }
-                datagrid.SelectedIndex = -1;
             }
         }
 
@@ -148,7 +192,11 @@ namespace MusicCollection.Pages
 
         private void LocalAddToListButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            AllLocalMusicAddToList();
+            var item = LocalMusicDataGrid.SelectedItem as Music;
+            if (item != null)
+            {
+                ParentWindow.CurrentMusicList.Add(item);
+            }
         }
         private void AllLocalMusicAddToList()
         {
@@ -161,6 +209,31 @@ namespace MusicCollection.Pages
                 ParentWindow.CurrentMusicList.Add(item);
             }
             ParentWindow.CurrentIndex = ParentWindow.CurrentMusicList.Count - 1;
+        }
+
+        public void ParentWindow_Closing()
+        {
+            File.WriteAllText("LocalMusicFolderList.json", JsonConvert.SerializeObject(FolderList));
+            File.WriteAllText("LocalMusicList.json", JsonConvert.SerializeObject(LocalMusicList));
+        }
+        private void SelectContent_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            var childWin = new ChildWondows.LocalMusicFolderWindow(ParentWindow, this);
+            childWin.Owner = ParentWindow;
+            childWin.ShowDialog();
+        }
+
+        private void SearchTextBox_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            var search = SearchTextBox.Text.ToLower();
+            if (search.Length > 0)
+            {
+                LocalMusicDataGrid.DataContext = LocalMusicList.Where(m => m.Singer.ToLower().Contains(search) || m.Title.ToLower().Contains(search) || m.Album.ToLower().Contains(search));
+            }
+            else
+            {
+                LocalMusicDataGrid.DataContext = LocalMusicList;
+            }
         }
     }
 }

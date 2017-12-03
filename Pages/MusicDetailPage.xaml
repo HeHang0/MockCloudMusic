@@ -1,0 +1,41 @@
+﻿<Page x:Class="MusicCollection.Pages.MusicDetailPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:MusicCollection.Pages"
+      mc:Ignorable="d" SizeChanged="Page_SizeChanged"
+      d:DesignHeight="570" d:DesignWidth="1022" Loaded="Page_Loaded"
+      Title="MusicDetailPage">
+    <Page.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="..\Resources\GlassButton.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Page.Resources>
+    <Grid>
+        <Button x:Name="HiddenButton" Style="{StaticResource AllHarfCircularButton}" Click="HiddenButton_Click" Foreground="#FF333333" HorizontalAlignment="Right" Margin="0,37,40,0" VerticalAlignment="Top" Width="40" Background="White" Height="25" BorderBrush="#FFE1E1E2">
+            <Image Name="PlayImage" Width="25" Height="20" Source="..\Resources\images\page_hidden.png"/>
+        </Button>
+
+        <ScrollViewer Name="LyricBlock" VerticalScrollBarVisibility="Auto" Margin="517,105,62,56">
+            <TextBlock x:Name="LyricTextBlock" Padding="80,0" TextWrapping="Wrap"/>
+        </ScrollViewer>
+        <Ellipse Margin="231,266,0,0"  Name="Image" HorizontalAlignment="Left" Width="115" Height="115" VerticalAlignment="Top">
+            <Ellipse.Fill>
+                <ImageBrush>
+                    <ImageBrush.ImageSource>
+                        <DrawingImage>
+                            <DrawingImage.Drawing>
+                                <ImageDrawing x:Name="AlbumImage" Rect="100,200,110,100"></ImageDrawing>
+                            </DrawingImage.Drawing>
+                        </DrawingImage>
+                    </ImageBrush.ImageSource>
+                </ImageBrush>
+            </Ellipse.Fill>
+        </Ellipse>
+
+        <Image Name="ImageBack" HorizontalAlignment="Left" VerticalAlignment="Bottom" Source="..\Resources\images\disc.png" Margin="60,86,505,56"/>
+    </Grid>
+</Page>

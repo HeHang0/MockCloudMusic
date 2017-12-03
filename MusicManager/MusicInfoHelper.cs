@@ -10,7 +10,6 @@ namespace MusicCollection.MusicManager
 {
     public class MusicInfoHelper
     {
-        [STAThread]
         public static Dictionary<MusicInfos, string> GetInfo(string path)
         {
             var Info = new Dictionary<MusicInfos, string>();
@@ -32,6 +31,15 @@ namespace MusicCollection.MusicManager
             Info.Add(MusicInfos.BitRate, dir.GetDetailsOf(item, 28));
             Info.Add(MusicInfos.Duration, dir.GetDetailsOf(item, 27));
             Info.Add(MusicInfos.AlbumImageUrl, GetImage(path));
+            var virtualLrc = Path.GetDirectoryName(path) + "\\" + Path.GetFileNameWithoutExtension(path) + ".lrc";
+            if (File.Exists(virtualLrc))
+            {
+                Info.Add(MusicInfos.LyricUrl, virtualLrc);
+            }
+            else
+            {
+                Info.Add(MusicInfos.LyricUrl, string.Empty);
+            }
             return Info;
         }
         private static string GetImage(string path)
@@ -155,6 +163,6 @@ namespace MusicCollection.MusicManager
             }
             return "";
         }
-        public enum MusicInfos { Title, Singer, Album, Duration, BitRate, Size, AlbumImageUrl };
+        public enum MusicInfos { Title, Singer, Album, Duration, BitRate, Size, AlbumImageUrl, LyricUrl };
     }
 }
