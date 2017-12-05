@@ -91,6 +91,9 @@
       <DependentUpon>LocalMusicFolderWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="EncodingHelper.cs" />
+    <Compile Include="MusicAPI\CloudMusic\CloudMusicSearchModel.cs" />
+    <Compile Include="MusicAPI\NetMusic.cs" />
+    <Compile Include="MusicAPI\NetMusicHelper.cs" />
     <Compile Include="MusicManager\LocalMusic.cs" />
     <Compile Include="MusicManager\LyricLine.cs" />
     <Compile Include="MusicManager\Music.cs" />
@@ -107,6 +110,10 @@
     <Compile Include="Pages\MusicDetailPage.xaml.cs">
       <DependentUpon>MusicDetailPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Pages\NetMusicSearchPage.xaml.cs">
+      <DependentUpon>NetMusicSearchPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\NetMusicTypeRadioBtnViewModel.cs" />
     <Compile Include="SoundPlayer\BSoundPlayer.cs" />
     <Page Include="ChildWondows\LocalMusicFolderWindow.xaml">
       <SubType>Designer</SubType>
@@ -133,6 +140,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Pages\MusicDetailPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\NetMusicSearchPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -229,6 +240,7 @@
     <Resource Include="Resources\images\vol_close.png" />
     <Resource Include="Resources\images\vol_open.png" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

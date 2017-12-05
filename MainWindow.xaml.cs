@@ -20,6 +20,7 @@ using MusicCollection.MusicManager;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using System.Collections.ObjectModel;
+using MusicCollection.MusicAPI;
 
 namespace MusicCollection
 {
@@ -31,10 +32,15 @@ namespace MusicCollection
         public BSoundPlayer bsp = new BSoundPlayer();
         public MusicObservableCollection<Music> CurrentMusicList = new MusicObservableCollection<Music>();
         public MusicHistoriesCollection<MusicHistory> HistoryMusicList = new MusicHistoriesCollection<MusicHistory>();
+        public ObservableCollection<NetMusic> NetMusicList = new ObservableCollection<NetMusic>();
+        
         public int CurrentIndex = -1;
         Timer timer = new System.Timers.Timer();
+
         private LocalMusicPage LocalMusic;
         private MusicDetailPage MusicDetail;
+        private NetMusicSearchPage NetMusicSearch;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -428,6 +434,39 @@ namespace MusicCollection
             if (MusicDetailFrame.Visibility == Visibility.Visible && CurrentIndex > 0)
             {
                 (MusicDetailFrame.Content as MusicDetailPage).Init(CurrentMusicList[CurrentIndex]);
+            }
+        }
+
+        private void SearchNetMusicButton_Click(object sender, RoutedEventArgs e)
+        {
+            SearchNetMusic(SearchTextBox.Text);
+        }
+        private void SearchTextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                SearchNetMusic(SearchTextBox.Text);
+            }
+        }
+        private void SearchNetMusic(string searchStr)
+        {
+            if (string.IsNullOrWhiteSpace(searchStr))
+            {
+                return;
+            }
+            if (NetMusicSearch == null)
+            {
+                NetMusicSearch = new NetMusicSearchPage(this);
+            }
+            PageFrame.Content = NetMusicSearch;
+
+            var type = NetMusicSearch.NetMusicTypeRadio.DataContext as NetMusicTypeRadioBtnViewModel;
+
+            NetMusicList.Clear();
+            var t = NetMusicHelper.GetNetMusicList(searchStr, type.SelectItem());
+            foreach (var item in t)
+            {
+                NetMusicList.Add(item);
             }
         }
     }

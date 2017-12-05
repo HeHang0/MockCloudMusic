@@ -62,9 +62,12 @@
             </Button>
             <Image x:Name="TitleImage" Height="40" Width="121" Source="Resources/images/logoandtitle.png" Canvas.Top="6" Canvas.Left="14"/>
             <Button x:Name="NoFocusButton" Style="{StaticResource MouseOverOpacity}" Canvas.Left="260" Canvas.Top="25" Width="18"/>
-            <TextBox x:Name="SearchTextBox" Padding="8,0" Style="{StaticResource CircularTextBox}" Width="218" Height="23" Canvas.Left="255" Canvas.Top="15"
+            <TextBox x:Name="SearchTextBox" Padding="8,0" Style="{StaticResource CircularTextBox}" KeyDown="SearchTextBox_KeyDown" Width="218" Height="23" Canvas.Left="255" Canvas.Top="15"
                          VerticalContentAlignment="Center" TextWrapping="Wrap" Background="#FFA82828" Foreground="White" Cursor="IBeam">
             </TextBox>
+            <Button x:Name="SearchNetMusicButton" Click="SearchNetMusicButton_Click" Style="{StaticResource MouseOverOpacity}" Height="19" Width="20" Canvas.Left="445" Canvas.Top="17" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}">
+                <Image Width="15" Height="15" Source="Resources/images/search.png"/>
+            </Button>
         </Canvas>
         <Frame Name="PageFrame" Background="#FAFAFA" NavigationUIVisibility="Hidden" Margin="200,50,0,50"/>
         <Canvas Name="PlayBar" Height="50" Background="#FFF5F5F7" Margin="0,0,0,0" VerticalAlignment="Bottom">

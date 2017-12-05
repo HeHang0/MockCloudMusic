@@ -1,0 +1,100 @@
+﻿<Page x:Class="MusicCollection.Pages.NetMusicSearchPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:MusicCollection.Pages"
+      mc:Ignorable="d" Loaded="Page_Loaded"
+      d:DesignHeight="570" d:DesignWidth="822"
+      Title="NetMusicSearchPage">
+    <Page.Resources>
+        <local:NetMusicTypeRadioBtnViewModel x:Key="RadioBtnViewModel" />
+    </Page.Resources>
+    <Grid>
+        <StackPanel Name="NetMusicTypeRadio" Margin="30,18,30,0" Height="18" VerticalAlignment="Top" DataContext="{StaticResource RadioBtnViewModel}">
+            <ItemsControl ItemsSource="{Binding Insertions}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <RadioButton GroupName="Insertions"
+                                         Content="{Binding Text}" 
+                                         Tag="{Binding Tag}"
+                                         IsChecked="{Binding IsChecked, Mode=TwoWay}" Width="100"/>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+        <!--<Canvas Height="50" VerticalAlignment="Top">
+            --><!--<RadioButton GroupName="NetMusicTypeRdBtn" IsChecked="True" Tag="{Binding NetMusicType.CloudMusic}" Content="网易云音乐" Canvas.Left="25" Canvas.Top="19"/>
+            <RadioButton GroupName="NetMusicTypeRdBtn" Content="QQ音乐" IsEnabled="False" Width="85" Canvas.Left="135" Canvas.Top="19"/>--><!--
+
+        </Canvas>-->
+        <DataGrid x:Name="NetMusicDataGrid" Margin="0,50,0,0" SelectionMode="Single" AlternationCount="2"
+                  BorderThickness="0" AutoGenerateColumns="False" CanUserAddRows="False" Opacity="0.7" Background="{x:Null}" BorderBrush="{x:Null}" LoadingRow="NetMusicDataGrid_LoadingRow" GridLinesVisibility="None"
+                  ItemsSource="{Binding}" HeadersVisibility="Column" IsReadOnly="True">
+            <!--MouseDoubleClick="LocalMusicDataGrid_MouseDoubleClick"-->
+            <DataGrid.RowStyle>
+                <Style TargetType = "{x:Type DataGridRow}" >
+                    <Setter Property="Height" Value="28"/>
+                    <EventSetter Event="MouseDoubleClick" Handler="NetMusicDataGrid_MouseDoubleClick"/>
+                    <!--<Setter Property="Background" Value="{x:Null}"/>-->
+                    <Style.Triggers>
+                        <!--隔行换色-->
+                        <Trigger Property="AlternationIndex" Value="0" >
+                            <Setter Property="Background" Value="#fafafa" />
+                        </Trigger>
+                        <Trigger Property="AlternationIndex" Value="1" >
+                            <Setter Property="Background" Value="#f5f5f7" />
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="#ecedee"/>
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter Property="Background" Value="#e4e4e6"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </DataGrid.RowStyle>
+            <DataGrid.ColumnHeaderStyle>
+                <Style TargetType = "{x:Type DataGridColumnHeader}" >
+                    <Setter Property="Padding" Value="10,5,5,5"/>
+                    <Setter Property="Height" Value="28"/>
+                    <Setter Property="Background" Value="#FAFAFA"/>
+                    <Setter Property="BorderBrush" Value="#E1E1E2"/>
+                    <Setter Property="BorderThickness" Value="0.7"/>
+                </Style>
+            </DataGrid.ColumnHeaderStyle>
+            <DataGrid.CellStyle>
+                <Style TargetType = "{x:Type DataGridCell}" >
+                    <Setter Property="Margin" Value="8,5"/>
+                    <Setter Property="Background" Value="{x:Null}"/>
+                    <Setter Property="BorderBrush" Value="{x:Null}"/>
+                    <Setter Property="Foreground" Value="Black"/>
+                </Style>
+            </DataGrid.CellStyle>
+            <DataGrid.Columns>
+                <DataGridTemplateColumn  Header="" Width="50" CanUserSort="False">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type DataGridRow}}, Path=Header}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,5,0"></TextBlock>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="音乐标题" Width="250*" Binding="{Binding Title, Mode=OneWay}"/>
+                <DataGridTextColumn Header="歌手" Width="180*" Binding="{Binding Singer, Mode=OneWay}"/>
+                <DataGridTextColumn Header="专辑" Width="150*" Binding="{Binding Album, Mode=OneWay}"/>
+                <DataGridTemplateColumn  Header="" Width="100" CanUserSort="False">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Content="下载" Tag="{Binding}" Click="NetMusicDownloadButton_Click" ></Button>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</Page>
