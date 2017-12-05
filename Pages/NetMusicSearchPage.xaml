@@ -4,14 +4,21 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:MusicCollection.Pages"
+      xmlns:gif="http://wpfanimatedgif.codeplex.com"
       mc:Ignorable="d" Loaded="Page_Loaded"
       d:DesignHeight="570" d:DesignWidth="822"
       Title="NetMusicSearchPage">
     <Page.Resources>
-        <local:NetMusicTypeRadioBtnViewModel x:Key="RadioBtnViewModel" />
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="..\Resources\GlassButton.xaml"/>                
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </Page.Resources>
     <Grid>
-        <StackPanel Name="NetMusicTypeRadio" Margin="30,18,30,0" Height="18" VerticalAlignment="Top" DataContext="{StaticResource RadioBtnViewModel}">
+        <Image Name="LodingImage" Visibility="Hidden" gif:ImageBehavior.AnimatedSource="..\Resources\images\loading.gif" Height="18" Width="18" Margin="25,15,777,534"/>
+
+        <StackPanel Name="NetMusicTypeRadio" Margin="50,18,30,0" Height="18" VerticalAlignment="Top" DataContext="{StaticResource RadioBtnViewModel}">
             <ItemsControl ItemsSource="{Binding Insertions}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -90,7 +97,16 @@
                 <DataGridTemplateColumn  Header="" Width="100" CanUserSort="False">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Button Content="下载" Tag="{Binding}" Click="NetMusicDownloadButton_Click" ></Button>
+                            <StackPanel Orientation="Horizontal" Margin="0,-2">
+                                <!--<Button Content="下载" Tag="{Binding}" Click="NetMusicDownloadButton_Click" ></Button>-->
+                                <Button Click="NetMusicDownloadButton_Click" Tag="{Binding}" Style="{StaticResource MouseOverOpacity}" Margin="2,0" Height="20" Width="20" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}">
+                                    <Image Width="18" Height="18" Source="..\Resources\images\download.png"/>
+                                </Button>
+                                <Button Click="NetMusicPlayButton_Click" Tag="{Binding}" Style="{StaticResource MouseOverOpacity}" Height="20" Margin="2,0" Width="20" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}">
+                                    <Image Width="18" Height="18" Source="..\Resources\images\item_play.png"/>
+                                </Button>
+                                <!--<Image Visibility="Hidden" gif:ImageBehavior.AnimatedSource="..\Resources\images\loading.gif" Height="18" Width="18" Margin="2,0"/>-->
+                            </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>

@@ -89,22 +89,10 @@ namespace MusicCollection.Pages
         {
             Dispatcher.Invoke(new Action(() =>
             {
-                LocalMusicList.Clear();
                 RefreshMusicCavas.Visibility = Visibility.Visible;
             }));
             var count = 0;
-            foreach (var item in FolderList)
-            {
-                DirectoryInfo TheFolder = new DirectoryInfo(item);
-                foreach (FileInfo NextFile in TheFolder.GetFiles())
-                {
-                    var pattern = ".*\\.(mp3|flac|wma|wav|ape)$";
-                    if (Regex.IsMatch(NextFile.Name, pattern, RegexOptions.IgnoreCase))
-                    {
-                        count++;
-                    }
-                }
-            }
+            List<string> pathList = new List<string>();
             foreach (var item in FolderList)
             {
                 DirectoryInfo TheFolder = new DirectoryInfo(item);
@@ -113,27 +101,53 @@ namespace MusicCollection.Pages
                     var pattern = ".+?(\\.mp3|\\.wav|\\.flac|\\.wma|\\.ape|\\.m4a)$";
                     if (Regex.IsMatch(NextFile.Name, pattern, RegexOptions.IgnoreCase))
                     {
-                        if (Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
-                        {
-                            var music = new Music(item + NextFile.Name);
-                            Dispatcher.Invoke(new Action(() => {
-                                LocalMusicList.Add(music);
-                            }));
-                        }
-                        else
-                        {
-                            object[] args = new object[] { LocalMusicList, item, NextFile.Name };
-                            Thread staThread = new Thread(new ParameterizedThreadStart(RefreshLocalListSTA));
-                            staThread.SetApartmentState(ApartmentState.STA);
-                            staThread.Start(args);
-                            staThread.Join();
-                        }
-                        Dispatcher.Invoke(new Action(() =>
-                        {
-                            RefreshMusicCountLable.Content = LocalMusicList.Count + "/" + count;
-                        }));
+                        pathList.Add(item + "\\" + NextFile.Name);
+                        count++;
                     }
                 }
+            }
+            List<Music> WillBeRemove = new List<Music>();
+            foreach (var item in LocalMusicList)
+            {
+                if (pathList.Contains(item.Url))
+                {
+                    pathList.Remove(item.Url);
+                }
+                else
+                {
+                    WillBeRemove.Add(item);
+                }
+            }
+
+            for (int i = 0; i < WillBeRemove.Count; i++)
+            {
+                Dispatcher.Invoke(new Action(() =>
+                {
+                    LocalMusicList.Remove(WillBeRemove[i]);
+                }));
+            }
+
+            foreach (var item in pathList)
+            {
+                if (Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
+                {
+                    var music = new Music(item);
+                    Dispatcher.Invoke(new Action(() => {
+                        LocalMusicList.Add(music);
+                    }));
+                }
+                else
+                {
+                    object[] args = new object[] { LocalMusicList, item };
+                    Thread staThread = new Thread(new ParameterizedThreadStart(RefreshLocalListSTA));
+                    staThread.SetApartmentState(ApartmentState.STA);
+                    staThread.Start(args);
+                    staThread.Join();
+                }
+                Dispatcher.Invoke(new Action(() =>
+                {
+                    RefreshMusicCountLable.Content = LocalMusicList.Count + "/" + count;
+                }));
             }
             Dispatcher.Invoke(new Action(() => {
                 RefreshMusicCavas.Visibility = Visibility.Hidden;
@@ -144,8 +158,7 @@ namespace MusicCollection.Pages
             object[] args = (object[])o;
             var list = (MusicObservableCollection<Music>)args[0];
             var item = (string)args[1];
-            var Name = (string)args[2];
-            var music = new Music(item + Name);
+            var music = new Music(item);
             Dispatcher.Invoke(new Action(() =>
             {
                 list.Add(music);

@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using MusicCollection.MusicManager;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -6,25 +7,89 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Net;
 using System.Text;
+using System.Threading;
 
 namespace MusicCollection.MusicAPI
 {
     class NetMusicHelper
     {
-        private static Dictionary<NetMusicType, string> NetAPI = new Dictionary<NetMusicType, string>()
+        private static Dictionary<NetMusicType, string> SearchAPI = new Dictionary<NetMusicType, string>()
         {
-            { NetMusicType.CloudMusic, "http://music.163.com/api/search/pc?s={0}&offset=0&limit=10&type=1" }
+            { NetMusicType.CloudMusic, "http://music.163.com/api/search/pc?s={0}&offset=0&limit=30&type=1" }
         };
+
+        private static Dictionary<NetMusicType, string> DownloadLinkAPI = new Dictionary<NetMusicType, string>()
+        {
+            { NetMusicType.CloudMusic, "http://link.hhtjim.com/163/{0}.mp3 " }
+        };
+
+        public static Music GetMusicByMusicID(NetMusic net_music)
+        {
+            var path = GetMusicUrlOfLocal(DownloadLinkAPI[net_music.Origin], net_music.MusicID, net_music.Title + " - " + net_music.Singer);
+            //Music music = new Music();
+            var list = new List<Music>();
+            if (Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
+            {
+                list.Add(new Music(path));
+            }
+            else
+            {
+                object[] args = new object[] { list, path };
+                Thread staThread = new Thread(new ParameterizedThreadStart(NewMusicSTA));
+                staThread.SetApartmentState(ApartmentState.STA);
+                staThread.Start(args);
+                staThread.Join();
+            }
+            return new Music(list[0], net_music);
+        }
+
+        private static void NewMusicSTA(object o)
+        {
+            object[] args = (object[])o;
+            var list = (List<Music>)args[0];
+            var path = (string)args[1];
+            list.Add(new Music(path));
+        }
+
+
         public static ObservableCollection<NetMusic> GetNetMusicList(string SearchStr, NetMusicType type)
         {
-            var retString = SendDataByGET(string.Format(NetAPI[type], SearchStr));
+            var retString = SendDataByGET(string.Format(SearchAPI[type], SearchStr));
             return GetNetMusicListBySources(retString, type);
         }
+        
+        private static string GetMusicUrlOfLocal(string Url, string MusicID, string MusicName)
+        {
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(string.Format(Url, MusicID));
+
+            //request.Referer = "http://music.163.com/";
+            request.Method = "GET";
+            request.ContentType = "application/x-www-form-urlencoded";
+            request.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.71 Safari/537.36";
+
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            Stream stream = response.GetResponseStream();
+            if (!Directory.Exists("DownLoad\\Music\\"))//如果不存在就创建文件夹
+            {
+                Directory.CreateDirectory("DownLoad\\Music\\");
+            }
+            var path = "DownLoad\\Music\\" + MusicName + ".mp3";
+            StreamWriter sw = new StreamWriter(path);
+            stream.CopyTo(sw.BaseStream);
+
+            sw.Flush();
+            sw.Close();
+
+            stream.Close();
+            return Path.GetFullPath(path);
+        }
+
+
         private static string SendDataByGET(string Url)	//读取string
         {
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(Url);
 
-            request.Referer = "http://music.163.com/";
+            //request.Referer = "http://music.163.com/";
             request.Method = "POST";
             request.ContentType = "text/html;charset=UTF-8";
 

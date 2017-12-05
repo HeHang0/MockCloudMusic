@@ -37,7 +37,7 @@ namespace MusicCollection
         public int CurrentIndex = -1;
         Timer timer = new System.Timers.Timer();
 
-        private LocalMusicPage LocalMusic;
+        public LocalMusicPage LocalMusic;
         private MusicDetailPage MusicDetail;
         private NetMusicSearchPage NetMusicSearch;
 
@@ -132,7 +132,10 @@ namespace MusicCollection
             {
                 Dispatcher.Invoke(new Action(() => {
                     CurrentTimeLabel.Content = bsp.CurrentTime.ToString(@"mm\:ss");
-                    MusicSlider.Value = (bsp.CurrentTime.TotalSeconds / bsp.TotalTime.TotalSeconds) * 10;
+                    if (bsp.TotalTime.TotalSeconds != 0)
+                    {
+                        MusicSlider.Value = (bsp.CurrentTime.TotalSeconds / bsp.TotalTime.TotalSeconds) * 10;
+                    }
                 }));
             }
             else if (bsp.IsStop && CurrentMusicList.Count > 0)
@@ -459,15 +462,17 @@ namespace MusicCollection
                 NetMusicSearch = new NetMusicSearchPage(this);
             }
             PageFrame.Content = NetMusicSearch;
-
+            NetMusicSearch.LodingImage.Visibility = Visibility.Visible;
             var type = NetMusicSearch.NetMusicTypeRadio.DataContext as NetMusicTypeRadioBtnViewModel;
 
             NetMusicList.Clear();
-            var t = NetMusicHelper.GetNetMusicList(searchStr, type.SelectItem());
-            foreach (var item in t)
+            Task<ObservableCollection<NetMusic>> t = Task.Factory.StartNew(() => NetMusicHelper.GetNetMusicList(searchStr, type.SelectItem()));
+            t.Wait();
+            foreach (var item in t.Result)
             {
                 NetMusicList.Add(item);
             }
+            NetMusicSearch.LodingImage.Visibility = Visibility.Hidden;
         }
     }
 }

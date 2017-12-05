@@ -1,4 +1,5 @@
 ﻿using System;
+using MusicCollection.MusicAPI;
 
 namespace MusicCollection.MusicManager
 {
@@ -37,6 +38,14 @@ namespace MusicCollection.MusicManager
             Duration = time;
             Url = url;
         }
+
+        public Music(Music music, NetMusic net_music) : this(music)
+        {
+            Title = net_music.Title;
+            Singer = net_music.Singer;
+            Album = net_music.Album;
+        }
+
         /// <summary>
         /// 音乐标题
         /// </summary>

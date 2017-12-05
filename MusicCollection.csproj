@@ -230,6 +230,8 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="packages\TagLib\lib\taglib-sharp.dll" />
+    <Resource Include="Resources\images\item_play.png" />
+    <Resource Include="Resources\images\download.png" />
     <Resource Include="Resources\images\search.png" />
     <Resource Include="Resources\images\page_hidden.png" />
     <Resource Include="Resources\images\disc.png" />

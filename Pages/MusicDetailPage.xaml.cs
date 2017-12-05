@@ -91,7 +91,7 @@ namespace MusicCollection.Pages
                 }
                 foreach (var item in Lyric)
                 {
-                    LyricTextBlock.Inlines.Add(new Run(item.Content + "\n"));
+                    LyricTextBlock.Inlines.Add(new Run(item.Content + "\n\n"));
                 }
                 Count = LyricTextBlock.Inlines.Count;
                 CurrentLyricIndex = 0;

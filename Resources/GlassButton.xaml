@@ -1,7 +1,9 @@
 ﻿<ResourceDictionary 
   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" >
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"     
+  xmlns:local="clr-namespace:MusicCollection.Pages">
 
+    <local:NetMusicTypeRadioBtnViewModel x:Key="RadioBtnViewModel" />
 
     <Style x:Key="GlassButton" TargetType="{x:Type Button}">
         <Setter Property="SnapsToDevicePixels" Value="True"/>

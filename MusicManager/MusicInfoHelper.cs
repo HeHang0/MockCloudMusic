@@ -16,14 +16,6 @@ namespace MusicCollection.MusicManager
             ShellClass sh = new ShellClass();
             Folder dir = sh.NameSpace(Path.GetDirectoryName(path));
             FolderItem item = dir.ParseName(Path.GetFileName(path));
-            StringBuilder sb = new StringBuilder();
-            for (int i = -1; i < 50; i++)
-            {
-                sb.Append(i.ToString());
-                sb.Append(":");
-                sb.Append(dir.GetDetailsOf(item, i));
-                sb.Append("\r\n");
-            }
             Info.Add(MusicInfos.Title, dir.GetDetailsOf(item, 21));
             Info.Add(MusicInfos.Singer, dir.GetDetailsOf(item, 13));
             Info.Add(MusicInfos.Album, dir.GetDetailsOf(item, 14));
@@ -31,6 +23,16 @@ namespace MusicCollection.MusicManager
             Info.Add(MusicInfos.BitRate, dir.GetDetailsOf(item, 28));
             Info.Add(MusicInfos.Duration, dir.GetDetailsOf(item, 27));
             Info.Add(MusicInfos.AlbumImageUrl, GetImage(path));
+
+            if (string.IsNullOrWhiteSpace(Info[MusicInfos.Singer]))
+            {
+                Info[MusicInfos.Singer] = dir.GetDetailsOf(item, 232);
+            }
+            if (string.IsNullOrWhiteSpace(Info[MusicInfos.Title]))
+            {
+                Info[MusicInfos.Title] = Path.GetFileName(path);
+            }
+
             var virtualLrc = Path.GetDirectoryName(path) + "\\" + Path.GetFileNameWithoutExtension(path) + ".lrc";
             if (File.Exists(virtualLrc))
             {
