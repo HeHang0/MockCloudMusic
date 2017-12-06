@@ -37,6 +37,22 @@ namespace MusicCollection.MusicManager
             return index;
         }
 
+        public int GetMusicIndexByPath(string path)
+        {
+            var list = this as MusicObservableCollection<Music>;
+            if (list != null)
+            {
+                for (int i = 0; i < this.Count; i++)
+                {
+                    if (list[i].Url == path)
+                    {
+                        return i;
+                    }
+                }
+            }
+            return -1;
+        }
+
         public new void Clear()
         {
             base.Clear();

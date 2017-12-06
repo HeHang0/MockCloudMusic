@@ -17,17 +17,22 @@ namespace MusicCollection.MusicAPI
     {
         private static Dictionary<NetMusicType, string> SearchAPI = new Dictionary<NetMusicType, string>()
         {
-            { NetMusicType.CloudMusic, "http://music.163.com/api/search/pc?s={0}&offset=0&limit=30&type=1" }
+            { NetMusicType.CloudMusic, "http://music.163.com/api/search/pc?s={0}&offset=0&limit=50&type=1" }
         };
 
         private static Dictionary<NetMusicType, string> DownloadLinkAPI = new Dictionary<NetMusicType, string>()
         {
-            { NetMusicType.CloudMusic, "http://link.hhtjim.com/163/{0}.mp3 " }
+            { NetMusicType.CloudMusic, "http://link.hhtjim.com/163/{0}.mp3" },
+            { NetMusicType.XiaMiMusic, "https://music-api-jwzcyzizya.now.sh/api/search/song/xiami?&limit=1&page=1&key={0}-{1}-{2}/" }
         };
 
         public static Music GetMusicByMusicID(NetMusic net_music)
         {
-            var path = GetMusicUrlOfLocal(DownloadLinkAPI[net_music.Origin], net_music.MusicID, net_music.Title + " - " + net_music.Singer);
+            var path = GetMusicUrlOfLocal(DownloadLinkAPI[net_music.Origin], net_music);
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return null;
+            }
             //Music music = new Music();
             var list = new List<Music>();
             if (Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
@@ -56,26 +61,58 @@ namespace MusicCollection.MusicAPI
 
         public static ObservableCollection<NetMusic> GetNetMusicList(string SearchStr, NetMusicType type)
         {
-            var retString = SendDataByGET(string.Format(SearchAPI[type], SearchStr));
+            var retString = SendDataByPOST(string.Format(SearchAPI[type], SearchStr));
             return GetNetMusicListBySources(retString, type);
         }
         
-        private static string GetMusicUrlOfLocal(string Url, string MusicID, string MusicName)
+        private static string GetMusicUrlOfLocal(string Url, NetMusic netMusic)
         {
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(string.Format(Url, MusicID));
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(string.Format(Url, netMusic.MusicID));
 
             //request.Referer = "http://music.163.com/";
             request.Method = "GET";
             request.ContentType = "application/x-www-form-urlencoded";
             request.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.71 Safari/537.36";
+            
+            HttpWebResponse response;
+            try
+            {
+                try
+                {
+                    response = (HttpWebResponse)request.GetResponse();
+                }
+                catch (Exception)
+                {
+                    var retString = SendDataByGET(string.Format(DownloadLinkAPI[NetMusicType.XiaMiMusic], netMusic.Title, netMusic.Album ,netMusic.Singer));
+                    if (string.IsNullOrWhiteSpace(retString))
+                    {
+                        return "";
+                    }
+                    var url = GetNetMusicLinkFromXiaMi(retString);
+                    request = (HttpWebRequest)WebRequest.Create(url);
+                    request.Method = "GET";
+                    request.ContentType = "application/x-www-form-urlencoded";
+                    request.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.71 Safari/537.36";
+                    response = (HttpWebResponse)request.GetResponse();
+                }
+            }
+            catch (Exception)
+            {
+                return "";
+            }
+            
 
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             Stream stream = response.GetResponseStream();
             if (!Directory.Exists("DownLoad\\Music\\"))//如果不存在就创建文件夹
             {
                 Directory.CreateDirectory("DownLoad\\Music\\");
             }
-            var path = "DownLoad\\Music\\" + MusicName + ".mp3";
+            var path = "DownLoad\\Music\\" + netMusic.Title + " - " + netMusic.Singer + ".mp3";
+            if (File.Exists(Path.GetFullPath(path)))
+            {
+                stream.Close();
+                return Path.GetFullPath(path);
+            }
             StreamWriter sw = new StreamWriter(path);
             stream.CopyTo(sw.BaseStream);
 
@@ -86,13 +123,32 @@ namespace MusicCollection.MusicAPI
             return Path.GetFullPath(path);
         }
 
+        private static string SendDataByPOST(string Url)	//读取string
+        {
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(Url);
+
+            //request.Referer = "http://music.163.com/";
+            request.Method = "POST";
+            request.ContentType = "text/html;charset=UTF-8";
+
+
+
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            Stream myResponseStream = response.GetResponseStream();
+            StreamReader myStreamReader = new StreamReader(myResponseStream, Encoding.GetEncoding("utf-8"));
+            string retString = myStreamReader.ReadToEnd();
+            myStreamReader.Close();
+            myResponseStream.Close();
+
+            return retString;
+        }
 
         private static string SendDataByGET(string Url)	//读取string
         {
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(Url);
 
             //request.Referer = "http://music.163.com/";
-            request.Method = "POST";
+            request.Method = "GET";
             request.ContentType = "text/html;charset=UTF-8";
 
 
@@ -114,6 +170,19 @@ namespace MusicCollection.MusicAPI
                     return GetCloudMusicList(Sources);
             }
             return new ObservableCollection<NetMusic>();
+        }
+
+        private static string GetNetMusicLinkFromXiaMi(string Sources)
+        {
+            JObject jo = (JObject)JsonConvert.DeserializeObject(Sources);
+            try
+            {
+                return jo["songList"][0]["file"].ToString();
+            }
+            catch (Exception)
+            {
+                return "";
+            }
         }
 
         private static ObservableCollection<NetMusic> GetCloudMusicList(string JsonStr)

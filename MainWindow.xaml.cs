@@ -198,31 +198,28 @@ namespace MusicCollection
         }
 
         public void Play(Music music = null)
-        {            
-            if (CurrentIndex >= 0 && CurrentIndex < CurrentMusicList.Count)
+        {
+            if (music != null)
             {
-                bsp.FileName = music == null ? CurrentMusicList[CurrentIndex].Url :music.Url;
-                bsp.Play();
-                //SetMiniLable(CurrentMusicList[CurrentIndex]);
-                ToTalTimeLabel.Content = bsp.TotalTime.ToString(@"mm\:ss");
-                timer.Start();
+                CurrentIndex = CurrentMusicList.Add(music);
+                bsp.Stop();
             }
-            else if (CurrentMusicList.Count > 0)
+            else if (CurrentMusicList.Count > 0 && CurrentIndex < 0)
             {
                 CurrentIndex = 0;
-                bsp.FileName = music == null ? CurrentMusicList[CurrentIndex].Url : music.Url;
-                bsp.Play();
-                ToTalTimeLabel.Content = bsp.TotalTime.ToString(@"mm\:ss");
-                timer.Start();
             }
 
-            if (CurrentIndex >= 0)
+            if (CurrentIndex >= 0 && CurrentIndex < CurrentMusicList.Count)
             {
+                bsp.FileName = CurrentMusicList[CurrentIndex].Url;
+                bsp.Play();
                 PlayMusicButton.Visibility = Visibility.Hidden;
                 PauseMusicButton.Visibility = Visibility.Visible;
                 Title = CurrentMusicList[CurrentIndex].Title + " - " + CurrentMusicList[CurrentIndex].Singer;
                 HistoryMusicList.Add(new MusicHistory(CurrentMusicList[CurrentIndex]));
                 SetMiniLable(CurrentMusicList[CurrentIndex]);
+                ToTalTimeLabel.Content = bsp.TotalTime.ToString(@"mm\:ss");
+                timer.Start();
             }
         }
 

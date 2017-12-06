@@ -46,19 +46,22 @@ namespace MusicCollection.Pages
 
         private void NetMusicDataGrid_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            
+            if (sender != null)
+            {
+                DataGridRow dgr = sender as DataGridRow;
+                var netMusic = dgr.Item as NetMusic;
+                if (netMusic != null)
+                {
+                    CheckAndDownLoad(netMusic, true);
+                }
+            }
         }
 
         private void NetMusicDownloadButton_Click(object sender, RoutedEventArgs e)
         {
             var btn = sender as Button;
             var netMusic = btn.Tag as NetMusic;
-            LodingImage.Visibility = Visibility.Visible;
-            netMusic.IsDownLoading = true;
-
-            Thread thread = new Thread(new ThreadStart(() => DownLoadMusic(netMusic, false)));
-            thread.IsBackground = true;
-            thread.Start();
+            CheckAndDownLoad(netMusic, false);
         }
 
         private void NetMusicPlayButton_Click(object sender, RoutedEventArgs e)
@@ -66,9 +69,29 @@ namespace MusicCollection.Pages
             var btn = sender as Button;
             var netMusic = btn.Tag as NetMusic;
             LodingImage.Visibility = Visibility.Visible;
-            netMusic.IsDownLoading = true;
 
-            Thread thread = new Thread(new ThreadStart(() => DownLoadMusic(netMusic, true)));
+            CheckAndDownLoad(netMusic, true);
+        }
+
+        private void CheckAndDownLoad(NetMusic netMusic, bool NeedPlay)
+        {
+            foreach (var item in ParentWindow.LocalMusic.FolderList)
+            {
+                var path = item + netMusic.Title + " - " + netMusic.Singer + ".mp3";
+                if (File.Exists(path))
+                {
+                    if (NeedPlay)
+                    {
+                        var indexL = ParentWindow.LocalMusic.LocalMusicList.Add(new Music(path));
+
+                        ParentWindow.Play(ParentWindow.LocalMusic.LocalMusicList[indexL]);
+                    }
+                    return;
+                }
+            }
+            LodingImage.Visibility = Visibility.Visible;
+            netMusic.IsDownLoading = true;
+            Thread thread = new Thread(new ThreadStart(() => DownLoadMusic(netMusic, NeedPlay)));
             thread.IsBackground = true;
             thread.Start();
         }
@@ -76,6 +99,14 @@ namespace MusicCollection.Pages
         private void DownLoadMusic(NetMusic netMusic, bool NeedPlay)
         {
             var music = NetMusicHelper.GetMusicByMusicID(netMusic);
+            if (music == null)
+            {
+                Dispatcher.Invoke(new Action(() =>
+                {
+                    LodingImage.Visibility = Visibility.Hidden;
+                }));
+                return;
+            }
             Dispatcher.Invoke(new Action(() =>
             {
                 if (!ParentWindow.LocalMusic.FolderList.Contains(Path.GetDirectoryName(music.Url) + "\\"))
@@ -88,8 +119,6 @@ namespace MusicCollection.Pages
                 netMusic.IsDownLoaded = true;
                 if (NeedPlay)
                 {
-                    ParentWindow.CurrentIndex = ParentWindow.CurrentMusicList.Add(music);
-                    ParentWindow.bsp.Stop();
                     ParentWindow.Play(music);
                 }
             }));            
