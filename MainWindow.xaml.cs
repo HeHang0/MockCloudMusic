@@ -21,6 +21,7 @@ using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using System.Collections.ObjectModel;
 using MusicCollection.MusicAPI;
+using System.Threading;
 
 namespace MusicCollection
 {
@@ -35,7 +36,7 @@ namespace MusicCollection
         public ObservableCollection<NetMusic> NetMusicList = new ObservableCollection<NetMusic>();
         
         public int CurrentIndex = -1;
-        Timer timer = new System.Timers.Timer();
+        System.Timers.Timer timer = new System.Timers.Timer();
 
         public LocalMusicPage LocalMusic;
         private MusicDetailPage MusicDetail;
@@ -60,7 +61,7 @@ namespace MusicCollection
 
         private void InitMusic()
         {
-            CurrentMusicList.OnCountChange += CurrentMusicList_OnCountChange;
+            CurrentMusicList.CollectionChanged += CurrentMusicList_OnCountChange;
             var content = Environment.GetFolderPath(Environment.SpecialFolder.MyMusic) + "\\";
 
             if (!File.Exists("CurrentMusicList.json"))
@@ -104,7 +105,7 @@ namespace MusicCollection
             CurrentMusicListCountLable.DataContext = CurrentMusicList;
         }
 
-        private void CurrentMusicList_OnCountChange(object sender)
+        private void CurrentMusicList_OnCountChange(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
             if (CurrentMusicList.Count == 0)
             {
@@ -466,13 +467,26 @@ namespace MusicCollection
             var type = NetMusicSearch.NetMusicTypeRadio.DataContext as NetMusicTypeRadioBtnViewModel;
 
             NetMusicList.Clear();
-            Task<ObservableCollection<NetMusic>> t = Task.Factory.StartNew(() => NetMusicHelper.GetNetMusicList(searchStr, type.SelectItem()));
-            t.Wait();
-            foreach (var item in t.Result)
+
+            Thread thread = new Thread(new ThreadStart(() => GetNetMusicList(searchStr, type.SelectItem())));
+            thread.IsBackground = true;
+            thread.Start();            
+        }
+
+        private void GetNetMusicList(string searchStr, NetMusicType netMusicType)
+        {
+            var t = NetMusicHelper.GetNetMusicList(searchStr, netMusicType);
+            foreach (var item in t)
             {
-                NetMusicList.Add(item);
+                Dispatcher.Invoke(new Action(() =>
+                {
+                    NetMusicList.Add(item);
+                }));
             }
-            NetMusicSearch.LodingImage.Visibility = Visibility.Hidden;
+            Dispatcher.Invoke(new Action(() =>
+            {
+                NetMusicSearch.LodingImage.Visibility = Visibility.Hidden;
+            }));
         }
     }
 }

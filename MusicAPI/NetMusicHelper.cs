@@ -2,10 +2,12 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Net;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 
@@ -130,6 +132,41 @@ namespace MusicCollection.MusicAPI
                 list.Add(music);
             }
             return list;
+        }
+
+        /// <summary>
+        /// 执行JS方法
+        /// </summary>
+        /// <param name="methodName">方法名</param>
+        /// <param name="para">参数</param>
+        /// <returns></returns>
+        private static string GetJsMethd(string methodName, object[] para)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append("package aa{");
+            sb.Append(" public class JScript {");
+            sb.Append("     public static function test(str) {");
+            sb.Append("         return 'Hello,'+str;");
+            sb.Append("     }");
+            sb.Append(" }");
+            sb.Append("}");
+
+            CompilerParameters parameters = new CompilerParameters();
+
+            parameters.GenerateInMemory = true;
+
+            CodeDomProvider _provider = new Microsoft.JScript.JScriptCodeProvider();
+
+            CompilerResults results = _provider.CompileAssemblyFromSource(parameters, sb.ToString());
+
+            Assembly assembly = results.CompiledAssembly;
+
+            Type _evaluateType = assembly.GetType("aa.JScript");
+
+            object obj = _evaluateType.InvokeMember("test", BindingFlags.InvokeMethod,
+            null, null, para);
+
+            return obj.ToString();
         }
     }
     public enum NetMusicType

@@ -1,10 +1,14 @@
 ﻿<ResourceDictionary 
   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"     
-  xmlns:local="clr-namespace:MusicCollection.Pages">
+  xmlns:pages="clr-namespace:MusicCollection.Pages"    
+  xmlns:control="clr-namespace:System.Windows.Controls;assembly=PresentationFramework" 
+  xmlns:resources="clr-namespace:MusicCollection.Resources">
 
-    <local:NetMusicTypeRadioBtnViewModel x:Key="RadioBtnViewModel" />
-
+    <pages:NetMusicTypeRadioBtnViewModel x:Key="RadioBtnViewModel" />
+    <!--<resources:BoolToVisibility x:Key="BoolToVisConverter" />-->
+    <control:BooleanToVisibilityConverter x:Key="BoolToValueConverter" />
+    
     <Style x:Key="GlassButton" TargetType="{x:Type Button}">
         <Setter Property="SnapsToDevicePixels" Value="True"/>
         <Setter Property="OverridesDefaultStyle" Value="True"/>

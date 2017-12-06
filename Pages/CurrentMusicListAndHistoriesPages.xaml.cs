@@ -33,8 +33,8 @@ namespace MusicCollection.Pages
             CurrentMusicOrHistoriesDataGrid.DataContext = ParentWindow.CurrentMusicList;
             CurrentMusicCountLable.Content = $"总{ParentWindow.CurrentMusicList.Count}首";
             HistoriesMusicCountLable.Content = $"总{ParentWindow.HistoryMusicList.Count}首";
-            ParentWindow.CurrentMusicList.OnCountChange += CurrentMusicList_OnCountChange;
-            ParentWindow.HistoryMusicList.OnCountChange += HistoryMusicList_OnCountChange;
+            ParentWindow.CurrentMusicList.CollectionChanged += CurrentMusicList_OnCountChange;
+            ParentWindow.HistoryMusicList.CollectionChanged += HistoryMusicList_OnCountChange;
         }
         
 
@@ -72,13 +72,13 @@ namespace MusicCollection.Pages
             }
         }
 
-        private void HistoryMusicList_OnCountChange(object sender)
+        private void HistoryMusicList_OnCountChange(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
             HistoriesMusicCountLable.Content = $"总{ParentWindow.HistoryMusicList.Count}首";
             UpdateHistoriesTimeDescribe();
         }
 
-        private void CurrentMusicList_OnCountChange(object sender)
+        private void CurrentMusicList_OnCountChange(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
             CurrentMusicCountLable.Content = $"总{ParentWindow.CurrentMusicList.Count}首";
         }

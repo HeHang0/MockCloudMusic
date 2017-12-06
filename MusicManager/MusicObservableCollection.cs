@@ -13,11 +13,11 @@ namespace MusicCollection.MusicManager
     public class MusicObservableCollection<T>: ObservableCollection<T>, INotifyPropertyChanged
     {        
         public delegate void CountChangeHandle(object sender);
-        public event CountChangeHandle OnCountChange;
-        public virtual void CountChange()
-        {
-            OnCountChange?.Invoke(Count);
-        }
+        //public event CountChangeHandle OnCountChange;
+        //public virtual void CountChange()
+        //{
+        //    OnCountChange?.Invoke(Count);
+        //}
 
         public new int Add(T item)
         {
@@ -31,7 +31,7 @@ namespace MusicCollection.MusicManager
             {
                 base.Add(item);
                 index = this.Count - 1;
-                CountChange();
+                //CountChange();
             }
             
             return index;
@@ -40,20 +40,20 @@ namespace MusicCollection.MusicManager
         public new void Clear()
         {
             base.Clear();
-            CountChange();
+            //CountChange();
         }
 
         public new bool Remove(T item)
         {
             var IsRemove = base.Remove(item);
-            CountChange();
+            //CountChange();
             return IsRemove;
         }
 
         public new void RemoveAt(int index)
         {
             base.RemoveAt(index);
-            CountChange();
+            //CountChange();
         }
 
         private bool IsExist(Music music, out int index)

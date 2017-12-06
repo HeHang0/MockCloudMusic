@@ -65,10 +65,10 @@ namespace MusicCollection.Pages
 
             LocalMusicDataGrid.DataContext = LocalMusicList;
             LocalMusicCountLable.Content = LocalMusicList.Count + "首音乐";
-            LocalMusicList.OnCountChange += LocalMusicList_OnCountChange;
+            LocalMusicList.CollectionChanged += LocalMusicList_OnCountChange; ;
         }
 
-        private void LocalMusicList_OnCountChange(object sender)
+        private void LocalMusicList_OnCountChange(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
             LocalMusicCountLable.Content = LocalMusicList.Count + "首音乐";
         }

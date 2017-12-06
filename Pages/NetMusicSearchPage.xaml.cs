@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -52,32 +53,46 @@ namespace MusicCollection.Pages
         {
             var btn = sender as Button;
             var netMusic = btn.Tag as NetMusic;
-            DownLoadMusic(netMusic);
+            LodingImage.Visibility = Visibility.Visible;
+            netMusic.IsDownLoading = true;
+
+            Thread thread = new Thread(new ThreadStart(() => DownLoadMusic(netMusic, false)));
+            thread.IsBackground = true;
+            thread.Start();
         }
 
         private void NetMusicPlayButton_Click(object sender, RoutedEventArgs e)
         {
             var btn = sender as Button;
             var netMusic = btn.Tag as NetMusic;
-            var music = DownLoadMusic(netMusic);
-            ParentWindow.CurrentIndex = ParentWindow.CurrentMusicList.Add(music);
-            ParentWindow.bsp.Stop();
-            ParentWindow.Play(music);
+            LodingImage.Visibility = Visibility.Visible;
+            netMusic.IsDownLoading = true;
+
+            Thread thread = new Thread(new ThreadStart(() => DownLoadMusic(netMusic, true)));
+            thread.IsBackground = true;
+            thread.Start();
         }
 
-        private Music DownLoadMusic(NetMusic netMusic)
+        private void DownLoadMusic(NetMusic netMusic, bool NeedPlay)
         {
-            LodingImage.Visibility = Visibility.Visible;
-            Task<Music> t = Task.Factory.StartNew(() => NetMusicHelper.GetMusicByMusicID(netMusic));
-            t.Wait();
-            var music = t.Result;
-            if (!ParentWindow.LocalMusic.FolderList.Contains(Path.GetDirectoryName(music.Url) + "\\"))
+            var music = NetMusicHelper.GetMusicByMusicID(netMusic);
+            Dispatcher.Invoke(new Action(() =>
             {
-                ParentWindow.LocalMusic.FolderList.Add(Path.GetDirectoryName(music.Url) + "\\");
-            }
-            ParentWindow.LocalMusic.LocalMusicList.Add(music);
-            LodingImage.Visibility = Visibility.Hidden;
-            return music;
+                if (!ParentWindow.LocalMusic.FolderList.Contains(Path.GetDirectoryName(music.Url) + "\\"))
+                {
+                    ParentWindow.LocalMusic.FolderList.Add(Path.GetDirectoryName(music.Url) + "\\");
+                }
+                ParentWindow.LocalMusic.LocalMusicList.Add(music);
+                LodingImage.Visibility = Visibility.Hidden;
+                netMusic.IsDownLoading = false;
+                netMusic.IsDownLoaded = true;
+                if (NeedPlay)
+                {
+                    ParentWindow.CurrentIndex = ParentWindow.CurrentMusicList.Add(music);
+                    ParentWindow.bsp.Stop();
+                    ParentWindow.Play(music);
+                }
+            }));            
         }
     }
 }

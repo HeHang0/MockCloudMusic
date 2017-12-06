@@ -48,6 +48,7 @@
     <ApplicationIcon>logo.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.JScript" />
     <Reference Include="NAudio, Version=1.8.3.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\NAudio.1.8.3\lib\net35\NAudio.dll</HintPath>
       <Private>True</Private>
@@ -114,6 +115,7 @@
       <DependentUpon>NetMusicSearchPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Pages\NetMusicTypeRadioBtnViewModel.cs" />
+    <Compile Include="Resources\BoolToVisibility.cs" />
     <Compile Include="SoundPlayer\BSoundPlayer.cs" />
     <Page Include="ChildWondows\LocalMusicFolderWindow.xaml">
       <SubType>Designer</SubType>
