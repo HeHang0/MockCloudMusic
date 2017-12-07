@@ -71,6 +71,7 @@ namespace MusicCollection.Pages
             LodingImage.Visibility = Visibility.Visible;
 
             CheckAndDownLoad(netMusic, true);
+
         }
 
         private void CheckAndDownLoad(NetMusic netMusic, bool NeedPlay)

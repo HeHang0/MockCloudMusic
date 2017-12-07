@@ -231,6 +231,7 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="bin\Debug\1.html" />
     <Content Include="packages\TagLib\lib\taglib-sharp.dll" />
     <Resource Include="Resources\images\item_play.png" />
     <Resource Include="Resources\images\download.png" />

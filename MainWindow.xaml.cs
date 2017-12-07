@@ -59,6 +59,12 @@ namespace MusicCollection
             MusicDetailFrame.Content = new MusicDetailPage(this);
         }
 
+        //private bool IsOnlinePlay = false;
+        private void PlayOnlineBrowser_LoadCompleted(object sender, NavigationEventArgs e)
+        {
+            MessageBox.Show("加载完成，开始播放");
+        }
+
         private void InitMusic()
         {
             CurrentMusicList.CollectionChanged += CurrentMusicList_OnCountChange;
@@ -440,7 +446,8 @@ namespace MusicCollection
 
         private void SearchNetMusicButton_Click(object sender, RoutedEventArgs e)
         {
-            SearchNetMusic(SearchTextBox.Text);
+            //SearchNetMusic(SearchTextBox.Text);http://music.163.com/outchain/player?type=2&id={netMusic.MusicID}&auto=1&height=66
+            PlayOnlineBrowser.Navigate(new Uri("file://F:/Programing/CSharp_test/MusicCollection/bin/Debug/1.html"));
         }
         private void SearchTextBox_KeyDown(object sender, KeyEventArgs e)
         {
