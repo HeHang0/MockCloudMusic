@@ -68,10 +68,13 @@ namespace MusicCollection.Pages
         {
             var btn = sender as Button;
             var netMusic = btn.Tag as NetMusic;
-            LodingImage.Visibility = Visibility.Visible;
+            //LodingImage.Visibility = Visibility.Visible;
 
-            CheckAndDownLoad(netMusic, true);
-
+            //CheckAndDownLoad(netMusic, true);
+            if (!ParentWindow.Play(null, netMusic))
+            {
+                MessageBox.Show("当前音乐不可在线播放！");
+            }
         }
 
         private void CheckAndDownLoad(NetMusic netMusic, bool NeedPlay)

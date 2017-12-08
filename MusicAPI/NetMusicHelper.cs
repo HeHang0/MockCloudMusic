@@ -26,6 +26,41 @@ namespace MusicCollection.MusicAPI
             { NetMusicType.XiaMiMusic, "https://music-api-jwzcyzizya.now.sh/api/search/song/xiami?&limit=1&page=1&key={0}-{1}-{2}/" }
         };
 
+        public static string GetUrlByNetMusic(NetMusic music)
+        {
+            var url = string.Format(DownloadLinkAPI[music.Origin], music.MusicID);
+            if (CheckLink(url))
+            {
+                return url;
+            }
+            return "";
+        }
+
+        private static bool CheckLink(string url)
+        {
+            HttpWebRequest req = null;
+            try
+            {
+                req = (HttpWebRequest)WebRequest.CreateDefault(new Uri(url));
+                req.Method = "HEAD";  //这是关键        
+                req.Timeout = 5000;
+                HttpWebResponse res = (HttpWebResponse)req.GetResponse();
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+            finally
+            {
+                if (req != null)
+                {
+                    req.Abort();
+                    req = null;
+                }
+            }
+        }
+
         public static Music GetMusicByMusicID(NetMusic net_music)
         {
             var path = GetMusicUrlOfLocal(DownloadLinkAPI[net_music.Origin], net_music);

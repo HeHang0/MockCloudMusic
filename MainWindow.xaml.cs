@@ -59,12 +59,6 @@ namespace MusicCollection
             MusicDetailFrame.Content = new MusicDetailPage(this);
         }
 
-        //private bool IsOnlinePlay = false;
-        private void PlayOnlineBrowser_LoadCompleted(object sender, NavigationEventArgs e)
-        {
-            MessageBox.Show("加载完成，开始播放");
-        }
-
         private void InitMusic()
         {
             CurrentMusicList.CollectionChanged += CurrentMusicList_OnCountChange;
@@ -152,6 +146,10 @@ namespace MusicCollection
                     {
                         CurrentIndex = 0;
                     }
+                    else if (CurrentIndex == -1 && CurrentMusicList.Count > 0)
+                    {
+                        CurrentIndex = 0;
+                    }
                     bsp.Stop();
                     Play();
                 }));
@@ -171,10 +169,18 @@ namespace MusicCollection
         {
             if (e.LeftButton == MouseButtonState.Pressed && !SearchTextBox.IsFocused)
             {
-                timer.Stop();
+                //var flag = false;
+                //if (timer.Enabled)
+                //{
+                //    flag = true;
+                //    timer.Stop();
+                //}
                 DragMove();
                 e.Handled = true;
-                timer.Start();
+                //if (flag)
+                //{
+                //    timer.Start();
+                //}
             }
         }
 
@@ -203,20 +209,35 @@ namespace MusicCollection
             PauseMusicButton.Visibility = Visibility.Hidden;
         }
 
-        public void Play(Music music = null)
+        public bool Play(Music music = null, NetMusic netMusic = null)
         {
             if (music != null)
             {
                 CurrentIndex = CurrentMusicList.Add(music);
-                bsp.Stop();
+            }
+            else if (netMusic != null)
+            {
+                var url = NetMusicHelper.GetUrlByNetMusic(netMusic);
+                if (url.Length > 0)
+                {
+                    CurrentIndex = -1;
+                    bsp.Stop();
+                    bsp.FileName = url;
+                }
+                else
+                {
+                    return false;
+                }
             }
             else if (CurrentMusicList.Count > 0 && CurrentIndex < 0)
             {
                 CurrentIndex = 0;
+                //bsp.FileName = CurrentMusicList[CurrentIndex].Url;
             }
 
             if (CurrentIndex >= 0 && CurrentIndex < CurrentMusicList.Count)
             {
+                bsp.Stop();
                 bsp.FileName = CurrentMusicList[CurrentIndex].Url;
                 bsp.Play();
                 PlayMusicButton.Visibility = Visibility.Hidden;
@@ -227,6 +248,37 @@ namespace MusicCollection
                 ToTalTimeLabel.Content = bsp.TotalTime.ToString(@"mm\:ss");
                 timer.Start();
             }
+            else if (netMusic != null)
+            {
+                bsp.Play();
+                PlayMusicButton.Visibility = Visibility.Hidden;
+                PauseMusicButton.Visibility = Visibility.Visible;
+                Title = netMusic.Title + " - " + netMusic.Singer;
+                SetMiniLable(netMusic);
+                ToTalTimeLabel.Content = bsp.TotalTime.ToString(@"mm\:ss");
+                //timer.Start();
+            }
+            return true;
+        }
+
+        private void SetMiniLable(NetMusic netMusic)
+        {
+            var url = "";
+            if (url == "")
+            {
+                url = "logo.ico";
+            }
+            BitmapImage bi = new BitmapImage();
+            bi.BeginInit();
+            bi.UriSource = new Uri(url, UriKind.RelativeOrAbsolute);
+            bi.EndInit();
+            CurrentMusicImageMini.Source = bi;
+            CurrentMusicTitleMini.Content = netMusic.Title;
+            CurrentMusicSingerMini.Content = netMusic.Singer;
+            //if (MusicDetailFrame.Content != null)
+            //{
+            //    (MusicDetailFrame.Content as MusicDetailPage).Init(CurrentMusicList[CurrentIndex]);
+            //}
         }
 
         private void SetMiniLable(Music music)
@@ -262,7 +314,8 @@ namespace MusicCollection
 
         private void NextMusicButton_Click(object sender, RoutedEventArgs e)
         {
-            if (++CurrentIndex >= CurrentMusicList.Count)
+            var count = CurrentMusicList.Count;
+            if (((++CurrentIndex >= count) || CurrentIndex == -1) && count > 0)
             {
                 CurrentIndex = 0;
             }
@@ -447,7 +500,6 @@ namespace MusicCollection
         private void SearchNetMusicButton_Click(object sender, RoutedEventArgs e)
         {
             //SearchNetMusic(SearchTextBox.Text);http://music.163.com/outchain/player?type=2&id={netMusic.MusicID}&auto=1&height=66
-            PlayOnlineBrowser.Navigate(new Uri("file://F:/Programing/CSharp_test/MusicCollection/bin/Debug/1.html"));
         }
         private void SearchTextBox_KeyDown(object sender, KeyEventArgs e)
         {

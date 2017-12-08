@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Icon="logo.ico"
         Title="假的云音乐" Height="670" Width="1022" MinHeight="670" MinWidth="1022" Loaded="Window_Loaded" MouseUp="Window_MouseDown" StateChanged="Window_StateChanged"
-        Closing="Window_Closing" WindowStartupLocation="CenterScreen" AllowsTransparency="False" WindowStyle="None" SizeChanged="Window_SizeChanged">
+        Closing="Window_Closing" WindowStartupLocation="CenterScreen" AllowsTransparency="True" WindowStyle="None" SizeChanged="Window_SizeChanged">
     <Window.Effect>
         <DropShadowEffect BlurRadius="10" Color="#FFDADADA" Direction="1" ShadowDepth="1"/>
     </Window.Effect>
@@ -111,6 +111,5 @@
                 <DropShadowEffect BlurRadius="10" Color="#FFDADADA" Direction="1" ShadowDepth="1"/>
             </Frame.Effect>
         </Frame>
-        <WebBrowser Name="PlayOnlineBrowser"  HorizontalAlignment="Left" Height="490" LoadCompleted="PlayOnlineBrowser_LoadCompleted" VerticalAlignment="Bottom" Width="1022" Margin="0,0,-8,0"/>
     </Grid>
 </Window>

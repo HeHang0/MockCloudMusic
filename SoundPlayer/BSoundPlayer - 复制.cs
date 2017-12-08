@@ -3,7 +3,7 @@ using System;
 
 namespace MusicCollection.SoundPlayer
 {
-    public class BSoundPlayer
+    public class BSoundPlayer2
     {
         //private class InnerInstance
         //{
@@ -23,7 +23,7 @@ namespace MusicCollection.SoundPlayer
 
         //}
         private IWavePlayer wavePlayer;
-        private MediaFoundationReader audioFileReader;
+        private AudioFileReader audioFileReader;
 
         public string FileName = string.Empty;        
         public bool IsPlaying { get; private set; }
@@ -90,9 +90,9 @@ namespace MusicCollection.SoundPlayer
                 if (value >= 0 && value <= 1f)
                 {
                     volume = value;
-                    if (wavePlayer != null)
+                    if (audioFileReader != null)
                     {
-                        wavePlayer.Volume = value;
+                        audioFileReader.Volume = value;
                     }
                 }
             }
@@ -100,7 +100,7 @@ namespace MusicCollection.SoundPlayer
 
         public void Play()
         {
-            if (string.IsNullOrEmpty(FileName))// || !System.IO.File.Exists(FileName))
+            if (string.IsNullOrEmpty(FileName) || !System.IO.File.Exists(FileName))
             {
                 return;
             }
@@ -118,9 +118,8 @@ namespace MusicCollection.SoundPlayer
             }
 
             wavePlayer = new WaveOut();
-            audioFileReader = new MediaFoundationReader(FileName);//AudioFileReader(FileName); 
-            //audioFileReader.Volume = volume;
-            wavePlayer.Volume = volume;
+            audioFileReader = new AudioFileReader(FileName);
+            audioFileReader.Volume = volume;
             wavePlayer.Init(audioFileReader);
             wavePlayer.PlaybackStopped += OnPlaybackStopped;
             wavePlayer.Play();
