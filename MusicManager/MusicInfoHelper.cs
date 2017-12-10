@@ -30,13 +30,22 @@ namespace MusicCollection.MusicManager
             }
             if (string.IsNullOrWhiteSpace(Info[MusicInfos.Title]))
             {
-                Info[MusicInfos.Title] = Path.GetFileName(path);
+                Info[MusicInfos.Title] = Path.GetFileNameWithoutExtension(path);
+            }
+            else if (!Path.GetFileNameWithoutExtension(path).Contains(Info[MusicInfos.Title]))
+            {
+                Info[MusicInfos.Title] = Path.GetFileNameWithoutExtension(path);
             }
 
             var virtualLrc = Path.GetDirectoryName(path) + "\\" + Path.GetFileNameWithoutExtension(path) + ".lrc";
+            var virtualLrc2 = "DownLoad\\Lyric\\" + Path.GetFileNameWithoutExtension(path) + ".lrc";
             if (File.Exists(virtualLrc))
             {
                 Info.Add(MusicInfos.LyricUrl, virtualLrc);
+            }
+            else if(File.Exists(virtualLrc2))
+            {
+                Info.Add(MusicInfos.LyricUrl, Path.GetFullPath(virtualLrc2));
             }
             else
             {

@@ -36,24 +36,30 @@ namespace MusicCollection
         public ObservableCollection<NetMusic> NetMusicList = new ObservableCollection<NetMusic>();
         
         public int CurrentIndex = -1;
-        System.Timers.Timer timer = new System.Timers.Timer();
 
         public LocalMusicPage LocalMusic;
+        public DownLoadMusicPage DownLoadMusic;
         private MusicDetailPage MusicDetail;
         private NetMusicSearchPage NetMusicSearch;
 
         public MainWindow()
         {
             InitializeComponent();
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            PlayBar.DataContext = bsp;
             InitMusic();
-            InitTimer();
             InitPages();
         }
 
         private void InitPages()
         {
             LocalMusic = new LocalMusicPage(this);
+            DownLoadMusic = new DownLoadMusicPage(this);
             MusicDetail = new MusicDetailPage(this);
+            NetMusicSearch = new NetMusicSearchPage(this);
             PageFrame.Content = LocalMusic;
             CurrentMusicListFrame.Content = new CurrentMusicListAndHistoriesPages(this);
             MusicDetailFrame.Content = new MusicDetailPage(this);
@@ -63,21 +69,24 @@ namespace MusicCollection
         {
             CurrentMusicList.CollectionChanged += CurrentMusicList_OnCountChange;
             var content = Environment.GetFolderPath(Environment.SpecialFolder.MyMusic) + "\\";
-
-            if (!File.Exists("CurrentMusicList.json"))
+            if (!Directory.Exists("Data\\"))//如果不存在就创建文件夹
             {
-                File.WriteAllText("CurrentMusicList.json", JsonConvert.SerializeObject(new MusicObservableCollection<Music>()));
+                Directory.CreateDirectory("Data\\");
             }
-            if (!File.Exists("HistoryMusicList.json"))
+            if (!File.Exists("Data\\CurrentMusicList.json"))
             {
-                File.WriteAllText("HistoryMusicList.json", JsonConvert.SerializeObject(new MusicHistoriesCollection<MusicHistory>()));
+                File.WriteAllText("Data\\CurrentMusicList.json", JsonConvert.SerializeObject(new MusicObservableCollection<Music>()));
+            }
+            if (!File.Exists("Data\\HistoryMusicList.json"))
+            {
+                File.WriteAllText("Data\\HistoryMusicList.json", JsonConvert.SerializeObject(new MusicHistoriesCollection<MusicHistory>()));
             }
 
 
-            var CurrentMusicListStr = File.ReadAllText("CurrentMusicList.json");
+            var CurrentMusicListStr = File.ReadAllText("Data\\CurrentMusicList.json");
             CurrentMusicList = JsonConvert.DeserializeObject<MusicObservableCollection<Music>>(CurrentMusicListStr);
 
-            var HistoryMusicListStr = File.ReadAllText("HistoryMusicList.json");
+            var HistoryMusicListStr = File.ReadAllText("Data\\HistoryMusicList.json");
             HistoryMusicList = JsonConvert.DeserializeObject<MusicHistoriesCollection<MusicHistory>>(HistoryMusicListStr);
 
             //foreach (var item in crlist)
@@ -100,9 +109,22 @@ namespace MusicCollection
             if (CurrentMusicList.Count > 0)
             {
                 Play();
-                Pause() ;
+                Pause();
             }
             CurrentMusicListCountLable.DataContext = CurrentMusicList;
+            bsp.PropertyChanged += Bsp_PropertyChanged;
+        }
+
+        private void Bsp_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == "MusicEnd" && CurrentMusicList.Count > 0)
+            {
+                if (++CurrentIndex >= CurrentMusicList.Count)
+                {
+                    CurrentIndex = 0;
+                }
+                Play();
+            }
         }
 
         private void CurrentMusicList_OnCountChange(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
@@ -119,68 +141,12 @@ namespace MusicCollection
             }
         }
 
-        private void InitTimer()
-        {
-            //System.Timers.Timer timer = new System.Timers.Timer();
-            timer.Enabled = true;
-            timer.Interval = 1000;//执行间隔时间,单位为毫秒;此时时间间隔为1分钟
-            timer.Elapsed += new System.Timers.ElapsedEventHandler((s, e) => CheckTime(s, e));
-        }
-
-        private void CheckTime(object s, ElapsedEventArgs e)
-        {
-            if (bsp.IsPlaying)
-            {
-                Dispatcher.Invoke(new Action(() => {
-                    CurrentTimeLabel.Content = bsp.CurrentTime.ToString(@"mm\:ss");
-                    if (bsp.TotalTime.TotalSeconds != 0)
-                    {
-                        MusicSlider.Value = (bsp.CurrentTime.TotalSeconds / bsp.TotalTime.TotalSeconds) * 10;
-                    }
-                }));
-            }
-            else if (bsp.IsStop && CurrentMusicList.Count > 0)
-            {
-                Dispatcher.Invoke(new Action(() => {
-                    if (++CurrentIndex >= CurrentMusicList.Count)
-                    {
-                        CurrentIndex = 0;
-                    }
-                    else if (CurrentIndex == -1 && CurrentMusicList.Count > 0)
-                    {
-                        CurrentIndex = 0;
-                    }
-                    bsp.Stop();
-                    Play();
-                }));
-            }
-            //else if (bsp.PlaybackState == NAudio.Wave.PlaybackState.Stopped)
-            //{
-            //    if (++CurrentIndex >= FileList.Count)
-            //    {
-            //        CurrentIndex = 0;
-            //    }
-            //    bsp.Stop();
-            //    Play();
-            //}
-        }
-
         private void Move_MouseMove(object sender, MouseEventArgs e)
         {
             if (e.LeftButton == MouseButtonState.Pressed && !SearchTextBox.IsFocused)
             {
-                //var flag = false;
-                //if (timer.Enabled)
-                //{
-                //    flag = true;
-                //    timer.Stop();
-                //}
                 DragMove();
                 e.Handled = true;
-                //if (flag)
-                //{
-                //    timer.Start();
-                //}
             }
         }
 
@@ -217,7 +183,15 @@ namespace MusicCollection
             }
             else if (netMusic != null)
             {
-                var url = NetMusicHelper.GetUrlByNetMusic(netMusic);
+                var url = "";
+                if (NetMusicHelper.CheckLink(netMusic.Url))
+                {
+                    url = netMusic.Url;
+                }
+                else
+                {
+                    url = NetMusicHelper.GetUrlByNetMusic(netMusic);
+                }
                 if (url.Length > 0)
                 {
                     CurrentIndex = -1;
@@ -238,15 +212,13 @@ namespace MusicCollection
             if (CurrentIndex >= 0 && CurrentIndex < CurrentMusicList.Count)
             {
                 bsp.Stop();
-                bsp.FileName = CurrentMusicList[CurrentIndex].Url;
+                bsp.FileName = CurrentMusicList[CurrentIndex].Path;
                 bsp.Play();
                 PlayMusicButton.Visibility = Visibility.Hidden;
                 PauseMusicButton.Visibility = Visibility.Visible;
                 Title = CurrentMusicList[CurrentIndex].Title + " - " + CurrentMusicList[CurrentIndex].Singer;
                 HistoryMusicList.Add(new MusicHistory(CurrentMusicList[CurrentIndex]));
                 SetMiniLable(CurrentMusicList[CurrentIndex]);
-                ToTalTimeLabel.Content = bsp.TotalTime.ToString(@"mm\:ss");
-                timer.Start();
             }
             else if (netMusic != null)
             {
@@ -255,16 +227,14 @@ namespace MusicCollection
                 PauseMusicButton.Visibility = Visibility.Visible;
                 Title = netMusic.Title + " - " + netMusic.Singer;
                 SetMiniLable(netMusic);
-                ToTalTimeLabel.Content = bsp.TotalTime.ToString(@"mm\:ss");
-                //timer.Start();
             }
             return true;
         }
 
         private void SetMiniLable(NetMusic netMusic)
         {
-            var url = "";
-            if (url == "")
+            var url = netMusic.AlbumImageUrl;
+            if (string.IsNullOrWhiteSpace(url))
             {
                 url = "logo.ico";
             }
@@ -275,10 +245,10 @@ namespace MusicCollection
             CurrentMusicImageMini.Source = bi;
             CurrentMusicTitleMini.Content = netMusic.Title;
             CurrentMusicSingerMini.Content = netMusic.Singer;
-            //if (MusicDetailFrame.Content != null)
-            //{
-            //    (MusicDetailFrame.Content as MusicDetailPage).Init(CurrentMusicList[CurrentIndex]);
-            //}
+            if (MusicDetailFrame.Content != null)
+            {
+                (MusicDetailFrame.Content as MusicDetailPage).Init(bi, null, netMusic);
+            }
         }
 
         private void SetMiniLable(Music music)
@@ -297,7 +267,7 @@ namespace MusicCollection
             CurrentMusicSingerMini.Content = music.Singer;
             if (MusicDetailFrame.Content != null)
             {
-                (MusicDetailFrame.Content as MusicDetailPage).Init(CurrentMusicList[CurrentIndex]);
+                (MusicDetailFrame.Content as MusicDetailPage).Init(bi, CurrentMusicList[CurrentIndex], null);
             }
         }
 
@@ -321,30 +291,6 @@ namespace MusicCollection
             }
             bsp.Stop();
             Play();
-        }
-
-        private void MusicSlider_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            if (CurrentIndex >= 0)
-            {
-                var CurrentSeconds = (int)(bsp.TotalTime.TotalSeconds * MusicSlider.Value / 10);
-                bsp.CurrentTime = new TimeSpan(0, 0, CurrentSeconds);
-                timer.Start();
-                bsp.Play();
-                PlayMusicButton.Visibility = Visibility.Hidden;
-                PauseMusicButton.Visibility = Visibility.Visible;
-            }
-        }        
-
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-            MusicSlider.AddHandler(MouseLeftButtonUpEvent, new MouseButtonEventHandler(MusicSlider_MouseLeftButtonUp), true);
-            MusicSlider.AddHandler(MouseLeftButtonDownEvent, new MouseButtonEventHandler(MusicSlider_MouseLeftButtonDown), true);
-        }
-
-        private void MusicSlider_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            timer.Close();
         }
 
         private void MinButton_Click(object sender, RoutedEventArgs e)
@@ -387,10 +333,6 @@ namespace MusicCollection
 
         private void ExitButton_Click(object sender, RoutedEventArgs e)
         {
-            if (MusicDetailFrame.Content != null)
-            {
-                (MusicDetailFrame.Content as MusicDetailPage).StopTimer();
-            }
             Application.Current.Shutdown();
         }
 
@@ -401,22 +343,9 @@ namespace MusicCollection
             //ContentBar.Height = Height-100;
         }
 
-        private void Window_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            NoFocusButton.Focus();
-        }
-
         private void LocalMusicButton_Click(object sender, RoutedEventArgs e)
         {
-            PageFrame.Content = LocalMusic;            
-        }
-
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-            timer.Close();
-            File.WriteAllText("CurrentMusicList.json", JsonConvert.SerializeObject(CurrentMusicList));
-            File.WriteAllText("HistoryMusicList.json", JsonConvert.SerializeObject(HistoryMusicList));
-            LocalMusic.ParentWindow_Closing();
+            PageFrame.Content = LocalMusic;
         }
 
         private void CurrentMusicImageMini_MouesOver(object sender, MouseEventArgs e)
@@ -451,8 +380,8 @@ namespace MusicCollection
         {
             SoundChangeSliderValue = SoundChangeSlider.Value;
             SoundChangeSlider.Value = 0;
-            VolOpenButton.Visibility = Visibility.Hidden;
-            VolCloseButton.Visibility = Visibility.Visible;
+            //VolOpenButton.Visibility = Visibility.Hidden;
+            //VolCloseButton.Visibility = Visibility.Visible;
         }
         private double SoundChangeSliderValue;
         private void VolCloseButton_Click(object sender, RoutedEventArgs e)
@@ -462,8 +391,8 @@ namespace MusicCollection
                 SoundChangeSliderValue = 10;
             }
             SoundChangeSlider.Value = SoundChangeSliderValue;
-            VolOpenButton.Visibility = Visibility.Visible;
-            VolCloseButton.Visibility = Visibility.Hidden;
+            //VolOpenButton.Visibility = Visibility.Visible;
+            //VolCloseButton.Visibility = Visibility.Hidden;
         }
 
         private void CurrentMusicListFrame_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -491,15 +420,15 @@ namespace MusicCollection
 
         private void CurrentMusicListFrame_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            if (MusicDetailFrame.Visibility == Visibility.Visible && CurrentIndex > 0)
-            {
-                (MusicDetailFrame.Content as MusicDetailPage).Init(CurrentMusicList[CurrentIndex]);
-            }
+            //if (MusicDetailFrame.Visibility == Visibility.Visible && CurrentIndex > 0)
+            //{
+            //    (MusicDetailFrame.Content as MusicDetailPage).Init(CurrentMusicList[CurrentIndex]);
+            //}
         }
 
         private void SearchNetMusicButton_Click(object sender, RoutedEventArgs e)
         {
-            //SearchNetMusic(SearchTextBox.Text);http://music.163.com/outchain/player?type=2&id={netMusic.MusicID}&auto=1&height=66
+            SearchNetMusic(SearchTextBox.Text);//http://music.163.com/outchain/player?type=2&id={netMusic.MusicID}&auto=1&height=66
         }
         private void SearchTextBox_KeyDown(object sender, KeyEventArgs e)
         {
@@ -513,10 +442,6 @@ namespace MusicCollection
             if (string.IsNullOrWhiteSpace(searchStr))
             {
                 return;
-            }
-            if (NetMusicSearch == null)
-            {
-                NetMusicSearch = new NetMusicSearchPage(this);
             }
             PageFrame.Content = NetMusicSearch;
             NetMusicSearch.LodingImage.Visibility = Visibility.Visible;
@@ -543,6 +468,30 @@ namespace MusicCollection
             {
                 NetMusicSearch.LodingImage.Visibility = Visibility.Hidden;
             }));
+        }
+
+        private void Window_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            NoFocusButton.Focus();
+        }
+
+        private void DownLoadMusicPageButton_Click(object sender, RoutedEventArgs e)
+        {
+            PageFrame.Content = DownLoadMusic;
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            bsp.Stop();
+            File.WriteAllText("Data\\CurrentMusicList.json", JsonConvert.SerializeObject(CurrentMusicList));
+            File.WriteAllText("Data\\HistoryMusicList.json", JsonConvert.SerializeObject(HistoryMusicList));
+            LocalMusic.LocalMusicPage_Closing();
+            DownLoadMusic.DownLoadMusicPage_Closing();
+        }
+
+        private void PlayBar_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            MusicSlider.Width = PlayBar.ActualWidth - 574;
         }
     }
 }

@@ -1,10 +1,18 @@
 ﻿using NAudio.Wave;
 using System;
+using System.ComponentModel;
+using System.Windows.Threading;
 
 namespace MusicCollection.SoundPlayer
 {
-    public class BSoundPlayer
+    public class BSoundPlayer: INotifyPropertyChanged
     {
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        public void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
         //private class InnerInstance
         //{
         //    /// <summary>
@@ -18,17 +26,85 @@ namespace MusicCollection.SoundPlayer
         //{
         //    return InnerInstance.instance;
         //}
-        //private BSoundPlayer()
-        //{
 
-        //}
         private IWavePlayer wavePlayer;
-        private MediaFoundationReader audioFileReader;
+        private WaveStream audioFileReader;
+        private DispatcherTimer timer = new DispatcherTimer();
+        public string FileName = string.Empty;
+        private bool _isPlaying = false;
+        public BSoundPlayer()
+        {
+            timer.Interval = TimeSpan.FromMilliseconds(1000);
+            timer.Tick += TimerOnTick;
+        }
+        const double sliderMax = 10.0;
+        private void TimerOnTick(object sender, EventArgs e)
+        {
+            if (audioFileReader != null)
+            {
+                OnPropertyChanged("CurrentTime");
+                _currentMusicPosition = Math.Min(sliderMax, audioFileReader.Position * sliderMax / audioFileReader.Length);
+                OnPropertyChanged("CurrentMusicPosition");
+            }
+        }
 
-        public string FileName = string.Empty;        
-        public bool IsPlaying { get; private set; }
-        public bool IsPause { get; private set; }
-        public bool IsStop { get; private set; } = false;
+        private double _currentMusicPosition = 0;
+        public double CurrentMusicPosition
+        {
+            get { return _currentMusicPosition; }
+            set
+            {
+                if (_currentMusicPosition != value)
+                {
+                    _currentMusicPosition = value;
+                    if (audioFileReader != null)
+                    {
+                        var pos = (long)(audioFileReader.Length * _currentMusicPosition / sliderMax);
+                        audioFileReader.Position = pos; // media foundation will worry about block align for us
+                    }
+                    OnPropertyChanged("CurrentMusicPosition");
+                }
+            }
+        }
+
+        public bool IsPlaying
+        {
+            get
+            {
+                return wavePlayer != null && wavePlayer.PlaybackState == PlaybackState.Playing;
+            }
+            private set
+            {
+                _isPlaying = value;
+                OnPropertyChanged("IsPlaying");
+            }
+        }
+        private bool _isPause = false;
+        public bool IsPause
+        {
+            get
+            {
+                return _isPause;
+            }
+            private set
+            {
+                _isPause = value;
+                OnPropertyChanged("IsPause");
+            }
+        }
+        private bool _isStop = false;
+        public bool IsStop
+        {
+            get
+            {
+                return wavePlayer == null || wavePlayer.PlaybackState == PlaybackState.Stopped; ;
+            }
+            private set
+            {
+                _isStop = value;
+                OnPropertyChanged("IsStop");
+            }
+        }
         public PlaybackState PlaybackState
         {
             get
@@ -57,13 +133,6 @@ namespace MusicCollection.SoundPlayer
                     return audioFileReader.CurrentTime;
                 }
             }
-            set
-            {
-                if (audioFileReader != null)
-                {
-                    audioFileReader.CurrentTime = value;
-                }
-            }
         }
 
         public TimeSpan TotalTime
@@ -84,19 +153,33 @@ namespace MusicCollection.SoundPlayer
         private float volume = 1f;
         public float Volume
         {
-            get { return volume; }
+            get { return volume*10; }
             set
             {
-                if (value >= 0 && value <= 1f)
+                volume = value*1.0f/10;
+                if (wavePlayer != null)
                 {
-                    volume = value;
-                    if (wavePlayer != null)
-                    {
-                        wavePlayer.Volume = value;
-                    }
+                    wavePlayer.Volume = volume;
                 }
+                if (volume == 0)
+                {
+                    IsMute = true;
+                    NoMute = !IsMute;
+                }
+                else
+                {
+                    IsMute = false;
+                    NoMute = !IsMute;
+                }
+                OnPropertyChanged("Volume");
+                OnPropertyChanged("IsMute");
+                OnPropertyChanged("NoMute");
             }
         }
+
+        public bool IsMute { get; private set; } = false;
+        public bool NoMute { get; private set; } = true;
+
 
         public void Play()
         {
@@ -124,8 +207,11 @@ namespace MusicCollection.SoundPlayer
             wavePlayer.Init(audioFileReader);
             wavePlayer.PlaybackStopped += OnPlaybackStopped;
             wavePlayer.Play();
+            timer.Start();
+            OnPropertyChanged("TotalTime");
             IsPlaying = true;
             IsStop = false;
+            IsPause = false;
         }
 
         public void Pause()
@@ -149,7 +235,10 @@ namespace MusicCollection.SoundPlayer
 
         private void OnPlaybackStopped(object sender, StoppedEventArgs e)
         {
+            CurrentMusicPosition = 0;
             Stop();
+            timer.Stop();
+            OnPropertyChanged("MusicEnd");
         }
         private void DisPose()
         {

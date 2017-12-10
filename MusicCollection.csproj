@@ -61,6 +61,7 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
@@ -96,6 +97,7 @@
     <Compile Include="MusicAPI\CloudMusic\CloudMusicSearchModel.cs" />
     <Compile Include="MusicAPI\NetMusic.cs" />
     <Compile Include="MusicAPI\NetMusicHelper.cs" />
+    <Compile Include="MusicManager\DownLoadMusic.cs" />
     <Compile Include="MusicManager\LocalMusic.cs" />
     <Compile Include="MusicManager\LyricLine.cs" />
     <Compile Include="MusicManager\Music.cs" />
@@ -103,8 +105,12 @@
     <Compile Include="MusicManager\MusicHistory.cs" />
     <Compile Include="MusicManager\MusicInfoHelper.cs" />
     <Compile Include="MusicManager\MusicObservableCollection.cs" />
+    <Compile Include="MusicManager\NetMusicObservableCollection.cs" />
     <Compile Include="Pages\CurrentMusicListAndHistoriesPages.xaml.cs">
       <DependentUpon>CurrentMusicListAndHistoriesPages.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\DownLoadMusicPage.xaml.cs">
+      <DependentUpon>DownLoadMusicPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Pages\LocalMusicPage.xaml.cs">
       <DependentUpon>LocalMusicPage.xaml</DependentUpon>
@@ -136,6 +142,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="Pages\CurrentMusicListAndHistoriesPages.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\DownLoadMusicPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -193,7 +203,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="packages\NAudio\lib\net\NAudio.xml" />
     <Resource Include="Resources\images\background.jpg" />
     <Resource Include="Resources\images\ff.png" />
     <Resource Include="Resources\images\rw.png" />

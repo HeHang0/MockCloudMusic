@@ -1,20 +1,11 @@
 ﻿using MusicCollection.MusicAPI;
 using MusicCollection.MusicManager;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
+using System.Windows.Threading;
 
 namespace MusicCollection.Pages
 {
@@ -35,6 +26,11 @@ namespace MusicCollection.Pages
             NetMusicDataGrid.DataContext = ParentWindow.NetMusicList;
         }
 
+        private void TimerOnTick(object sender, EventArgs e)
+        {
+            
+        }
+
         private void NetMusicDataGrid_LoadingRow(object sender, DataGridRowEventArgs e)
         {
             e.Row.Header = e.Row.GetIndex() + 1;
@@ -52,7 +48,11 @@ namespace MusicCollection.Pages
                 var netMusic = dgr.Item as NetMusic;
                 if (netMusic != null)
                 {
-                    CheckAndDownLoad(netMusic, true);
+                    ParentWindow.DownLoadMusic.DownLoadingList.Add(netMusic);
+                }
+                if (!ParentWindow.Play(null, netMusic))
+                {
+                    MessageBox.Show("当前音乐不可在线播放！");
                 }
             }
         }
@@ -61,7 +61,8 @@ namespace MusicCollection.Pages
         {
             var btn = sender as Button;
             var netMusic = btn.Tag as NetMusic;
-            CheckAndDownLoad(netMusic, false);
+            ParentWindow.DownLoadMusic.DownLoadingList.Add(netMusic);
+            btn.Visibility = Visibility.Hidden;
         }
 
         private void NetMusicPlayButton_Click(object sender, RoutedEventArgs e)
@@ -75,57 +76,6 @@ namespace MusicCollection.Pages
             {
                 MessageBox.Show("当前音乐不可在线播放！");
             }
-        }
-
-        private void CheckAndDownLoad(NetMusic netMusic, bool NeedPlay)
-        {
-            foreach (var item in ParentWindow.LocalMusic.FolderList)
-            {
-                var path = item + netMusic.Title + " - " + netMusic.Singer + ".mp3";
-                if (File.Exists(path))
-                {
-                    if (NeedPlay)
-                    {
-                        var indexL = ParentWindow.LocalMusic.LocalMusicList.Add(new Music(path));
-
-                        ParentWindow.Play(ParentWindow.LocalMusic.LocalMusicList[indexL]);
-                    }
-                    return;
-                }
-            }
-            LodingImage.Visibility = Visibility.Visible;
-            netMusic.IsDownLoading = true;
-            Thread thread = new Thread(new ThreadStart(() => DownLoadMusic(netMusic, NeedPlay)));
-            thread.IsBackground = true;
-            thread.Start();
-        }
-
-        private void DownLoadMusic(NetMusic netMusic, bool NeedPlay)
-        {
-            var music = NetMusicHelper.GetMusicByMusicID(netMusic);
-            if (music == null)
-            {
-                Dispatcher.Invoke(new Action(() =>
-                {
-                    LodingImage.Visibility = Visibility.Hidden;
-                }));
-                return;
-            }
-            Dispatcher.Invoke(new Action(() =>
-            {
-                if (!ParentWindow.LocalMusic.FolderList.Contains(Path.GetDirectoryName(music.Url) + "\\"))
-                {
-                    ParentWindow.LocalMusic.FolderList.Add(Path.GetDirectoryName(music.Url) + "\\");
-                }
-                ParentWindow.LocalMusic.LocalMusicList.Add(music);
-                LodingImage.Visibility = Visibility.Hidden;
-                netMusic.IsDownLoading = false;
-                netMusic.IsDownLoaded = true;
-                if (NeedPlay)
-                {
-                    ParentWindow.Play(music);
-                }
-            }));            
         }
     }
 }

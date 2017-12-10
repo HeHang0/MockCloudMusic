@@ -1,6 +1,7 @@
 ﻿using MusicCollection.MusicManager;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -126,6 +127,12 @@ namespace MusicCollection.Pages
         {
             UpdateHistoriesTimeDescribe();
             CurrentMusicOrHistoriesDataGrid.DataContext = ParentWindow.HistoryMusicList;
+
+            ICollectionView view = CollectionViewSource.GetDefaultView(CurrentMusicOrHistoriesDataGrid.ItemsSource);
+            view.SortDescriptions.Clear();
+            SortDescription sd = new SortDescription("LastPlayTime", ListSortDirection.Descending);
+            view.SortDescriptions.Add(sd);
+
             CurrentMusicOrHistoriesDataGrid.Columns[2].Visibility = Visibility.Hidden;
             CurrentMusicOrHistoriesDataGrid.Columns[3].Visibility = Visibility.Visible;
             CurrentMusicListButton.Visibility = Visibility.Visible;

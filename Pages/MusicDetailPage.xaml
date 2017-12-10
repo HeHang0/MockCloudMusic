@@ -28,7 +28,7 @@
                     <ImageBrush.ImageSource>
                         <DrawingImage>
                             <DrawingImage.Drawing>
-                                <ImageDrawing x:Name="AlbumImage" Rect="100,200,110,100"></ImageDrawing>
+                                <ImageDrawing x:Name="AlbumImage" ImageSource="{Binding}" Rect="100,200,110,100"></ImageDrawing>
                             </DrawingImage.Drawing>
                         </DrawingImage>
                     </ImageBrush.ImageSource>

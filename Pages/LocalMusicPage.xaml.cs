@@ -29,8 +29,8 @@ namespace MusicCollection.Pages
 
         private void Init()
         {
-            var LocalMusicFolderListPath = "LocalMusicFolderList.json";
-            var LocalMusicListPath = "LocalMusicList.json";
+            var LocalMusicFolderListPath = "Data\\LocalMusicFolderList.json";
+            var LocalMusicListPath = "Data\\LocalMusicList.json";
 
             if (!File.Exists(LocalMusicFolderListPath))
             {
@@ -61,11 +61,18 @@ namespace MusicCollection.Pages
             if (LocalMusicList.Count == 0)
             {
                 RefreshLocalList();
-            }            
+            }
 
             LocalMusicDataGrid.DataContext = LocalMusicList;
             LocalMusicCountLable.Content = LocalMusicList.Count + "首音乐";
             LocalMusicList.CollectionChanged += LocalMusicList_OnCountChange; ;
+            FolderList.CollectionChanged += FolderList_CollectionChanged;
+
+        }
+
+        private void FolderList_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            RefreshLocalList();
         }
 
         private void LocalMusicList_OnCountChange(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
@@ -101,7 +108,7 @@ namespace MusicCollection.Pages
                     var pattern = ".+?(\\.mp3|\\.wav|\\.flac|\\.wma|\\.ape|\\.m4a)$";
                     if (Regex.IsMatch(NextFile.Name, pattern, RegexOptions.IgnoreCase))
                     {
-                        pathList.Add(item + "\\" + NextFile.Name);
+                        pathList.Add(item + NextFile.Name);
                         count++;
                     }
                 }
@@ -109,9 +116,9 @@ namespace MusicCollection.Pages
             List<Music> WillBeRemove = new List<Music>();
             foreach (var item in LocalMusicList)
             {
-                if (pathList.Contains(item.Url))
+                if (pathList.Contains(item.Path))
                 {
-                    pathList.Remove(item.Url);
+                    pathList.Remove(item.Path);
                 }
                 else
                 {
@@ -224,10 +231,10 @@ namespace MusicCollection.Pages
             ParentWindow.CurrentIndex = ParentWindow.CurrentMusicList.Count - 1;
         }
 
-        public void ParentWindow_Closing()
+        public void LocalMusicPage_Closing()
         {
-            File.WriteAllText("LocalMusicFolderList.json", JsonConvert.SerializeObject(FolderList));
-            File.WriteAllText("LocalMusicList.json", JsonConvert.SerializeObject(LocalMusicList));
+            File.WriteAllText("Data\\LocalMusicFolderList.json", JsonConvert.SerializeObject(FolderList));
+            File.WriteAllText("Data\\LocalMusicList.json", JsonConvert.SerializeObject(LocalMusicList));
         }
         private void SelectContent_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {

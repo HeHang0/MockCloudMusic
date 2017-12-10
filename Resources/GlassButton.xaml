@@ -358,7 +358,7 @@
 
                             <StackPanel Orientation="Horizontal" Visibility="Collapsed" Name="stpWatermark">
                                 <TextBlock HorizontalAlignment="Left" VerticalAlignment="Center"  FontSize="{TemplateBinding FontSize}" FontFamily="{TemplateBinding FontFamily}"
-                                                      Opacity="0.5" Text="搜索本地音乐" Margin="8,3" Width="203">
+                                                      Opacity="0.5" Text="{TemplateBinding Tag}" Margin="8,3" Width="203">
                                 </TextBlock>
                             </StackPanel>
                             <ContentPresenter></ContentPresenter>

@@ -1,4 +1,5 @@
-﻿using MusicCollection.MusicManager;
+﻿using MusicCollection.MusicAPI;
+using MusicCollection.MusicManager;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -15,6 +16,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace MusicCollection.Pages
 {
@@ -26,7 +28,7 @@ namespace MusicCollection.Pages
         private MainWindow ParentWindow;
         private ObservableCollection<LyricLine> Lyric = new ObservableCollection<LyricLine>();
         private int CurrentLyricIndex = -1;
-        Timer timer = new Timer();
+        private DispatcherTimer timer = new DispatcherTimer();
         public MusicDetailPage(MainWindow mainWindow)
         {
             ParentWindow = mainWindow;
@@ -35,56 +37,103 @@ namespace MusicCollection.Pages
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            if (ParentWindow.CurrentIndex >= 0)
-            {
-                Init(ParentWindow.CurrentMusicList[ParentWindow.CurrentIndex]);
-            }
-            timer.Enabled = true;
-            timer.Interval = 100;//执行间隔时间,单位为毫秒;此时时间间隔为1分钟
-            timer.Elapsed += new ElapsedEventHandler(CheckTime);
-            timer.Start();
+            //if (ParentWindow.CurrentIndex >= 0)
+            //{
+            //    Init(ParentWindow.CurrentMusicList[ParentWindow.CurrentIndex]);
+            //}
+            timer.Interval = TimeSpan.FromMilliseconds(100);
+            timer.Tick += TimerOnTick;
+            //timer.Start();
+            ParentWindow.bsp.PropertyChanged += Bsp_PropertyChanged;
         }
 
-        private int LastLyricLineIndex = -1;
-        private int Count = 0;
-        private void CheckTime(object sender, ElapsedEventArgs e)
+        private void Bsp_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if (ParentWindow.bsp.IsPlaying)
+            var bsp = sender as SoundPlayer.BSoundPlayer;
+            if (e.PropertyName == "IsPlaying")
             {
-                if (CurrentLyricIndex > LastLyricLineIndex && Lyric[CurrentLyricIndex].StartTime <= ParentWindow.bsp.CurrentTime)
+                if (bsp.IsPlaying)
                 {
-                    LastLyricLineIndex = CurrentLyricIndex++;
-                    if (CurrentLyricIndex == Count)
-                    {
-                        timer.Stop();
-                        CurrentLyricIndex = -1;
-                        LastLyricLineIndex = -1;
-                    }
-                    try
-                    {
-                        var run = LyricTextBlock.Inlines.ElementAt(LastLyricLineIndex);
-                        Dispatcher.Invoke(new Action(() => {
-                            run.Foreground = Brushes.Red;
-                            LyricBlock.ScrollToVerticalOffset(LyricBlock.ScrollableHeight * LastLyricLineIndex * 1.0 / Count);
-                        }));
-                    }
-                    catch (Exception)
-                    {
-                    }
+                    timer.Start();
+                }
+                else
+                {
+                    timer.Stop();
+                }
+            }
+            else if (e.PropertyName == "IsStop")
+            {
+                if (bsp.IsStop)
+                {
+                    RotateTransform rotateTransform = new RotateTransform(0);
+                    Image.RenderTransform = rotateTransform;//Spirit = new Image();
                 }
             }
         }
-
-        public void Init(Music music)
+        private float angle = 0;
+        private void TimerOnTick(object sender, EventArgs e)
         {
-            timer.Stop();
+            RotateTransform rotateTransform = new RotateTransform((angle+=0.03f) * 180 / 3.142);
+            rotateTransform.CenterX = Image.ActualWidth / 2;
+            rotateTransform.CenterY = Image.ActualHeight / 2;
+            Image.RenderTransform = rotateTransform;
+            if (CurrentLyricIndex > LastLyricLineIndex && Lyric[CurrentLyricIndex].StartTime <= ParentWindow.bsp.CurrentTime)
+            {
+                LastLyricLineIndex = CurrentLyricIndex++;
+                if (CurrentLyricIndex == Count)
+                {
+                    CurrentLyricIndex = -1;
+                    LastLyricLineIndex = -1;
+                }
+                else
+                {
+                    var run = LyricTextBlock.Inlines.ElementAt(LastLyricLineIndex);
+                    run.Foreground = Brushes.Red;
+                    LyricBlock.ScrollToVerticalOffset(LyricBlock.ScrollableHeight * LastLyricLineIndex * 1.0 / Count);
+                }
+            }
+        }
+        
+
+        private int LastLyricLineIndex = -1;
+        private int Count = 0;
+
+        public void Init(BitmapImage bi, Music music = null, NetMusic netMusic = null)
+        {
+            //timer.Stop();
             Lyric.Clear();
             LyricTextBlock.Inlines.Clear();
-            AlbumImage.ImageSource = ParentWindow.CurrentMusicImageMini.Source;
-            if (music.LyricUrl.Length > 0)
+            AlbumImage.ImageSource = bi;
+            LyricBlock.ScrollToVerticalOffset(0);
+            var lyricPath = "";
+            if (music != null)
             {
-                var lrcEncoding = EncodingHelper.GetType(music.LyricUrl);
-                var lrcList = System.IO.File.ReadLines(music.LyricUrl, lrcEncoding);
+                if (!string.IsNullOrWhiteSpace(music.LyricPath))
+                {
+                    lyricPath = music.LyricPath;
+                }
+                else
+                {
+                    lyricPath = NetMusicHelper.GetLyricByMusic(music);
+                    music.LyricPath = lyricPath;
+                }
+            }
+            else if (netMusic != null)
+            {
+                if (!string.IsNullOrWhiteSpace(netMusic.LyricPath))
+                {
+                    lyricPath = netMusic.LyricPath;
+                }
+                else
+                {
+                    lyricPath = NetMusicHelper.GetLyricByNetMusic(netMusic);
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(lyricPath))
+            {
+                var lrcEncoding = EncodingHelper.GetType(lyricPath);
+                var lrcList = System.IO.File.ReadLines(lyricPath, lrcEncoding);
                 foreach (var item in lrcList)
                 {
                     Lyric.Add(new LyricLine(item));
@@ -95,7 +144,12 @@ namespace MusicCollection.Pages
                 }
                 Count = LyricTextBlock.Inlines.Count;
                 CurrentLyricIndex = 0;
-                timer.Start();
+                LastLyricLineIndex = -1;
+                //timer.Start();
+            }
+            else if (1 == 0)
+            {
+
             }
             else
             {
@@ -133,11 +187,6 @@ namespace MusicCollection.Pages
                 LyricBlock.Margin = new Thickness(ImageBack.ActualWidth + ImageBack.Margin.Left, LyricBlock.Margin.Top, LyricBlock.Margin.Right, LyricBlock.Margin.Bottom);
             }
 
-        }
-
-        internal void StopTimer()
-        {
-            timer.Stop();
         }
 
         private void HiddenButton_Click(object sender, RoutedEventArgs e)

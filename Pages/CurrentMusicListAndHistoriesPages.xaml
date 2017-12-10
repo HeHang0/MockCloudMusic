@@ -80,7 +80,7 @@
             <DataGrid.Columns>
                 <DataGridTextColumn Header="音乐标题" Width="35*" Binding="{Binding Title, Mode=OneWay}"/>
                 <DataGridTextColumn Header="歌手" Width="13*" Binding="{Binding Singer, Mode=OneWay}"/>
-                <DataGridTextColumn Header="时长" Width="7*" Binding="{Binding Duration, Mode=OneWay, StringFormat={}{0:mm\\:ss}}" />
+                <DataGridTextColumn Header="时长" Width="8*" Binding="{Binding Duration, Mode=OneWay, StringFormat={}{0:mm\\:ss}}" />
                 <DataGridTextColumn Header="最后播放时间" Width="8*" Visibility="Hidden" Binding="{Binding LastPlayTimeDescribe, Mode=OneWay, StringFormat={}{0:yyyy-MM-dd HH:mm:ss}}" />
             </DataGrid.Columns>
         </DataGrid>

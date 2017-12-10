@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:MusicCollection"
         mc:Ignorable="d"
         Icon="logo.ico"
-        Title="假的云音乐" Height="670" Width="1022" MinHeight="670" MinWidth="1022" Loaded="Window_Loaded" MouseUp="Window_MouseDown" StateChanged="Window_StateChanged"
+        Title="假的云音乐" Height="670" Width="1022" MinHeight="670" MinWidth="1022" Loaded="Window_Loaded" StateChanged="Window_StateChanged" MouseUp="Window_MouseUp"
         Closing="Window_Closing" WindowStartupLocation="CenterScreen" AllowsTransparency="True" WindowStyle="None" SizeChanged="Window_SizeChanged">
     <Window.Effect>
         <DropShadowEffect BlurRadius="10" Color="#FFDADADA" Direction="1" ShadowDepth="1"/>
@@ -31,6 +31,12 @@
                 <Grid>
                     <Image Source="Resources/images/logo.png" Margin="-58,0,102,0"></Image>
                     <Label Content="我的音乐" VerticalContentAlignment="Center" Margin="-18,0,39,0"/>
+                </Grid>
+            </Button>
+            <Button Name="DownLoadMusicButton" Click="DownLoadMusicPageButton_Click" Width="200" Height="33" Canvas.Left="0" Canvas.Top="58" BorderBrush="{x:Null}">
+                <Grid>
+                    <Image Source="Resources/images/download.png" Margin="-58,0,102,0"></Image>
+                    <Label Content="下载管理" VerticalContentAlignment="Center" Margin="-18,0,39,0"/>
                 </Grid>
             </Button>
             <Canvas Name="CurrentMusicCanvasMini" Canvas.Left="0" Canvas.Bottom="0" Width="200" Height="56" Cursor="Hand" MouseDown="CurrentMusicCanvasMini_MouseDown" MouseMove="CurrentMusicImageMini_MouesOver" MouseLeave="CurrentMusicImageMini_MouesLeave">
@@ -65,12 +71,12 @@
             <TextBox x:Name="SearchTextBox" Padding="8,0" Style="{StaticResource CircularTextBox}" KeyDown="SearchTextBox_KeyDown" Width="218" Height="23" Canvas.Left="255" Canvas.Top="15"
                          VerticalContentAlignment="Center" TextWrapping="Wrap" Background="#FFA82828" Foreground="White" Cursor="IBeam">
             </TextBox>
-            <Button x:Name="SearchNetMusicButton" Click="SearchNetMusicButton_Click" Style="{StaticResource MouseOverOpacity}" Height="19" Width="20" Canvas.Left="445" Canvas.Top="17" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}">
-                <Image Width="15" Height="15" Source="Resources/images/search.png"/>
-            </Button>
         </Canvas>
+        <Button x:Name="SearchNetMusicButton" Click="SearchNetMusicButton_Click" Style="{StaticResource MouseOverOpacity}" Height="22" Width="25" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}" Margin="445,15,0,0" HorizontalAlignment="Left" VerticalAlignment="Top">
+            <Image Width="15" Height="15" Source="Resources/images/search.png"/>
+        </Button>
         <Frame Name="PageFrame" Background="#FAFAFA" NavigationUIVisibility="Hidden" Margin="200,50,0,50"/>
-        <Canvas Name="PlayBar" Height="50" Background="#FFF5F5F7" Margin="0,0,0,0" VerticalAlignment="Bottom">
+        <Canvas Name="PlayBar" Height="50" Background="#FFF5F5F7" Margin="0,0,0,0" SizeChanged="PlayBar_SizeChanged" VerticalAlignment="Bottom">
             <Button Name="LastMusicButton" Click="LastMusicButton_Click" Style="{StaticResource CircularButton}" Width="30" Height="30" Background="#E83C3C" Canvas.Left="28" Canvas.Bottom="10" Canvas.Top="10">
                 <Image Width="18" Height="18" Source="Resources/images/rw.png"/>
             </Button>
@@ -78,7 +84,7 @@
             <Button Name="PlayMusicButton" Click="PlayMusicButton_Click" Style="{StaticResource CircularButton}" Width="35" Height="35" Background="#E83C3C" Canvas.Left="82" Canvas.Bottom="7" Canvas.Top="8">
                 <Image Name="PlayImage" Width="18" Height="18" Source="Resources/images/play.png"/>
             </Button>
-            <Button Name="PauseMusicButton" Click="PlayMusicButton_Click" Style="{StaticResource CircularButton}" Visibility="Hidden"  Width="35" Height="35" Background="#E83C3C" Canvas.Left="82" Canvas.Bottom="7">
+            <Button Name="PauseMusicButton" Visibility="Hidden" Click="PlayMusicButton_Click" Style="{StaticResource CircularButton}"  Width="35" Height="35" Background="#E83C3C" Canvas.Left="82" Canvas.Bottom="7">
                 <Image Name="PauseImage" Width="18" Height="18" Source="Resources/images/suspend.png"/>
             </Button>
 
@@ -86,15 +92,24 @@
                 <Image Width="18" Height="18" Source="Resources/images/ff.png"/>
             </Button>
 
-            <Label x:Name="CurrentTimeLabel" Content="00:00" Canvas.Left="198" Canvas.Top="14"/>
-            <Label x:Name="ToTalTimeLabel" Content="00:00" Canvas.Right="293" Canvas.Top="14"/>
-            <Button x:Name="VolOpenButton" Click="VolOpenButton_Click"  Style="{StaticResource MouseOverOpacity}" Height="30" Canvas.Right="260" Canvas.Top="12" Width="30" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}">
+            <Label x:Name="CurrentTimeLabel"  Canvas.Left="198" Canvas.Top="14">
+                <Label.Content>
+                    <TextBlock Text="{Binding CurrentTime, Mode=OneWay, StringFormat={}{0:mm\\:ss}}"/>
+                </Label.Content>
+            </Label>
+            <Label x:Name="ToTalTimeLabel" Canvas.Right="293" Canvas.Top="14">
+                <Label.Content>
+                    <TextBlock Text="{Binding TotalTime, Mode=OneWay, StringFormat={}{0:mm\\:ss}}"/>
+                </Label.Content>
+            </Label>
+            <Slider x:Name="MusicSlider" Value="{Binding CurrentMusicPosition, Mode=TwoWay}" BorderBrush="{x:Null}" Cursor="Hand" Foreground="#FFF00F0F" IsMoveToPointEnabled="True" Height="18" VerticalAlignment="Bottom" Canvas.Left="243" Width="448" Canvas.Top="18"/>
+            <Button x:Name="VolOpenButton" Visibility="{Binding NoMute, Converter={StaticResource BoolToValueConverter}, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Click="VolOpenButton_Click"  Style="{StaticResource MouseOverOpacity}" Height="30" Canvas.Right="260" Canvas.Top="12" Width="30" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}">
                 <Image Width="23" Height="25" Source="Resources/images/vol_open.png" Margin="11,2,-4,2"/>
             </Button>
-            <Button x:Name="VolCloseButton" Click="VolCloseButton_Click" Style="{StaticResource MouseOverOpacity}" Height="30" Visibility="Hidden" Canvas.Right="260" Canvas.Top="12" Width="30" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}">
+            <Button x:Name="VolCloseButton" Visibility="{Binding IsMute, Converter={StaticResource BoolToValueConverter}, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Click="VolCloseButton_Click" Style="{StaticResource MouseOverOpacity}" Height="30" Canvas.Right="260" Canvas.Top="12" Width="30" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}">
                 <Image Width="23" Height="25" Source="Resources/images/vol_close.png" Margin="11,2,-4,2"/>
             </Button>
-            <Slider x:Name="SoundChangeSlider" ValueChanged="SoundChangeSlider_ValueChanged" Value="10" Canvas.Right="160" Canvas.Top="18" Width="100" Cursor="Hand" Background="#FFF5F5F7" IsMoveToPointEnabled="True"/>
+            <Slider x:Name="SoundChangeSlider" Value="{Binding Volume, Mode=TwoWay}" Canvas.Right="160" Canvas.Top="18" Width="100" Cursor="Hand" Background="#FFF5F5F7" IsMoveToPointEnabled="True"/>
             <Button Click="CurrentMusicListButton_Click" Canvas.Right="15" Canvas.Bottom="16" Width="45" Height="16" BorderThickness="0" Style="{StaticResource HarfCircularButton}" Background="#E1E1E2">
                 <Grid>
                     <Label Name="CurrentMusicListCountLable" Margin="5,-8,-5,-8" FontSize="11" Content="{Binding Count}"></Label>
@@ -102,7 +117,6 @@
             </Button>
             <Image Source="Resources/images/currentmusiclistcount_icon.png" PreviewMouseLeftButtonUp="CurrentMusicListButton_Click"  Canvas.Right="40" Canvas.Top="13" Cursor="Hand"/>
         </Canvas>
-        <Slider x:Name="MusicSlider" BorderBrush="{x:Null}" Cursor="Hand" Foreground="#FFF00F0F" IsMoveToPointEnabled="True" Margin="247,0,336,0" Height="33" VerticalAlignment="Bottom"/>
         <GridSplitter Background="#E1E1E2" Margin="200,50,0,51" HorizontalAlignment="Left" Width="1"/>
         <GridSplitter Height="1" Background="#E1E1E2" Margin="0,0,0,50" VerticalAlignment="Bottom" HorizontalAlignment="Stretch"/>
         <Frame Name="MusicDetailFrame" Visibility="Hidden" Background="#FAFAFA" NavigationUIVisibility="Hidden" Margin="0,50,0,50"/>

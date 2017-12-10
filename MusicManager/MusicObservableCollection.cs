@@ -10,15 +10,8 @@ using System.Threading.Tasks;
 
 namespace MusicCollection.MusicManager
 {
-    public class MusicObservableCollection<T>: ObservableCollection<T>, INotifyPropertyChanged
-    {        
-        public delegate void CountChangeHandle(object sender);
-        //public event CountChangeHandle OnCountChange;
-        //public virtual void CountChange()
-        //{
-        //    OnCountChange?.Invoke(Count);
-        //}
-
+    public class MusicObservableCollection<T>: ObservableCollection<T>
+    {
         public new int Add(T item)
         {
             int index = -1;
@@ -27,7 +20,7 @@ namespace MusicCollection.MusicManager
             {
                 return index;
             }
-            else if (File.Exists(music.Url))
+            else if (File.Exists(music.Path))
             {
                 base.Add(item);
                 index = this.Count - 1;
@@ -44,7 +37,7 @@ namespace MusicCollection.MusicManager
             {
                 for (int i = 0; i < this.Count; i++)
                 {
-                    if (list[i].Url == path)
+                    if (list[i].Path == path)
                     {
                         return i;
                     }
@@ -79,7 +72,7 @@ namespace MusicCollection.MusicManager
             {
                 for (int i = 0; i < this.Count; i++)
                 {
-                    if (list[i].Url == music.Url)
+                    if (list[i].Path == music.Path)
                     {
                         index = i;
                         return true;

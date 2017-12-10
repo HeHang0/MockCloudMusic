@@ -8,6 +8,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Net;
 using System.Reflection;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 
@@ -20,6 +21,11 @@ namespace MusicCollection.MusicAPI
             { NetMusicType.CloudMusic, "http://music.163.com/api/search/pc?s={0}&offset=0&limit=50&type=1" }
         };
 
+        private static Dictionary<NetMusicType, string> LyricAPI = new Dictionary<NetMusicType, string>()
+        {
+            { NetMusicType.CloudMusic, "http://music.163.com/api/song/lyric?os=pc&id={0}&lv=-1&kv=-1&tv=-1" }
+        };
+
         private static Dictionary<NetMusicType, string> DownloadLinkAPI = new Dictionary<NetMusicType, string>()
         {
             { NetMusicType.CloudMusic, "http://link.hhtjim.com/163/{0}.mp3" },
@@ -28,6 +34,18 @@ namespace MusicCollection.MusicAPI
 
         public static string GetUrlByNetMusic(NetMusic music)
         {
+            if (music.Origin == NetMusicType.CloudMusic)
+            {
+                var CloudMusicUrl = GetUrlFromCloudMusic(music);
+                if (!string.IsNullOrWhiteSpace(CloudMusicUrl) && CheckLink(CloudMusicUrl))
+                {
+                    return CloudMusicUrl;
+                }
+                else if (CheckLink(music.Url))
+                {
+                    return music.Url;
+                }
+            }
             var url = string.Format(DownloadLinkAPI[music.Origin], music.MusicID);
             if (CheckLink(url))
             {
@@ -36,7 +54,7 @@ namespace MusicCollection.MusicAPI
             return "";
         }
 
-        private static bool CheckLink(string url)
+        public static bool CheckLink(string url)
         {
             HttpWebRequest req = null;
             try
@@ -61,9 +79,9 @@ namespace MusicCollection.MusicAPI
             }
         }
 
-        public static Music GetMusicByMusicID(NetMusic net_music)
+        public static Music GetMusicByNetMusic(NetMusic net_music)
         {
-            var path = GetMusicUrlOfLocal(DownloadLinkAPI[net_music.Origin], net_music);
+            var path = GetMusicUrlOfLocal(net_music);
             if (string.IsNullOrWhiteSpace(path))
             {
                 return null;
@@ -82,7 +100,10 @@ namespace MusicCollection.MusicAPI
                 staThread.Start(args);
                 staThread.Join();
             }
-            return new Music(list[0], net_music);
+            var music = list[0];
+            music.AlbumImageUrl = net_music.AlbumImageUrl;
+            music.LyricPath = GetLyricByNetMusic(net_music);
+            return new Music(music, net_music);
         }
 
         private static void NewMusicSTA(object o)
@@ -93,6 +114,68 @@ namespace MusicCollection.MusicAPI
             list.Add(new Music(path));
         }
 
+        public static string GetLyricByMusic(Music music)
+        {
+            var LyricStr = "";
+            var LyricPath = "";
+            try
+            {
+                var LyricInfo = SendDataByGET($"http://lyrics.kugou.com/search?ver=1&man=yes&client=pc&keyword={Path.GetFileNameWithoutExtension(music.Path)}{music.Title}{music.Singer}&duration={music.Duration.TotalMilliseconds}&hash=");
+                JObject jo = (JObject)JsonConvert.DeserializeObject(LyricInfo);
+                var LyricId = jo["candidates"][0]["id"].ToString();
+                var LyricAccesskey = jo["candidates"][0]["accesskey"].ToString();
+                var LyricBase64 = SendDataByGET($"http://lyrics.kugou.com/download?ver=1&client=pc&id={LyricId}&accesskey={LyricAccesskey}&fmt=lrc&charset=utf8");
+                jo = (JObject)JsonConvert.DeserializeObject(LyricBase64);
+                var LyricBase64Str = jo["content"].ToString();
+                var LyricBytes = Convert.FromBase64String(LyricBase64Str);
+                LyricStr = Encoding.UTF8.GetString(LyricBytes);
+                if (!Directory.Exists("DownLoad\\Lyric\\"))//如果不存在就创建文件夹
+                {
+                    Directory.CreateDirectory("DownLoad\\Lyric\\");
+                }
+                File.WriteAllText($"DownLoad\\Lyric\\{music.Title} - {music.Singer}.lrc", LyricStr);
+                LyricPath = "DownLoad\\Lyric\\" + music.Title + " - " + music.Singer + ".lrc";
+                if (File.Exists(Path.GetFullPath(LyricPath)))
+                {
+                    return Path.GetFullPath(LyricPath);
+                }
+            }
+            catch (Exception)
+            {
+            }
+            return LyricPath;
+        }
+
+        public static string GetLyricByNetMusic(NetMusic netMusic)
+        {
+            var LyricStr = "";
+            var LyricPath = "";
+            if (string.IsNullOrWhiteSpace(netMusic.LyricPath) && CheckLink(netMusic.LyricPath))
+            {
+                LyricStr = SendDataByGET(netMusic.LyricPath);
+            }
+            else
+            {
+                LyricStr = SendDataByGET(string.Format(LyricAPI[netMusic.Origin], netMusic.MusicID));
+            }
+            if (!string.IsNullOrWhiteSpace(LyricStr))
+            {
+                JObject jo = (JObject)JsonConvert.DeserializeObject(LyricStr);
+                LyricStr = jo["lrc"]["lyric"].ToString();
+                if (!Directory.Exists("DownLoad\\Lyric\\"))//如果不存在就创建文件夹
+                {
+                    Directory.CreateDirectory("DownLoad\\Lyric\\");
+                }
+                var LiricLine = LyricStr.Split('\n');
+                File.WriteAllLines($"DownLoad\\Lyric\\{netMusic.Title} - {netMusic.Singer}.lrc", LiricLine);
+                LyricPath = "DownLoad\\Lyric\\" + netMusic.Title + " - " + netMusic.Singer + ".lrc";
+                if (File.Exists(Path.GetFullPath(LyricPath)))
+                {
+                    return Path.GetFullPath(LyricPath);
+                }
+            }
+            return LyricPath;
+        }
 
         public static ObservableCollection<NetMusic> GetNetMusicList(string SearchStr, NetMusicType type)
         {
@@ -104,10 +187,12 @@ namespace MusicCollection.MusicAPI
             return GetNetMusicListBySources(retString, type);
         }
         
-        private static string GetMusicUrlOfLocal(string Url, NetMusic netMusic)
+        private static string GetMusicUrlOfLocal(NetMusic netMusic)
         {
             try
             {
+                var Url = GetUrlByNetMusic(netMusic);
+
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(string.Format(Url, netMusic.MusicID));
 
                 //request.Referer = "http://music.163.com/";
@@ -168,11 +253,12 @@ namespace MusicCollection.MusicAPI
             {
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(Url);
 
-                //request.Referer = "http://music.163.com/";
+                request.Referer = "http://music.163.com/";
                 request.Method = "POST";
                 request.ContentType = "text/html;charset=UTF-8";
                 request.Timeout = 5000;
                 request.ReadWriteTimeout = 5000;
+                request.Headers.Add("Cookie", "appver=1.5.0.75771");
 
 
                 HttpWebResponse response = (HttpWebResponse)request.GetResponse();
@@ -197,7 +283,6 @@ namespace MusicCollection.MusicAPI
             //request.Referer = "http://music.163.com/";
             request.Method = "GET";
             request.ContentType = "text/html;charset=UTF-8";
-
 
 
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
@@ -246,7 +331,38 @@ namespace MusicCollection.MusicAPI
                     music.Singer = item["artists"][0]["name"].ToString();
                     music.MusicID = item["id"].ToString();
                     music.Album = item["album"]["name"].ToString();
+                    music.AlbumImageUrl = item["album"]["picUrl"].ToString();//"picUrl": "http://p1.music.126.net/B1ePGczwQUZueJl70TITWQ==/3287539775420245.jpg"
                     music.Origin = NetMusicType.CloudMusic;
+                    music.Url = item["mp3Url"].ToString().Replace("m2.music.126.net", "p2.music.126.net");
+                    try
+                    {
+                        music.Remark = item["hMusic"]["dfsId"].ToString();
+                    }
+                    catch (Exception)
+                    {
+                        try
+                        {
+                            music.Remark = item["mMusic"]["dfsId"].ToString();
+                        }
+                        catch (Exception)
+                        {
+                            try
+                            {
+                                music.Remark = item["lMusic"]["dfsId"].ToString();
+                            }
+                            catch (Exception)
+                            {
+                                try
+                                {
+                                    music.Remark = item["bMusic"]["dfsId"].ToString();
+                                }
+                                catch (Exception)
+                                {
+                                    
+                                }
+                            }
+                        }
+                    }
                     list.Add(music);
                 }
                 return list;
@@ -257,39 +373,104 @@ namespace MusicCollection.MusicAPI
             }
         }
 
-        /// <summary>
-        /// 执行JS方法
-        /// </summary>
-        /// <param name="methodName">方法名</param>
-        /// <param name="para">参数</param>
-        /// <returns></returns>
-        private static string GetJsMethd(string methodName, object[] para)
+        private static string CloudSendDataByPost(string Url, string paramData)
         {
-            StringBuilder sb = new StringBuilder();
-            sb.Append("package aa{");
-            sb.Append(" public class JScript {");
-            sb.Append("     public static function test(str) {");
-            sb.Append("         return 'Hello,'+str;");
-            sb.Append("     }");
-            sb.Append(" }");
-            sb.Append("}");
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(Url);
 
-            CompilerParameters parameters = new CompilerParameters();
+            //byte[] byteArray = dataEncode.GetBytes(paramData); //转化
+            request.Referer = "http://music.163.com/";
+            request.Method = "POST";
+            request.ContentType = "application/x-www-form-urlencoded";
+            request.Timeout = 5000;
+            request.ReadWriteTimeout = 5000;
+            request.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.71 Safari/537.36";
 
-            parameters.GenerateInMemory = true;
+            var a = Encoding.ASCII.GetBytes(paramData);
+            request.ContentLength = a.Length;
+            using (Stream reqStream = request.GetRequestStream())
+            {
+                reqStream.Write(a, 0, a.Length);
+            }
 
-            CodeDomProvider _provider = new Microsoft.JScript.JScriptCodeProvider();
+            try
+            {
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            Stream myResponseStream = response.GetResponseStream();
+            StreamReader myStreamReader = new StreamReader(myResponseStream, Encoding.GetEncoding("utf-8"));
+            string retString = myStreamReader.ReadToEnd();
+            myStreamReader.Close();
+            myResponseStream.Close();
+                JObject jo = (JObject)JsonConvert.DeserializeObject(retString);
+                var jt = jo["data"][0]["url"];
+                return jt.ToString();
+            }
+            catch (Exception)
+            {
+            }
 
-            CompilerResults results = _provider.CompileAssemblyFromSource(parameters, sb.ToString());
+            return "";
+        }
+        private static string GetUrlFromCloudMusic(NetMusic music)
+        {
+            var param = AesEncrypt("{\"ids\":\"[" + music.MusicID + "]\",\"br\":320000,\"csrf_token\":\"\"}", "0CoJUm6Qyw8W8jud");
+            param = AesEncrypt(param, "a8LWv2uAtXjzSfkQ");
+            param = System.Web.HttpUtility.UrlEncode(param);
+            var encSecKey = "&encSecKey=2d48fd9fb8e58bc9c1f14a7bda1b8e49a3520a67a2300a1f73766caee29f2411c5350bceb15ed196ca963d6a6d0b61f3734f0a0f4a172ad853f16dd06018bc5ca8fb640eaa8decd1cd41f66e166cea7a3023bd63960e656ec97751cfc7ce08d943928e9db9b35400ff3d138bda1ab511a06fbee75585191cabe0e6e63f7350d6";
+            var url = "http://music.163.com/weapi/song/enhance/player/url?csrf_token=";
+            var paramData = "params=" + param + encSecKey;
+            var Url = CloudSendDataByPost(url, paramData);
+            if (string.IsNullOrWhiteSpace(Url))
+            {
+                if (CheckLink(music.Url))
+                {
+                    Url = music.Url;
+                }
+                else
+                {
+                    Url = GetOldUrlFromCloudMusic(music);
+                }
+            }
+            return Url;
+        }
+        private static string AesEncrypt(string plaintextData, string key, string iv = "0102030405060708")
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(plaintextData)) return null;
+                byte[] toEncryptArray = Encoding.UTF8.GetBytes(plaintextData);
+                RijndaelManaged rm = new RijndaelManaged
+                {
+                    Key = Encoding.UTF8.GetBytes(key),
+                    IV = Encoding.UTF8.GetBytes(iv),
+                    Mode = CipherMode.CBC
+                };
+                ICryptoTransform cTransform = rm.CreateEncryptor();
+                byte[] resultArray = cTransform.TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
+                return Convert.ToBase64String(resultArray, 0, resultArray.Length);
+            }
+            catch (Exception)
+            {
+                return "";
+            }
+        }
+        public static string GetOldUrlFromCloudMusic(NetMusic music)
+        {
+            var input = music.Remark;
+            string key = "3go8&$8*3*3h0k(2)2";
+            byte[] keyBytes = Encoding.Default.GetBytes(key);
+            byte[] searchBytes = Encoding.Default.GetBytes(input);
 
-            Assembly assembly = results.CompiledAssembly;
+            for (int i = 0; i < searchBytes.Length; ++i)
+            {
+                searchBytes[i] ^= keyBytes[i % keyBytes.Length];
+            }
 
-            Type _evaluateType = assembly.GetType("aa.JScript");
+            var md5 = new MD5CryptoServiceProvider().ComputeHash(searchBytes);
+            var result = Convert.ToBase64String(md5);
+            result = result.Replace("+", "-");
+            result = result.Replace("/", "_");
 
-            object obj = _evaluateType.InvokeMember("test", BindingFlags.InvokeMethod,
-            null, null, para);
-
-            return obj.ToString();
+            return "http://p2.music.126.net/" + result + "/" + input + ".mp3";
         }
     }
     public enum NetMusicType

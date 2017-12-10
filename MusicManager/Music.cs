@@ -18,13 +18,22 @@ namespace MusicCollection.MusicManager
             BitRate = music.BitRate;
             AlbumImageUrl = music.AlbumImageUrl;
             Duration = music.Duration;
-            Url = music.Url;
-            LyricUrl = music.LyricUrl;
+            Path = music.Path;
+            LyricPath = music.LyricPath;
+        }
+        public Music(NetMusic music)
+        {
+            Title = music.Title;
+            Singer = music.Singer;
+            Album = music.Album;
+            AlbumImageUrl = music.AlbumImageUrl;
+            Path = music.Url;
+            LyricPath = music.LyricPath;
         }
 
-        public Music(string url)
+        public Music(string path)
         {
-            var info = MusicInfoHelper.GetInfo(url);
+            var info = MusicInfoHelper.GetInfo(path);
 
             Title = info[MusicInfoHelper.MusicInfos.Title];
             Singer = info[MusicInfoHelper.MusicInfos.Singer];
@@ -32,11 +41,11 @@ namespace MusicCollection.MusicManager
             Size = info[MusicInfoHelper.MusicInfos.Size];
             BitRate = info[MusicInfoHelper.MusicInfos.BitRate];
             AlbumImageUrl = info[MusicInfoHelper.MusicInfos.AlbumImageUrl];
-            LyricUrl = info[MusicInfoHelper.MusicInfos.LyricUrl];
+            LyricPath = info[MusicInfoHelper.MusicInfos.LyricUrl];
             var time = new TimeSpan();
             TimeSpan.TryParse(info[MusicInfoHelper.MusicInfos.Duration], out time);
             Duration = time;
-            Url = url;
+            Path = path;
         }
 
         public Music(Music music, NetMusic net_music) : this(music)
@@ -64,7 +73,7 @@ namespace MusicCollection.MusicManager
         /// <summary>
         /// 音乐时长
         /// </summary>
-        public TimeSpan Duration { get; set; }
+        public TimeSpan Duration { get; set; } = TimeSpan.Zero;
         
         /// <summary>
         /// 音乐大小
@@ -79,7 +88,7 @@ namespace MusicCollection.MusicManager
         /// <summary>
         /// 本地路径
         /// </summary>
-        public string Url { get; set; }
+        public string Path { get; set; }
         /// <summary>
         /// 专辑图
         /// </summary>
@@ -87,6 +96,6 @@ namespace MusicCollection.MusicManager
         /// <summary>
         /// 歌词路径
         /// </summary>
-        public string LyricUrl { get; set; }
+        public string LyricPath { get; set; } = string.Empty;
     }
 }

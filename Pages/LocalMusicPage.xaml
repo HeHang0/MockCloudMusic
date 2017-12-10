@@ -18,7 +18,7 @@
 
     <Grid>
         <Label Content="本地音乐" HorizontalAlignment="Left" Margin="40,22,0,0" VerticalAlignment="Top" FontSize="18" Opacity="0.7"/>
-        <Label Name="LocalMusicCountLable" Content="{Binding}" HorizontalAlignment="Left" Margin="122,29,0,0" VerticalAlignment="Top" Opacity="0.7"/>
+        <Label Name="LocalMusicCountLable" HorizontalAlignment="Left" Margin="122,29,0,0" VerticalAlignment="Top" Opacity="0.7"/>
         <!--<Label Content="  首音乐，" HorizontalAlignment="Left" Margin="122,29,0,0" VerticalAlignment="Top" Opacity="0.7"/>-->
         <Label Content="选择目录" Name="SelectContent" MouseDown="SelectContent_MouseDown" HorizontalAlignment="Left" Margin="188,29,0,0" VerticalAlignment="Top" Opacity="0.7" Cursor="Hand" Foreground="#FF005DFF"/>
         <Canvas Name="RefreshMusicCavas" Margin="389,0,312,518" Visibility="Hidden">
@@ -32,7 +32,7 @@
         <Button x:Name="RefreshLocalListButton" Style="{StaticResource AllHarfCircularButton}" Content="匹配音乐" Click="RefreshLocalListButton_Click" Foreground="#FF333333" HorizontalAlignment="Left" Margin="165,69,0,0" VerticalAlignment="Top" Width="92" Background="White" Height="25" BorderBrush="#FFE1E1E2"/>
 
         <Image Source="..\Resources\images\search.png" Cursor="IBeam" Margin="0,72,54,0" HorizontalAlignment="Right" Width="18" Height="18" VerticalAlignment="Top"/>
-        <TextBox x:Name="SearchTextBox" Style="{StaticResource SearchTextBox}" Keyboard.KeyUp="SearchTextBox_KeyUp" Padding="8,0" BorderBrush="#E1E1E2" BorderThickness="1" Background="{x:Null}" Height="25" Canvas.Left="255" Canvas.Top="15"
+        <TextBox x:Name="SearchTextBox" Style="{StaticResource SearchTextBox}" Tag="搜索本地音乐" Keyboard.KeyUp="SearchTextBox_KeyUp" Padding="8,0" BorderBrush="#E1E1E2" BorderThickness="1" Background="{x:Null}" Height="25" Canvas.Left="255" Canvas.Top="15"
                          VerticalContentAlignment="Center" TextWrapping="Wrap" Foreground="Black" Cursor="IBeam" Margin="0,69,45,0" HorizontalAlignment="Right" Width="165" VerticalAlignment="Top"/>
 
         <DataGrid x:Name="LocalMusicDataGrid" Margin="0,110,0,0" SelectionMode="Single" AlternationCount="2"

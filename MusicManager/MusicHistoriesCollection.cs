@@ -26,7 +26,7 @@ namespace MusicCollection.MusicManager
             {
                 for (int i = 0; i < this.Count; i++)
                 {
-                    if (list[i].Url == music.Url)
+                    if (list[i].Path == music.Path)
                     {
                         index = i;
                         return true;
