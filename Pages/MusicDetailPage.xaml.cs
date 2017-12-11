@@ -47,6 +47,7 @@ namespace MusicCollection.Pages
             ParentWindow.bsp.PropertyChanged += Bsp_PropertyChanged;
         }
 
+        private bool haveLyric = false;
         private void Bsp_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             var bsp = sender as SoundPlayer.BSoundPlayer;
@@ -73,6 +74,11 @@ namespace MusicCollection.Pages
         private float angle = 0;
         private void TimerOnTick(object sender, EventArgs e)
         {
+            if (!haveLyric)
+            {
+                timer.Stop();
+                return;
+            }
             RotateTransform rotateTransform = new RotateTransform((angle+=0.03f) * 180 / 3.142);
             rotateTransform.CenterX = Image.ActualWidth / 2;
             rotateTransform.CenterY = Image.ActualHeight / 2;
@@ -100,7 +106,7 @@ namespace MusicCollection.Pages
 
         public void Init(BitmapImage bi, Music music = null, NetMusic netMusic = null)
         {
-            //timer.Stop();
+            angle = 0;
             Lyric.Clear();
             LyricTextBlock.Inlines.Clear();
             AlbumImage.ImageSource = bi;
@@ -145,14 +151,11 @@ namespace MusicCollection.Pages
                 Count = LyricTextBlock.Inlines.Count;
                 CurrentLyricIndex = 0;
                 LastLyricLineIndex = -1;
-                //timer.Start();
-            }
-            else if (1 == 0)
-            {
-
+                haveLyric = true;
             }
             else
             {
+                haveLyric = false;
                 for (int i = 0; i < 10; i++)
                 {
                     LyricTextBlock.Inlines.Add("\n");

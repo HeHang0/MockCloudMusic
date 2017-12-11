@@ -123,6 +123,11 @@ namespace MusicCollection
                 {
                     CurrentIndex = 0;
                 }
+                if (IsShufflePlay)
+                {
+                    Random ran = new Random();
+                    CurrentIndex = ran.Next(0, CurrentMusicList.Count);
+                }
                 Play();
             }
         }
@@ -277,6 +282,11 @@ namespace MusicCollection
             {
                 CurrentIndex = CurrentMusicList.Count - 1;
             }
+            if (IsShufflePlay && CurrentMusicList.Count > 0)
+            {
+                Random ran = new Random();
+                CurrentIndex = ran.Next(0, CurrentMusicList.Count);
+            }
             bsp.Stop();
             Play();
         }
@@ -288,6 +298,11 @@ namespace MusicCollection
             if (((++CurrentIndex >= count) || CurrentIndex == -1) && count > 0)
             {
                 CurrentIndex = 0;
+            }
+            if (IsShufflePlay && count > 0)
+            {
+                Random ran = new Random();
+                CurrentIndex = ran.Next(0, CurrentMusicList.Count);
             }
             bsp.Stop();
             Play();
@@ -492,6 +507,20 @@ namespace MusicCollection
         private void PlayBar_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             MusicSlider.Width = PlayBar.ActualWidth - 574;
+        }
+
+        private void ShufflePlayButton_Click(object sender, RoutedEventArgs e)
+        {
+            IsShufflePlay = false;
+            ShufflePlayButton.Visibility = Visibility.Hidden;
+            LoopPlayButton.Visibility = Visibility.Visible;
+        }
+        private bool IsShufflePlay = true;
+        private void LoopPlayButton_Click(object sender, RoutedEventArgs e)
+        {
+            IsShufflePlay = true;
+            ShufflePlayButton.Visibility = Visibility.Visible;
+            LoopPlayButton.Visibility = Visibility.Hidden;
         }
     }
 }

@@ -246,6 +246,8 @@
     <Content Include="bin\Debug\1.html" />
     <Content Include="packages\NAudio\lib\net\NAudio.dll" />
     <Content Include="packages\TagLib\lib\taglib-sharp.dll" />
+    <Resource Include="Resources\images\shuffle_play.png" />
+    <Resource Include="Resources\images\loop_play.png" />
     <Resource Include="Resources\images\item_play.png" />
     <Resource Include="Resources\images\download.png" />
     <Resource Include="Resources\images\search.png" />
