@@ -22,6 +22,9 @@ using Newtonsoft.Json;
 using System.Collections.ObjectModel;
 using MusicCollection.MusicAPI;
 using System.Threading;
+using Microsoft.WindowsAPICodePack.Taskbar;
+using System.Windows.Interop;
+using System.Drawing;
 
 namespace MusicCollection
 {
@@ -50,8 +53,116 @@ namespace MusicCollection
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             PlayBar.DataContext = bsp;
-            InitMusic();
             InitPages();
+            InitMusic();
+            InitTaskBar();
+            InitNotyfy();
+        }
+
+        System.Windows.Forms.NotifyIcon notifyIcon;
+        private void InitNotyfy()
+        {
+            notifyIcon = new System.Windows.Forms.NotifyIcon();
+            notifyIcon.Text = Title;//最小化到托盘时，鼠标点击时显示的文本
+            notifyIcon.Icon = FromImageSource(Icon);//程序图标
+            notifyIcon.Visible = true;
+            notifyIcon.MouseDown += NotifyIcon_MouseDown;
+            BalloonTips("IsMusic");
+        }
+        public void BalloonTips(string msg)
+        {
+            notifyIcon.BalloonTipText = msg; //设置托盘提示显示的文本
+            notifyIcon.ShowBalloonTip(500);
+        }
+
+        ChildWondows.NotifyWindow NotifyWin;
+        private void NotifyIcon_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
+            if (e.Button == System.Windows.Forms.MouseButtons.Right)
+            {
+                if (NotifyWin == null)
+                {
+                    NotifyWin = new ChildWondows.NotifyWindow(this);
+                }
+                NotifyWin.Show();
+            }
+            else if (e.Button == System.Windows.Forms.MouseButtons.Left)
+            {
+                if (this.Visibility == Visibility.Hidden)
+                {
+                    this.Visibility = Visibility.Visible;
+                }
+                else if (WindowState == WindowState.Minimized)
+                {
+                    WindowState = WindowState.Normal;
+                }
+            }
+        }
+
+        private static Icon FromImageSource(ImageSource icon)
+        {
+            if (icon == null)
+            {
+                return null;
+            }
+            Uri iconUri = new Uri(icon.ToString());
+            return new Icon(System.Windows.Application.GetResourceStream(iconUri).Stream);
+        }
+        private void InitTaskBar()
+        {
+            //播放按钮
+            ThumbnailToolBarButton btnPlayPause = new ThumbnailToolBarButton(Properties.Resources.Play, "播放");
+            btnPlayPause.Enabled = true;
+            btnPlayPause.Click += new EventHandler<ThumbnailButtonClickedEventArgs>(btnPlayPause_Click);
+
+
+            ThumbnailToolBarButton btnNext = new ThumbnailToolBarButton(Properties.Resources.Next, "下一曲");
+            btnNext.Enabled = true;
+            btnNext.Click += new EventHandler<ThumbnailButtonClickedEventArgs>(btnNext_Click);
+
+            //上一首按钮  
+            ThumbnailToolBarButton btnPre = new ThumbnailToolBarButton(Properties.Resources.Last, "上一曲");
+            btnNext.Enabled = true;
+            btnPre.Click += new EventHandler<ThumbnailButtonClickedEventArgs>(btnPre_Click);
+
+            //添加按钮  
+            TaskbarManager.Instance.ThumbnailToolBars.AddButtons(new WindowInteropHelper(Application.Current.MainWindow).Handle, btnPre, btnPlayPause, btnNext);
+
+            //裁剪略缩图，后面提到  
+            //TaskbarManager.Instance.TabbedThumbnail.SetThumbnailClip(new WindowInteropHelper(this).Handle, new System.Drawing.Rectangle(5, 570, 45, 43));
+        }
+
+        private void btnNext_Click(object sender, ThumbnailButtonClickedEventArgs e)
+        {
+            
+            NextMusicPlay();
+        }
+
+        private void btnPre_Click(object sender, ThumbnailButtonClickedEventArgs e)
+        {
+            LastMusicPlay();
+        }
+
+        private void btnPlayPause_Click(object sender, ThumbnailButtonClickedEventArgs e)
+        {
+            var btn = sender as ThumbnailToolBarButton;
+            if (bsp.IsPlaying)
+            {
+                Pause();
+                btn.Icon = Properties.Resources.Play;
+                return;
+            }
+            else if (bsp.IsPause)
+            {
+                bsp.Play();
+                btn.Icon = Properties.Resources.Pause;
+                PlayMusicButton.Visibility = Visibility.Hidden;
+                PauseMusicButton.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                Play();
+            }
         }
 
         private void InitPages()
@@ -278,6 +389,10 @@ namespace MusicCollection
 
         private void LastMusicButton_Click(object sender, RoutedEventArgs e)
         {
+            LastMusicPlay();
+        }
+        private void LastMusicPlay()
+        {
             if (--CurrentIndex < 0)
             {
                 CurrentIndex = CurrentMusicList.Count - 1;
@@ -291,8 +406,11 @@ namespace MusicCollection
             Play();
         }
 
-
         private void NextMusicButton_Click(object sender, RoutedEventArgs e)
+        {
+            NextMusicPlay();
+        }
+        private void NextMusicPlay()
         {
             var count = CurrentMusicList.Count;
             if (((++CurrentIndex >= count) || CurrentIndex == -1) && count > 0)

@@ -50,6 +50,18 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.JScript" />
+    <Reference Include="Microsoft.WindowsAPICodePack, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\Microsoft.WindowsAPICodePack-Core.1.1.0.0\lib\Microsoft.WindowsAPICodePack.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.WindowsAPICodePack.Shell, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\Microsoft.WindowsAPICodePack-Shell.1.1.0.0\lib\Microsoft.WindowsAPICodePack.Shell.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.WindowsAPICodePack.ShellExtensions, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\Microsoft.WindowsAPICodePack-Shell.1.1.0.0\lib\Microsoft.WindowsAPICodePack.ShellExtensions.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="NAudio, Version=1.7.2.19, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>packages\NAudio\lib\net\NAudio.dll</HintPath>
@@ -90,8 +102,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="ChildWondows\LocalMusicFolderWindow.xaml.cs">
+    <Compile Include="ChildWindows\LocalMusicFolderWindow.xaml.cs">
       <DependentUpon>LocalMusicFolderWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ChildWindows\NotifyWindow.xaml.cs">
+      <DependentUpon>NotifyWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="EncodingHelper.cs" />
     <Compile Include="MusicAPI\CloudMusic\CloudMusicSearchModel.cs" />
@@ -125,7 +140,11 @@
     <Compile Include="Resources\BoolToVisibility.cs" />
     <Compile Include="SoundPlayer\BSoundPlayer - 复制.cs" />
     <Compile Include="SoundPlayer\BSoundPlayer.cs" />
-    <Page Include="ChildWondows\LocalMusicFolderWindow.xaml">
+    <Page Include="ChildWindows\LocalMusicFolderWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ChildWindows\NotifyWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -243,9 +262,16 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="bin\Debug\1.html" />
     <Content Include="packages\NAudio\lib\net\NAudio.dll" />
     <Content Include="packages\TagLib\lib\taglib-sharp.dll" />
+    <Resource Include="Resources\images\last_circle.png" />
+    <Resource Include="Resources\images\player.png" />
+    <Resource Include="Resources\images\next_circle.png" />
+    <Resource Include="Resources\images\music.png" />
+    <Resource Include="Resources\images\rw.ico" />
+    <Resource Include="Resources\images\suspend.ico" />
+    <Resource Include="Resources\images\play.ico" />
+    <Resource Include="Resources\images\ff.ico" />
     <Resource Include="Resources\images\shuffle_play.png" />
     <Resource Include="Resources\images\loop_play.png" />
     <Resource Include="Resources\images\item_play.png" />
@@ -260,7 +286,9 @@
     <Resource Include="Resources\images\vol_close.png" />
     <Resource Include="Resources\images\vol_open.png" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="bin\Debug\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

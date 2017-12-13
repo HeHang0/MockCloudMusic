@@ -78,18 +78,18 @@
         <Frame Name="PageFrame" Background="#FAFAFA" NavigationUIVisibility="Hidden" Margin="200,50,0,50"/>
         <Canvas Name="PlayBar" Height="50" Background="#FFF5F5F7" Margin="0,0,0,0" SizeChanged="PlayBar_SizeChanged" VerticalAlignment="Bottom">
             <Button Name="LastMusicButton" Click="LastMusicButton_Click" Style="{StaticResource CircularButton}" Width="30" Height="30" Background="#E83C3C" Canvas.Left="28" Canvas.Bottom="10" Canvas.Top="10">
-                <Image Width="18" Height="18" Source="Resources/images/rw.png"/>
+                <Image Name="LastImage" Width="18" Height="18" Source="Resources/images/rw.ico"/>
             </Button>
 
             <Button Name="PlayMusicButton" Click="PlayMusicButton_Click" Style="{StaticResource CircularButton}" Width="35" Height="35" Background="#E83C3C" Canvas.Left="82" Canvas.Bottom="7" Canvas.Top="8">
-                <Image Name="PlayImage" Width="18" Height="18" Source="Resources/images/play.png"/>
+                <Image Name="PlayImage" Width="18" Height="18" Source="Resources/images/play.ico"/>
             </Button>
             <Button Name="PauseMusicButton" Visibility="Hidden" Click="PlayMusicButton_Click" Style="{StaticResource CircularButton}"  Width="35" Height="35" Background="#E83C3C" Canvas.Left="82" Canvas.Bottom="7">
-                <Image Name="PauseImage" Width="18" Height="18" Source="Resources/images/suspend.png"/>
+                <Image Name="PauseImage" Width="18" Height="18" Source="Resources/images/suspend.ico"/>
             </Button>
 
             <Button Name="NextMusicButton" Click="NextMusicButton_Click" Style="{StaticResource CircularButton}" Width="30" Height="30" Background="#E83C3C" Canvas.Left="140" Canvas.Bottom="10" Canvas.Top="10">
-                <Image Width="18" Height="18" Source="Resources/images/ff.png"/>
+                <Image Name="NextImage" Width="18" Height="18" Source="Resources/images/ff.ico"/>
             </Button>
 
             <Label x:Name="CurrentTimeLabel"  Canvas.Left="198" Canvas.Top="14">
