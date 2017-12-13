@@ -53,22 +53,32 @@ namespace MusicCollection
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             PlayBar.DataContext = bsp;
+            InitNotyfy();
+            InitTaskBar();
             InitPages();
             InitMusic();
-            InitTaskBar();
-            InitNotyfy();
         }
 
         System.Windows.Forms.NotifyIcon notifyIcon;
         private void InitNotyfy()
         {
+            NotifyWin = new ChildWondows.NotifyWindow(this);
+            NotifyWin.Owner = this;
             notifyIcon = new System.Windows.Forms.NotifyIcon();
             notifyIcon.Text = Title;//最小化到托盘时，鼠标点击时显示的文本
             notifyIcon.Icon = FromImageSource(Icon);//程序图标
             notifyIcon.Visible = true;
+            notifyIcon.MouseDoubleClick += NotifyIcon_MouseDoubleClick;
             notifyIcon.MouseDown += NotifyIcon_MouseDown;
             BalloonTips("IsMusic");
         }
+
+        private void NotifyIcon_MouseDoubleClick(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
+            WindowState = WindowState.Normal;
+            Show();
+        }
+
         public void BalloonTips(string msg)
         {
             notifyIcon.BalloonTipText = msg; //设置托盘提示显示的文本
@@ -83,8 +93,13 @@ namespace MusicCollection
                 if (NotifyWin == null)
                 {
                     NotifyWin = new ChildWondows.NotifyWindow(this);
+                    NotifyWin.Owner = this;
                 }
+                System.Drawing.Point pt = System.Windows.Forms.Control.MousePosition;//WPF方法
                 NotifyWin.Show();
+                NotifyWin.Left = pt.X;
+                NotifyWin.Top = pt.Y - NotifyWin.ActualHeight;
+                NotifyWin.Activate();
             }
             else if (e.Button == System.Windows.Forms.MouseButtons.Left)
             {
@@ -92,10 +107,11 @@ namespace MusicCollection
                 {
                     this.Visibility = Visibility.Visible;
                 }
-                else if (WindowState == WindowState.Minimized)
+                else if (WindowState != WindowState.Normal)
                 {
                     WindowState = WindowState.Normal;
                 }
+                Show();
             }
         }
 
@@ -108,12 +124,13 @@ namespace MusicCollection
             Uri iconUri = new Uri(icon.ToString());
             return new Icon(System.Windows.Application.GetResourceStream(iconUri).Stream);
         }
+        ThumbnailToolBarButton ToolBarPlayPauseButton;
         private void InitTaskBar()
         {
             //播放按钮
-            ThumbnailToolBarButton btnPlayPause = new ThumbnailToolBarButton(Properties.Resources.Play, "播放");
-            btnPlayPause.Enabled = true;
-            btnPlayPause.Click += new EventHandler<ThumbnailButtonClickedEventArgs>(btnPlayPause_Click);
+            ToolBarPlayPauseButton = new ThumbnailToolBarButton(Properties.Resources.Play, "播放");
+            ToolBarPlayPauseButton.Enabled = true;
+            ToolBarPlayPauseButton.Click += new EventHandler<ThumbnailButtonClickedEventArgs>(btnPlayPause_Click);
 
 
             ThumbnailToolBarButton btnNext = new ThumbnailToolBarButton(Properties.Resources.Next, "下一曲");
@@ -126,7 +143,7 @@ namespace MusicCollection
             btnPre.Click += new EventHandler<ThumbnailButtonClickedEventArgs>(btnPre_Click);
 
             //添加按钮  
-            TaskbarManager.Instance.ThumbnailToolBars.AddButtons(new WindowInteropHelper(Application.Current.MainWindow).Handle, btnPre, btnPlayPause, btnNext);
+            TaskbarManager.Instance.ThumbnailToolBars.AddButtons(new WindowInteropHelper(Application.Current.MainWindow).Handle, btnPre, ToolBarPlayPauseButton, btnNext);
 
             //裁剪略缩图，后面提到  
             //TaskbarManager.Instance.TabbedThumbnail.SetThumbnailClip(new WindowInteropHelper(this).Handle, new System.Drawing.Rectangle(5, 570, 45, 43));
@@ -145,24 +162,7 @@ namespace MusicCollection
 
         private void btnPlayPause_Click(object sender, ThumbnailButtonClickedEventArgs e)
         {
-            var btn = sender as ThumbnailToolBarButton;
-            if (bsp.IsPlaying)
-            {
-                Pause();
-                btn.Icon = Properties.Resources.Play;
-                return;
-            }
-            else if (bsp.IsPause)
-            {
-                bsp.Play();
-                btn.Icon = Properties.Resources.Pause;
-                PlayMusicButton.Visibility = Visibility.Hidden;
-                PauseMusicButton.Visibility = Visibility.Visible;
-            }
-            else
-            {
-                Play();
-            }
+            PlayMusicButton_Click(new object(), new RoutedEventArgs());
         }
 
         private void InitPages()
@@ -173,7 +173,7 @@ namespace MusicCollection
             NetMusicSearch = new NetMusicSearchPage(this);
             PageFrame.Content = LocalMusic;
             CurrentMusicListFrame.Content = new CurrentMusicListAndHistoriesPages(this);
-            MusicDetailFrame.Content = new MusicDetailPage(this);
+            MusicDetailFrame.Content = MusicDetail;
         }
 
         private void InitMusic()
@@ -219,8 +219,9 @@ namespace MusicCollection
             //}
             if (CurrentMusicList.Count > 0)
             {
-                Play();
-                Pause();
+                PlayMusicButton_Click(new object(), new RoutedEventArgs());
+                PlayMusicButton_Click(new object(), new RoutedEventArgs());
+                //Pause();
             }
             CurrentMusicListCountLable.DataContext = CurrentMusicList;
             bsp.PropertyChanged += Bsp_PropertyChanged;
@@ -266,7 +267,7 @@ namespace MusicCollection
             }
         }
 
-        private void PlayMusicButton_Click(object sender, RoutedEventArgs e)
+        public void PlayMusicButton_Click(object sender, RoutedEventArgs e)
         {
             if (bsp.IsPlaying)
             {
@@ -276,17 +277,23 @@ namespace MusicCollection
             else if (bsp.IsPause)
             {
                 bsp.Play();
-                PlayMusicButton.Visibility = Visibility.Hidden;
-                PauseMusicButton.Visibility = Visibility.Visible;
             }
             else
             {
                 Play();
             }
+            PlayMusicButton.Visibility = Visibility.Hidden;
+            PauseMusicButton.Visibility = Visibility.Visible;
+            ToolBarPlayPauseButton.Icon = Properties.Resources.Pause;
+            NotifyWin.NotifyPalyButton.Visibility = Visibility.Hidden;
+            NotifyWin.NotifyPauseButton.Visibility = Visibility.Visible;
         }
         public void Pause()
         {
             bsp.Pause();
+            NotifyWin.NotifyPalyButton.Visibility = Visibility.Visible;
+            NotifyWin.NotifyPauseButton.Visibility = Visibility.Hidden;
+            ToolBarPlayPauseButton.Icon = Properties.Resources.Play;
             PlayMusicButton.Visibility = Visibility.Visible;
             PauseMusicButton.Visibility = Visibility.Hidden;
         }
@@ -333,6 +340,7 @@ namespace MusicCollection
                 PlayMusicButton.Visibility = Visibility.Hidden;
                 PauseMusicButton.Visibility = Visibility.Visible;
                 Title = CurrentMusicList[CurrentIndex].Title + " - " + CurrentMusicList[CurrentIndex].Singer;
+                notifyIcon.Text = Title;
                 HistoryMusicList.Add(new MusicHistory(CurrentMusicList[CurrentIndex]));
                 SetMiniLable(CurrentMusicList[CurrentIndex]);
             }
@@ -342,6 +350,7 @@ namespace MusicCollection
                 PlayMusicButton.Visibility = Visibility.Hidden;
                 PauseMusicButton.Visibility = Visibility.Visible;
                 Title = netMusic.Title + " - " + netMusic.Singer;
+                notifyIcon.Text = Title;
                 SetMiniLable(netMusic);
             }
             return true;
@@ -361,10 +370,7 @@ namespace MusicCollection
             CurrentMusicImageMini.Source = bi;
             CurrentMusicTitleMini.Content = netMusic.Title;
             CurrentMusicSingerMini.Content = netMusic.Singer;
-            if (MusicDetailFrame.Content != null)
-            {
-                (MusicDetailFrame.Content as MusicDetailPage).Init(bi, null, netMusic);
-            }
+            MusicDetail.Init(bi, null, netMusic);
         }
 
         private void SetMiniLable(Music music)
@@ -381,17 +387,14 @@ namespace MusicCollection
             CurrentMusicImageMini.Source = bi;
             CurrentMusicTitleMini.Content = music.Title;
             CurrentMusicSingerMini.Content = music.Singer;
-            if (MusicDetailFrame.Content != null)
-            {
-                (MusicDetailFrame.Content as MusicDetailPage).Init(bi, CurrentMusicList[CurrentIndex], null);
-            }
+            MusicDetail.Init(bi, CurrentMusicList[CurrentIndex], null);
         }
 
         private void LastMusicButton_Click(object sender, RoutedEventArgs e)
         {
             LastMusicPlay();
         }
-        private void LastMusicPlay()
+        public void LastMusicPlay()
         {
             if (--CurrentIndex < 0)
             {
@@ -410,7 +413,7 @@ namespace MusicCollection
         {
             NextMusicPlay();
         }
-        private void NextMusicPlay()
+        public void NextMusicPlay()
         {
             var count = CurrentMusicList.Count;
             if (((++CurrentIndex >= count) || CurrentIndex == -1) && count > 0)
@@ -466,7 +469,7 @@ namespace MusicCollection
 
         private void ExitButton_Click(object sender, RoutedEventArgs e)
         {
-            Application.Current.Shutdown();
+            Hide();
         }
 
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -616,6 +619,7 @@ namespace MusicCollection
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             bsp.Stop();
+            notifyIcon.Dispose();
             File.WriteAllText("Data\\CurrentMusicList.json", JsonConvert.SerializeObject(CurrentMusicList));
             File.WriteAllText("Data\\HistoryMusicList.json", JsonConvert.SerializeObject(HistoryMusicList));
             LocalMusic.LocalMusicPage_Closing();

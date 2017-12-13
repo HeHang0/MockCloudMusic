@@ -193,19 +193,24 @@
         </Style.Triggers>
     </Style>
 
-    <Style x:Key="MouseOverNotyfyButton" TargetType="{x:Type Button}">
+    <Style x:Key="MouseOverNotifyButton" TargetType="{x:Type Button}">
+        <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="Template">
             <Setter.Value>
-                <ControlTemplate TargetType="Button">
-                    <ContentPresenter Content="{TemplateBinding Content}"/>
+                <ControlTemplate TargetType="{x:Type Button}">
+                    <Grid>
+                        <Border x:Name="Border" BorderBrush="{TemplateBinding Control.BorderBrush}" Background="{TemplateBinding Background}">
+                            <ContentPresenter Content="{TemplateBinding ContentControl.Content}" HorizontalAlignment="Center" VerticalAlignment="Center"></ContentPresenter>
+                        </Border>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Border" Property="Background" Value="#EDEDEF"></Setter>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
-        <Style.Triggers>
-            <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="Black"/>
-            </Trigger>
-        </Style.Triggers>
     </Style>
 
     <Style x:Key="CircularButton" TargetType="{x:Type Button}">

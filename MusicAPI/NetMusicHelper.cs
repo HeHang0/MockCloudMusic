@@ -120,9 +120,24 @@ namespace MusicCollection.MusicAPI
             var LyricPath = "";
             try
             {
-                var LyricInfo = SendDataByGET($"http://lyrics.kugou.com/search?ver=1&man=yes&client=pc&keyword={Path.GetFileNameWithoutExtension(music.Path)}{music.Title}{music.Singer}&duration={music.Duration.TotalMilliseconds}&hash=");
-                JObject jo = (JObject)JsonConvert.DeserializeObject(LyricInfo);
-                var LyricId = jo["candidates"][0]["id"].ToString();
+                var LyricInfo = "";
+                JObject jo;
+                var LyricId = "";
+                try
+                {
+                    LyricInfo = SendDataByGET($"http://lyrics.kugou.com/search?ver=1&man=yes&client=pc&keyword={Path.GetFileNameWithoutExtension(music.Path)}&duration={music.Duration.TotalMilliseconds}&hash=");
+                    jo = (JObject)JsonConvert.DeserializeObject(LyricInfo);
+                    LyricId = jo["candidates"][0]["id"].ToString();
+                }
+                catch (Exception)
+                {
+                    LyricInfo = SendDataByGET($"http://lyrics.kugou.com/search?ver=1&man=yes&client=pc&keyword={music.Title}&duration={music.Duration.TotalMilliseconds}&hash=");
+                    jo = (JObject)JsonConvert.DeserializeObject(LyricInfo);
+                    LyricId = jo["candidates"][0]["id"].ToString();
+                }
+                //var LyricInfo = SendDataByGET($"http://lyrics.kugou.com/search?ver=1&man=yes&client=pc&keyword={Path.GetFileNameWithoutExtension(music.Path)}{music.Title}{music.Singer}&duration={music.Duration.TotalMilliseconds}&hash=");
+                //JObject jo = (JObject)JsonConvert.DeserializeObject(LyricInfo);
+                //var LyricId = jo["candidates"][0]["id"].ToString();
                 var LyricAccesskey = jo["candidates"][0]["accesskey"].ToString();
                 var LyricBase64 = SendDataByGET($"http://lyrics.kugou.com/download?ver=1&client=pc&id={LyricId}&accesskey={LyricAccesskey}&fmt=lrc&charset=utf8");
                 jo = (JObject)JsonConvert.DeserializeObject(LyricBase64);
