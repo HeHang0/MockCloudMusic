@@ -45,6 +45,8 @@ namespace MusicCollection
         private MusicDetailPage MusicDetail;
         private NetMusicSearchPage NetMusicSearch;
 
+        ChildWondows.NotifyWindow NotifyWin;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -85,7 +87,6 @@ namespace MusicCollection
             notifyIcon.ShowBalloonTip(500);
         }
 
-        ChildWondows.NotifyWindow NotifyWin;
         private void NotifyIcon_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
         {
             if (e.Button == System.Windows.Forms.MouseButtons.Right)
@@ -643,6 +644,18 @@ namespace MusicCollection
             IsShufflePlay = true;
             ShufflePlayButton.Visibility = Visibility.Visible;
             LoopPlayButton.Visibility = Visibility.Hidden;
+        }
+
+        private void DesktopLyricButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (MusicDetail.DesktopLyricWin.Visibility == Visibility.Visible)
+            {
+                MusicDetail.DesktopLyricWin.Visibility = Visibility.Hidden;
+            }
+            else
+            {
+                MusicDetail.DesktopLyricWin.Visibility = Visibility.Visible;
+            }
         }
     }
 }

@@ -102,6 +102,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="ChildWindows\DesktopLyricWindow.xaml.cs">
+      <DependentUpon>DesktopLyricWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ChildWindows\LocalMusicFolderWindow.xaml.cs">
       <DependentUpon>LocalMusicFolderWindow.xaml</DependentUpon>
     </Compile>
@@ -140,6 +143,10 @@
     <Compile Include="Resources\BoolToVisibility.cs" />
     <Compile Include="SoundPlayer\BSoundPlayer - 复制.cs" />
     <Compile Include="SoundPlayer\BSoundPlayer.cs" />
+    <Page Include="ChildWindows\DesktopLyricWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="ChildWindows\LocalMusicFolderWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

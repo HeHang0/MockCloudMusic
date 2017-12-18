@@ -16,7 +16,7 @@ namespace MusicCollection.MusicManager
             {
                 RemoveAt(index);
             }
-            base.Add(item);
+            base.Insert(0, item);
         }
 
         private bool IsExist(MusicHistory music, out int index)

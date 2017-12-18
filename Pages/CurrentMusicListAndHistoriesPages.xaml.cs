@@ -55,11 +55,11 @@ namespace MusicCollection.Pages
                 }
                 else if (tm < 60 && tts > 0)
                 {
-                    describe = tm-1 + "分钟前";
+                    describe = tm + "分钟前";
                 }
                 else if (th < 24 && tts > 0)
                 {
-                    describe = th-1 + "小时前";
+                    describe = th + "小时前";
                 }
                 else if (tts < 24 )
                 {
@@ -102,7 +102,14 @@ namespace MusicCollection.Pages
 
         private void ClearCurrentMusicListButton_Click(object sender, RoutedEventArgs e)
         {
-            ParentWindow.CurrentMusicList.Clear();
+            if (CurrentMusicListButtonHelper.Visibility == Visibility.Visible)
+            {
+                ParentWindow.CurrentMusicList.Clear();
+            }
+            else if (HistoryMusicListButtonHelper.Visibility == Visibility.Visible)
+            {
+                ParentWindow.HistoryMusicList.Clear();
+            }
         }
 
         private void ExitButton_Click(object sender, RoutedEventArgs e)
@@ -128,10 +135,10 @@ namespace MusicCollection.Pages
             UpdateHistoriesTimeDescribe();
             CurrentMusicOrHistoriesDataGrid.DataContext = ParentWindow.HistoryMusicList;
 
-            ICollectionView view = CollectionViewSource.GetDefaultView(CurrentMusicOrHistoriesDataGrid.ItemsSource);
-            view.SortDescriptions.Clear();
-            SortDescription sd = new SortDescription("LastPlayTime", ListSortDirection.Descending);
-            view.SortDescriptions.Add(sd);
+            //ICollectionView view = CollectionViewSource.GetDefaultView(CurrentMusicOrHistoriesDataGrid.ItemsSource);
+            //view.SortDescriptions.Clear();
+            //SortDescription sd = new SortDescription("LastPlayTime", ListSortDirection.Descending);
+            //view.SortDescriptions.Add(sd);
 
             CurrentMusicOrHistoriesDataGrid.Columns[2].Visibility = Visibility.Hidden;
             CurrentMusicOrHistoriesDataGrid.Columns[3].Visibility = Visibility.Visible;

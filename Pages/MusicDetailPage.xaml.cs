@@ -29,22 +29,27 @@ namespace MusicCollection.Pages
         private ObservableCollection<LyricLine> Lyric = new ObservableCollection<LyricLine>();
         private int CurrentLyricIndex = -1;
         private DispatcherTimer timer = new DispatcherTimer();
+
+        public ChildWindows.DesktopLyricWindow DesktopLyricWin;
         public MusicDetailPage(MainWindow mainWindow)
         {
             ParentWindow = mainWindow;
             InitializeComponent();
+            Init();
+        }
+
+        private void Init()
+        {
+            DesktopLyricWin = new ChildWindows.DesktopLyricWindow();
+            DesktopLyricWin.Owner = ParentWindow;
+
+            timer.Interval = TimeSpan.FromMilliseconds(100);
+            timer.Tick += TimerOnTick;
+            ParentWindow.bsp.PropertyChanged += Bsp_PropertyChanged;
         }
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            //if (ParentWindow.CurrentIndex >= 0)
-            //{
-            //    Init(ParentWindow.CurrentMusicList[ParentWindow.CurrentIndex]);
-            //}
-            timer.Interval = TimeSpan.FromMilliseconds(100);
-            timer.Tick += TimerOnTick;
-            //timer.Start();
-            ParentWindow.bsp.PropertyChanged += Bsp_PropertyChanged;
         }
 
         private bool haveLyric = false;
@@ -96,6 +101,7 @@ namespace MusicCollection.Pages
                     var run = LyricTextBlock.Inlines.ElementAt(LastLyricLineIndex);
                     run.Foreground = Brushes.Red;
                     LyricBlock.ScrollToVerticalOffset(LyricBlock.ScrollableHeight * LastLyricLineIndex * 1.0 / Count);
+                    DesktopLyricWin.Lyric.Content = run;
                 }
             }
         }
@@ -161,6 +167,7 @@ namespace MusicCollection.Pages
                     LyricTextBlock.Inlines.Add("\n");
                 }
                 LyricTextBlock.Inlines.Add(new Run("               用 心 去 感 受 音 乐\n") { Foreground = Brushes.Red, FontSize = 16 });
+                DesktopLyricWin.Lyric.Content = "               用 心 去 感 受 音 乐\n";
             }
             
         }

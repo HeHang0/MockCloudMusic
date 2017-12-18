@@ -109,11 +109,14 @@
             <Button x:Name="VolCloseButton" Visibility="{Binding IsMute, Converter={StaticResource BoolToValueConverter}, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Click="VolCloseButton_Click" Style="{StaticResource MouseOverOpacity}" Height="30" Canvas.Right="260" Canvas.Top="12" Width="30" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}">
                 <Image Width="23" Height="25" Source="Resources/images/vol_close.png" Margin="11,2,-4,2"/>
             </Button>
-            <Button Name="ShufflePlayButton" Click="ShufflePlayButton_Click" Style="{StaticResource MouseOverOpacity}" Height="30" Canvas.Right="260" Canvas.Top="12" Width="30" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}" Canvas.Left="890">
+            <Button Name="ShufflePlayButton" Click="ShufflePlayButton_Click" Style="{StaticResource MouseOverOpacity}" Height="30" Canvas.Right="90" Canvas.Top="12" Width="30" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}">
                 <Image Width="23" Height="25" Source="Resources/images/shuffle_play.png" Margin="11,2,-4,2"/>
             </Button>
-            <Button Name="LoopPlayButton" Click="LoopPlayButton_Click" Visibility="Hidden" Style="{StaticResource MouseOverOpacity}" Height="30" Canvas.Right="260" Canvas.Top="12" Width="30" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}" Canvas.Left="890">
+            <Button Name="LoopPlayButton" Click="LoopPlayButton_Click" Visibility="Hidden" Style="{StaticResource MouseOverOpacity}" Height="30" Canvas.Right="90" Canvas.Top="12" Width="30" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}">
                 <Image Width="23" Height="25" Source="Resources/images/loop_play.png" Margin="11,2,-4,2"/>
+            </Button>
+            <Button Name="DesktopLyricButton" Click="DesktopLyricButton_Click" Style="{StaticResource MouseOverOpacity}" Height="22" Width="20" Canvas.Right="125" Canvas.Top="15.5" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" Cursor="Hand" Background="{x:Null}">
+                <Label HorizontalContentAlignment="Center" VerticalContentAlignment="Center" FontSize="14" BorderBrush="#666666" BorderThickness="1" Padding="0" Foreground="#FF666666">词</Label>
             </Button>
             <Slider x:Name="SoundChangeSlider" Value="{Binding Volume, Mode=TwoWay}" Canvas.Right="160" Canvas.Top="18" Width="100" Cursor="Hand" Background="#FFF5F5F7" IsMoveToPointEnabled="True"/>
             <Button Click="CurrentMusicListButton_Click" Canvas.Right="15" Canvas.Bottom="16" Width="45" Height="16" BorderThickness="0" Style="{StaticResource HarfCircularButton}" Background="#E1E1E2">
