@@ -2,20 +2,14 @@
 using MusicCollection.MusicManager;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Timers;
+using System.Text.RegularExpressions;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Windows.Threading;
 
 namespace MusicCollection.Pages
@@ -26,7 +20,7 @@ namespace MusicCollection.Pages
     public partial class MusicDetailPage : Page
     {
         private MainWindow ParentWindow;
-        private ObservableCollection<LyricLine> Lyric = new ObservableCollection<LyricLine>();
+        private List<LyricLine> Lyric = new List<LyricLine>();
         private int CurrentLyricIndex = -1;
         private DispatcherTimer timer = new DispatcherTimer();
 
@@ -79,6 +73,7 @@ namespace MusicCollection.Pages
         private float angle = 0;
         private void TimerOnTick(object sender, EventArgs e)
         {
+            //ChildWindows.DesktopLyricWindow.TopMostTool.SetTopMost(DesktopLyricWin);
             if (!haveLyric)
             {
                 timer.Stop();
@@ -101,7 +96,7 @@ namespace MusicCollection.Pages
                     var run = LyricTextBlock.Inlines.ElementAt(LastLyricLineIndex);
                     run.Foreground = Brushes.Red;
                     LyricBlock.ScrollToVerticalOffset(LyricBlock.ScrollableHeight * LastLyricLineIndex * 1.0 / Count);
-                    DesktopLyricWin.Lyric.Content = run;
+                    DesktopLyricWin.Lyric.Content = ((Run)run).Text;
                 }
             }
         }
@@ -110,13 +105,28 @@ namespace MusicCollection.Pages
         private int LastLyricLineIndex = -1;
         private int Count = 0;
 
-        public void Init(BitmapImage bi, Music music = null, NetMusic netMusic = null)
+        public void Init( Music music, ImageSource source)
         {
             angle = 0;
             Lyric.Clear();
             LyricTextBlock.Inlines.Clear();
-            AlbumImage.ImageSource = bi;
+            if (source != null)
+            {
+                AlbumImage.ImageSource = source;
+            }
+            else
+            {
+                Image.DataContext = "logo.ico";
+            }
             LyricBlock.ScrollToVerticalOffset(0);
+            timer.Stop();
+            Thread thread = new Thread(new ThreadStart(() => GetLiric(music)));
+            thread.IsBackground = true;
+            thread.Start();            
+        }
+
+        private void GetLiric(Music music)
+        {
             var lyricPath = "";
             if (music != null)
             {
@@ -130,46 +140,44 @@ namespace MusicCollection.Pages
                     music.LyricPath = lyricPath;
                 }
             }
-            else if (netMusic != null)
+
+            Dispatcher.Invoke(new Action(() =>
             {
-                if (!string.IsNullOrWhiteSpace(netMusic.LyricPath))
+                if (!string.IsNullOrWhiteSpace(lyricPath))
                 {
-                    lyricPath = netMusic.LyricPath;
+                    var lrcEncoding = EncodingHelper.GetType(lyricPath);
+                    var lrcList = System.IO.File.ReadLines(lyricPath, lrcEncoding);
+                    foreach (var item in lrcList)
+                    {
+                        var pattern = @"\[([0-9.:]*)\]";
+                        MatchCollection mc = Regex.Matches(item, pattern);
+                        foreach (Match line in mc)
+                        {
+                            Lyric.Add(new LyricLine(Regex.Replace(item, @"\[([0-9.:]*)\]", ""), TimeSpan.Parse("00:" + line.Groups[1].Value)));
+                        }
+                    }
+                    Lyric = Lyric.OrderBy(m => m.StartTime).ToList();
+                    foreach (var item in Lyric)
+                    {
+                        LyricTextBlock.Inlines.Add(new Run(item.Content + "\n\n"));
+                    }
+                    Count = LyricTextBlock.Inlines.Count;
+                    CurrentLyricIndex = 0;
+                    LastLyricLineIndex = -1;
+                    haveLyric = true;
+                    timer.Start();
                 }
                 else
                 {
-                    lyricPath = NetMusicHelper.GetLyricByNetMusic(netMusic);
+                    haveLyric = false;
+                    for (int i = 0; i < 10; i++)
+                    {
+                        LyricTextBlock.Inlines.Add("\n");
+                    }
+                    LyricTextBlock.Inlines.Add(new Run("               用 心 去 感 受 音 乐\n") { Foreground = Brushes.Red, FontSize = 16 });
+                    DesktopLyricWin.Lyric.Content = "               用 心 去 感 受 音 乐\n";
                 }
-            }
-
-            if (!string.IsNullOrWhiteSpace(lyricPath))
-            {
-                var lrcEncoding = EncodingHelper.GetType(lyricPath);
-                var lrcList = System.IO.File.ReadLines(lyricPath, lrcEncoding);
-                foreach (var item in lrcList)
-                {
-                    Lyric.Add(new LyricLine(item));
-                }
-                foreach (var item in Lyric)
-                {
-                    LyricTextBlock.Inlines.Add(new Run(item.Content + "\n\n"));
-                }
-                Count = LyricTextBlock.Inlines.Count;
-                CurrentLyricIndex = 0;
-                LastLyricLineIndex = -1;
-                haveLyric = true;
-            }
-            else
-            {
-                haveLyric = false;
-                for (int i = 0; i < 10; i++)
-                {
-                    LyricTextBlock.Inlines.Add("\n");
-                }
-                LyricTextBlock.Inlines.Add(new Run("               用 心 去 感 受 音 乐\n") { Foreground = Brushes.Red, FontSize = 16 });
-                DesktopLyricWin.Lyric.Content = "               用 心 去 感 受 音 乐\n";
-            }
-            
+            }));
         }
 
         private void Page_SizeChanged(object sender, SizeChangedEventArgs e)

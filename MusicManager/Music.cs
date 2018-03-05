@@ -20,6 +20,8 @@ namespace MusicCollection.MusicManager
             Duration = music.Duration;
             Path = music.Path;
             LyricPath = music.LyricPath;
+            MusicID = music.MusicID;
+            Origin = music.Origin;
         }
         public Music(NetMusic music)
         {
@@ -29,6 +31,9 @@ namespace MusicCollection.MusicManager
             AlbumImageUrl = music.AlbumImageUrl;
             Path = music.Url;
             LyricPath = music.LyricPath;
+            Duration = music.Duration;
+            Origin = music.Origin;
+            MusicID = music.MusicID;
         }
 
         public Music(string path)
@@ -97,5 +102,13 @@ namespace MusicCollection.MusicManager
         /// 歌词路径
         /// </summary>
         public string LyricPath { get; set; } = string.Empty;
+        /// <summary>
+        /// 歌曲来源
+        /// </summary>
+        public NetMusicType Origin { get; set; } = NetMusicType.LocalMusic;
+        /// <summary>
+        /// 音乐ID
+        /// </summary>
+        public string MusicID { get; set; }
     }
 }

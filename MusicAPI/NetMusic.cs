@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 
 namespace MusicCollection.MusicAPI
 {
@@ -36,13 +37,18 @@ namespace MusicCollection.MusicAPI
         /// <summary>
         /// 音乐ID
         /// </summary>
+        public string MusicID { get; set; }
         public string Album { get; set; }
         public string AlbumImageUrl { get; set; }
-        public string MusicID { get; set; }
         /// <summary>
         /// 音乐来源
         /// </summary>
         public NetMusicType Origin { get; set; }
+
+        /// <summary>
+        /// 音乐时长
+        /// </summary>
+        public TimeSpan Duration { get; set; } = TimeSpan.Zero;
 
         private string lyricPath;
         public string LyricPath

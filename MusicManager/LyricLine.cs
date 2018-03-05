@@ -9,7 +9,11 @@ namespace MusicCollection.MusicManager
 {
     class LyricLine
     {
-
+        public LyricLine(string line, TimeSpan startTime)
+        {
+            Content = line;
+            StartTime = startTime;
+        }
         public LyricLine(string line)
         {
             if (line.StartsWith("[ti:"))

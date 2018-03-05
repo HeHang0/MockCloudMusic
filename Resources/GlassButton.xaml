@@ -192,6 +192,15 @@
             </Trigger>
         </Style.Triggers>
     </Style>
+    <Style x:Key="NoOpacityStyle" TargetType="{x:Type Button}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <ContentPresenter Content="{TemplateBinding Content}"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 
     <Style x:Key="MouseOverNotifyButton" TargetType="{x:Type Button}">
         <Setter Property="Cursor" Value="Hand"/>
@@ -244,7 +253,27 @@
                 <ControlTemplate TargetType="{x:Type Button}">
                     <Grid>
                         <Border x:Name="Border" BorderBrush="{TemplateBinding Control.BorderBrush}" Background="{TemplateBinding Background}" BorderThickness="1" CornerRadius="3,0,0,3">
-                            <ContentPresenter Content="{TemplateBinding ContentControl.Content}" HorizontalAlignment="Center" VerticalAlignment="Center" ></ContentPresenter>
+                            <ContentPresenter Content="{TemplateBinding ContentControl.Content}" Margin="{TemplateBinding Padding}" HorizontalAlignment="Center" VerticalAlignment="Center" ></ContentPresenter>
+                        </Border>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Border" Property="Background" Value="#F5F5F7"></Setter>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="NoHarfCircularButton" TargetType="{x:Type Button}">
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Button}">
+                    <Grid>
+                        <Border x:Name="Border" BorderBrush="{TemplateBinding Control.BorderBrush}" Background="{TemplateBinding Background}" BorderThickness="1" CornerRadius="0,0,0,0">
+                            <ContentPresenter Content="{TemplateBinding ContentControl.Content}" Margin="{TemplateBinding Padding}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                     </Grid>
                     <ControlTemplate.Triggers>
@@ -283,7 +312,7 @@
                 <ControlTemplate TargetType="{x:Type Button}">
                     <Grid>
                         <Border x:Name="Border" BorderBrush="{TemplateBinding Control.BorderBrush}" Background="{TemplateBinding Background}" BorderThickness="1" CornerRadius="3,3,3,3">
-                            <ContentPresenter Content="{TemplateBinding ContentControl.Content}" HorizontalAlignment="Center" VerticalAlignment="Center"></ContentPresenter>
+                            <ContentPresenter Content="{TemplateBinding ContentControl.Content}" Margin="{TemplateBinding Padding}" HorizontalAlignment="Center" VerticalAlignment="Center"></ContentPresenter>
                         </Border>
                     </Grid>
                     <ControlTemplate.Triggers>

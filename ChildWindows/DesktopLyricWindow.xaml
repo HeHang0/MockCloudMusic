@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:MusicCollection.ChildWindows"
         mc:Ignorable="d" AllowsTransparency="True" WindowStyle="None" Background="{x:Null}" MouseMove="Window_MouseMove" Topmost="True" ShowInTaskbar="False"
         Title="DesktopLyricWindow" Height="74.144" Width="582.89">
-    <Grid>
+    <Grid Background="#01FFFFFF" MouseWheel="Lyric_MouseWheel" >
         <Label Name="Lyric" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" FontSize="48" FontFamily="书体坊郭小语钢笔楷体" Foreground="#FFFF00E8">用心感受音乐</Label>
     </Grid>
 </Window>

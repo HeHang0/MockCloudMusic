@@ -11,14 +11,14 @@
     <Page.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="..\Resources\GlassButton.xaml"/>                
+                <ResourceDictionary Source="..\Resources\GlassButton.xaml"/>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Page.Resources>
     <Grid>
         <Image Name="LodingImage" Visibility="Hidden" gif:ImageBehavior.AnimatedSource="..\Resources\images\loading.gif" Height="18" Width="18" Margin="25,15,777,534"/>
 
-        <StackPanel Name="NetMusicTypeRadio" Margin="50,18,30,0" Height="18" VerticalAlignment="Top" DataContext="{StaticResource RadioBtnViewModel}">
+        <StackPanel Name="NetMusicTypeRadio" Margin="50,18,180,0" Height="18" VerticalAlignment="Top" DataContext="{StaticResource RadioBtnViewModel}">
             <ItemsControl ItemsSource="{Binding Insertions}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -35,9 +35,15 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
         </StackPanel>
+        <Label x:Name="CountLabel" Margin="0,12,90,0" Content="{Binding}" ToolTip="{Binding}" VerticalAlignment="Top" Height="24" MaxWidth="256" HorizontalAlignment="Right"/>
+        <Button x:Name="LastPageButton" Click="LastPageButton_Click" ToolTip="上一页" Style="{StaticResource  LeftHarfCircularButton}" Content=">" FontSize="22" FontWeight="Thin" Foreground="#FF333333" Padding="0,-3,0,0" Margin="0,12,55,0" VerticalAlignment="Top" Background="White" BorderBrush="#FFE1E1E2" Height="25" HorizontalAlignment="Right" Width="30"/>
+        <Button x:Name="NextPageButton" Click="NextPageButton_Click" IsEnabled="False" ToolTip="下一页" Style="{StaticResource RightHarfCircularButton}" Content=">" FontSize="22" FontWeight="Thin" Foreground="#FF333333" Padding="0,-3,0,0" Margin="0,12,26,0" VerticalAlignment="Top" Background="White" BorderBrush="#FFE1E1E2" Height="25" HorizontalAlignment="Right" Width="30"/>
+
         <!--<Canvas Height="50" VerticalAlignment="Top">
-            --><!--<RadioButton GroupName="NetMusicTypeRdBtn" IsChecked="True" Tag="{Binding NetMusicType.CloudMusic}" Content="网易云音乐" Canvas.Left="25" Canvas.Top="19"/>
-            <RadioButton GroupName="NetMusicTypeRdBtn" Content="QQ音乐" IsEnabled="False" Width="85" Canvas.Left="135" Canvas.Top="19"/>--><!--
+            -->
+        <!--<RadioButton GroupName="NetMusicTypeRdBtn" IsChecked="True" Tag="{Binding NetMusicType.CloudMusic}" Content="网易云音乐" Canvas.Left="25" Canvas.Top="19"/>
+            <RadioButton GroupName="NetMusicTypeRdBtn" Content="QQ音乐" IsEnabled="False" Width="85" Canvas.Left="135" Canvas.Top="19"/>-->
+        <!--
 
         </Canvas>-->
         <DataGrid x:Name="NetMusicDataGrid" Margin="0,50,0,0" SelectionMode="Single" AlternationCount="2"
@@ -92,18 +98,27 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
                 <DataGridTextColumn Header="音乐标题" Width="250*" Binding="{Binding Title, Mode=OneWay}"/>
-                <DataGridTextColumn Header="歌手" Width="180*" Binding="{Binding Singer, Mode=OneWay}"/>
+                <DataGridTemplateColumn Header="歌手" Width="180*" ><!--Binding="{Binding Singer, Mode=OneWay}"-->
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Label Padding="0,-5" Height="30" Content="{Binding Singer, Mode=OneWay}" Cursor="Hand" MouseLeftButtonDown="SingerCell_MouseLeftButtonDown"></Label>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
                 <DataGridTextColumn Header="专辑" Width="150*" Binding="{Binding Album, Mode=OneWay}"/>
-                <DataGridTemplateColumn  Header="" Width="100" CanUserSort="False">
+                <DataGridTextColumn Header="时长" Width="80*" Binding="{Binding Duration, Mode=OneWay, StringFormat={}{0:mm\\:ss}}" />
+                <DataGridTemplateColumn  Header="" Width="110" CanUserSort="False">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal" Margin="0,-2">
-                                <!--<Button Content="下载" Tag="{Binding}" Click="NetMusicDownloadButton_Click" ></Button>-->
                                 <Button Click="NetMusicDownloadButton_Click" Tag="{Binding}" Style="{StaticResource MouseOverOpacity}" Margin="2,0" Height="20" Width="20" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}">
                                     <Image Width="18" Height="18" Source="..\Resources\images\download.png"/>
                                 </Button>
                                 <Button Click="NetMusicPlayButton_Click" Tag="{Binding}" Style="{StaticResource MouseOverOpacity}" Height="20" Margin="2,0" Width="20" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}">
                                     <Image Width="18" Height="18" Source="..\Resources\images\item_play.png"/>
+                                </Button>
+                                <Button Click="NetMusicAddToListButton_Click" Tag="{Binding}" ToolTip="添加到当前列表" Style="{StaticResource MouseOverOpacity}" Height="20" Margin="2,0" Width="20" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}">
+                                    <Image Width="18" Height="18" Source="..\Resources\images\item_add.png"/>
                                 </Button>
                                 <Image Visibility="{Binding IsDownLoading, Converter={StaticResource BoolToValueConverter}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" gif:ImageBehavior.AnimatedSource="..\Resources\images\loading.gif" Height="18" Width="18" Margin="2,0"/>
                             </StackPanel>

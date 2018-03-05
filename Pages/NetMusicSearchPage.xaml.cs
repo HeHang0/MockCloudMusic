@@ -15,10 +15,14 @@ namespace MusicCollection.Pages
     public partial class NetMusicSearchPage : Page
     {
         private MainWindow ParentWindow;
+        public int Offset { get; set; } = 0;
+        public int MusicCount { get; set; } = 0;
+        public string SearchStr { get; set; } = string.Empty;
         public NetMusicSearchPage(MainWindow parentWindow)
         {
             InitializeComponent();
             ParentWindow = parentWindow;
+            LastPageButton.Content = "<";
         }
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
@@ -39,7 +43,7 @@ namespace MusicCollection.Pages
                 e.Row.Header = "0" + e.Row.Header;
             }
         }
-
+        
         private void NetMusicDataGrid_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (sender != null)
@@ -54,6 +58,21 @@ namespace MusicCollection.Pages
                 {
                     MessageBox.Show("当前音乐不可在线播放！");
                 }
+            }
+        }
+        private void SingerCell_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (sender != null)
+            {
+                Label lb = sender as Label;
+                string searchStr = lb.Content as string;
+                MusicCount = 0;
+                Offset = 0;
+                SearchStr = searchStr;
+                var type = NetMusicTypeRadio.DataContext as NetMusicTypeRadioBtnViewModel;
+                Thread thread = new Thread(new ThreadStart(() => GetNetMusicList(searchStr, Offset, type.SelectItem())));
+                thread.IsBackground = true;
+                thread.Start();
             }
         }
 
@@ -74,8 +93,87 @@ namespace MusicCollection.Pages
             //CheckAndDownLoad(netMusic, true);
             if (!ParentWindow.Play(null, netMusic))
             {
-                MessageBox.Show("当前音乐不可在线播放！");
+                MessageBox.Show($"当前音乐不可在线播放！{Environment.NewLine}更换资源或重试！");
             }
+        }
+
+        private void NetMusicAddToListButton_Click(object sender, RoutedEventArgs e)
+        {
+            var btn = sender as Button;
+            var netMusic = btn.Tag as NetMusic;
+            ParentWindow.CurrentMusicList.Add(new Music(netMusic));
+        }
+
+        private void LastPageButton_Click(object sender, RoutedEventArgs e)
+        {
+            var type = NetMusicTypeRadio.DataContext as NetMusicTypeRadioBtnViewModel;
+            Offset -= 30;
+            Thread thread = new Thread(new ThreadStart(() => GetNetMusicList(SearchStr, Offset, type.SelectItem())));
+            thread.IsBackground = true;
+            thread.Start();
+        }
+
+        private void NextPageButton_Click(object sender, RoutedEventArgs e)
+        {
+            var type = NetMusicTypeRadio.DataContext as NetMusicTypeRadioBtnViewModel;
+            Offset += 30;
+            Thread thread = new Thread(new ThreadStart(() => GetNetMusicList(SearchStr, Offset, type.SelectItem())));
+            thread.IsBackground = true;
+            thread.Start();
+        }
+
+        public void GetNetMusicList(string searchStr, int offset, NetMusicType netMusicType)
+        {
+            int count = 0;
+            Dispatcher.Invoke(new Action(() =>
+            {
+                LodingImage.Visibility = Visibility.Visible;
+                if (offset == 0)
+                {
+                    CountLabel.DataContext = $"搜索\"{searchStr}\"";
+                }
+            }));
+            var t = NetMusicHelper.GetNetMusicList(searchStr, offset, netMusicType, out count);
+            Dispatcher.Invoke(new Action(() =>
+            {
+                ParentWindow.NetMusicList.Clear();
+            }));
+            foreach (var item in t)
+            {
+                Dispatcher.Invoke(new Action(() =>
+                {
+                    ParentWindow.NetMusicList.Add(item);
+                }));
+            }
+            Dispatcher.Invoke(new Action(() =>
+            {
+                if (offset == 0)
+                {
+                    CountLabel.DataContext = $"搜索\"{searchStr}\", 找到 {count} 首单曲";
+                }
+                if (offset == 0 && count <= 30)
+                {
+                    LastPageButton.IsEnabled = false;
+                    NextPageButton.IsEnabled = false;
+                }
+                else if (offset == 0)
+                {
+                    LastPageButton.IsEnabled = false;
+                    NextPageButton.IsEnabled = true;
+                }
+                else if (offset/30+1 == count/30 + (count%30 == 0 ? 0 : 1))
+                {
+                    LastPageButton.IsEnabled = true;
+                    NextPageButton.IsEnabled = false;
+                }
+                else
+                {
+                    LastPageButton.IsEnabled = true;
+                    NextPageButton.IsEnabled = true;
+                }
+                MusicCount = count;
+                LodingImage.Visibility = Visibility.Hidden;
+            }));
         }
     }
 }

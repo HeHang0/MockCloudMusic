@@ -25,6 +25,8 @@ using System.Threading;
 using Microsoft.WindowsAPICodePack.Taskbar;
 using System.Windows.Interop;
 using System.Drawing;
+using System.Data;
+using MusicCollection.ChildWindows;
 
 namespace MusicCollection
 {
@@ -37,13 +39,18 @@ namespace MusicCollection
         public MusicObservableCollection<Music> CurrentMusicList = new MusicObservableCollection<Music>();
         public MusicHistoriesCollection<MusicHistory> HistoryMusicList = new MusicHistoriesCollection<MusicHistory>();
         public ObservableCollection<NetMusic> NetMusicList = new ObservableCollection<NetMusic>();
+        public ObservableCollection<PlayListCollectionModel> PlayListCollection = new ObservableCollection<PlayListCollectionModel>();
         
         public int CurrentIndex = -1;
 
+        public DiscoverMusicPage DiscoverMusic;
         public LocalMusicPage LocalMusic;
         public DownLoadMusicPage DownLoadMusic;
         private MusicDetailPage MusicDetail;
         private NetMusicSearchPage NetMusicSearch;
+        private PlayListPage PlayList;
+
+        private System.Windows.Controls.Image CurrentBackGround;
 
         ChildWondows.NotifyWindow NotifyWin;
 
@@ -72,13 +79,20 @@ namespace MusicCollection
             notifyIcon.Visible = true;
             notifyIcon.MouseDoubleClick += NotifyIcon_MouseDoubleClick;
             notifyIcon.MouseDown += NotifyIcon_MouseDown;
-            BalloonTips("IsMusic");
+            BalloonTips("Just Listen");
         }
 
         private void NotifyIcon_MouseDoubleClick(object sender, System.Windows.Forms.MouseEventArgs e)
         {
-            WindowState = WindowState.Normal;
-            Show();
+            if (Visibility == Visibility.Hidden)
+            {
+                WindowState = WindowState.Normal;
+                Show();
+            }
+            else if (Visibility == Visibility.Visible)
+            {
+                Hide();
+            }
         }
 
         public void BalloonTips(string msg)
@@ -111,6 +125,10 @@ namespace MusicCollection
                 else if (WindowState != WindowState.Normal)
                 {
                     WindowState = WindowState.Normal;
+                }
+                else if(this.Visibility == Visibility.Hidden)
+                {
+                    this.Visibility = Visibility.Hidden;
                 }
                 Show();
             }
@@ -169,10 +187,13 @@ namespace MusicCollection
         private void InitPages()
         {
             LocalMusic = new LocalMusicPage(this);
+            DiscoverMusic = new DiscoverMusicPage(this);
             DownLoadMusic = new DownLoadMusicPage(this);
             MusicDetail = new MusicDetailPage(this);
             NetMusicSearch = new NetMusicSearchPage(this);
-            PageFrame.Content = LocalMusic;
+            PlayList = new PlayListPage(this);
+            PageFrame.Content = DiscoverMusic;
+            CurrentBackGround = DiscoverMusicBackGround;
             CurrentMusicListFrame.Content = new CurrentMusicListAndHistoriesPages(this);
             MusicDetailFrame.Content = MusicDetail;
         }
@@ -193,6 +214,14 @@ namespace MusicCollection
             {
                 File.WriteAllText("Data\\HistoryMusicList.json", JsonConvert.SerializeObject(new MusicHistoriesCollection<MusicHistory>()));
             }
+            if (!File.Exists("Data\\PlayListCollection.json"))
+            {
+                DataTable dt = new DataTable();
+                dt.Columns.Add("Name");
+                dt.Columns.Add("PlayList");
+                File.WriteAllText("Data\\PlayListCollection.json", JsonConvert.SerializeObject(dt));
+            }
+            
 
 
             var CurrentMusicListStr = File.ReadAllText("Data\\CurrentMusicList.json");
@@ -201,28 +230,14 @@ namespace MusicCollection
             var HistoryMusicListStr = File.ReadAllText("Data\\HistoryMusicList.json");
             HistoryMusicList = JsonConvert.DeserializeObject<MusicHistoriesCollection<MusicHistory>>(HistoryMusicListStr);
 
-            //foreach (var item in crlist)
-            //{
-            //    CurrentMusicList.Add(item);
-            //}
-            //if (CurrentMusicList.Count == 0)
-            //{
+            var PlayListCollectionStr = File.ReadAllText("Data\\PlayListCollection.json");
+            PlayListCollection = JsonConvert.DeserializeObject<ObservableCollection<PlayListCollectionModel>>(PlayListCollectionStr);
+            PlayListListBox.DataContext = PlayListCollection;
 
-            //    //DirectoryInfo TheFolder = new DirectoryInfo(content);
-            //    //foreach (FileInfo NextFile in TheFolder.GetFiles())
-            //    //{
-            //    //    var pattern = ".+?(\\.mp3|\\.wav|\\.flac|\\.wma|\\.ape|\\.m4a)$";
-            //    //    if (Regex.IsMatch(NextFile.Name, pattern, RegexOptions.IgnoreCase))
-            //    //    {
-            //    //        CurrentMusicList.Add(new Music(content + NextFile.Name));
-            //    //    }
-            //    //}
-            //}
             if (CurrentMusicList.Count > 0)
             {
                 PlayMusicButton_Click(new object(), new RoutedEventArgs());
                 PlayMusicButton_Click(new object(), new RoutedEventArgs());
-                //Pause();
             }
             CurrentMusicListCountLable.DataContext = CurrentMusicList;
             bsp.PropertyChanged += Bsp_PropertyChanged;
@@ -301,36 +316,44 @@ namespace MusicCollection
 
         public bool Play(Music music = null, NetMusic netMusic = null)
         {
+            var tmpIndex = CurrentIndex;
             if (music != null)
             {
                 CurrentIndex = CurrentMusicList.Add(music);
             }
             else if (netMusic != null)
             {
+                CurrentIndex = CurrentMusicList.Add(new Music(netMusic));
+            }
+            if (CurrentIndex >= 0 && CurrentIndex < CurrentMusicList.Count && CurrentMusicList[CurrentIndex].Origin != NetMusicType.LocalMusic)
+            {
                 var url = "";
-                if (NetMusicHelper.CheckLink(netMusic.Url))
+                if (NetMusicHelper.CheckLink(CurrentMusicList[CurrentIndex].Path))
                 {
-                    url = netMusic.Url;
+                    url = CurrentMusicList[CurrentIndex].Path;
                 }
                 else
                 {
-                    url = NetMusicHelper.GetUrlByNetMusic(netMusic);
+                    url = NetMusicHelper.GetUrlByNetMusic(CurrentMusicList[CurrentIndex]);
+                    if (!NetMusicHelper.CheckLink(url))
+                    {
+                        CurrentMusicList.RemoveAt(CurrentIndex);
+                        CurrentIndex = -1;
+                        Play();
+                        return false;
+                    }
+                    CurrentMusicList[CurrentIndex].Path = url;
                 }
-                if (url.Length > 0)
+                if (url.Length <= 0)
                 {
-                    CurrentIndex = -1;
-                    bsp.Stop();
-                    bsp.FileName = url;
-                }
-                else
-                {
+                    CurrentMusicList.Remove(CurrentMusicList[CurrentIndex]);
+                    CurrentIndex = tmpIndex;
                     return false;
                 }
             }
             else if (CurrentMusicList.Count > 0 && CurrentIndex < 0)
             {
                 CurrentIndex = 0;
-                //bsp.FileName = CurrentMusicList[CurrentIndex].Url;
             }
 
             if (CurrentIndex >= 0 && CurrentIndex < CurrentMusicList.Count)
@@ -345,50 +368,15 @@ namespace MusicCollection
                 HistoryMusicList.Add(new MusicHistory(CurrentMusicList[CurrentIndex]));
                 SetMiniLable(CurrentMusicList[CurrentIndex]);
             }
-            else if (netMusic != null)
-            {
-                bsp.Play();
-                PlayMusicButton.Visibility = Visibility.Hidden;
-                PauseMusicButton.Visibility = Visibility.Visible;
-                Title = netMusic.Title + " - " + netMusic.Singer;
-                notifyIcon.Text = Title;
-                SetMiniLable(netMusic);
-            }
             return true;
-        }
-
-        private void SetMiniLable(NetMusic netMusic)
-        {
-            var url = netMusic.AlbumImageUrl;
-            if (string.IsNullOrWhiteSpace(url))
-            {
-                url = "logo.ico";
-            }
-            BitmapImage bi = new BitmapImage();
-            bi.BeginInit();
-            bi.UriSource = new Uri(url, UriKind.RelativeOrAbsolute);
-            bi.EndInit();
-            CurrentMusicImageMini.Source = bi;
-            CurrentMusicTitleMini.Content = netMusic.Title;
-            CurrentMusicSingerMini.Content = netMusic.Singer;
-            MusicDetail.Init(bi, null, netMusic);
-        }
+        }       
 
         private void SetMiniLable(Music music)
         {
-            var url = music.AlbumImageUrl;
-            if (url == "")
-            {
-                url = "logo.ico";
-            }
-            BitmapImage bi = new BitmapImage();
-            bi.BeginInit();
-            bi.UriSource = new Uri(url, UriKind.RelativeOrAbsolute);
-            bi.EndInit();
-            CurrentMusicImageMini.Source = bi;
+            CurrentMusicImageMini.DataContext = string.IsNullOrWhiteSpace(music.AlbumImageUrl) ? "logo.ico" : music.AlbumImageUrl;
             CurrentMusicTitleMini.Content = music.Title;
             CurrentMusicSingerMini.Content = music.Singer;
-            MusicDetail.Init(bi, CurrentMusicList[CurrentIndex], null);
+            MusicDetail.Init(CurrentMusicList[CurrentIndex], CurrentMusicImageMini.Source);
         }
 
         private void LastMusicButton_Click(object sender, RoutedEventArgs e)
@@ -483,6 +471,15 @@ namespace MusicCollection
         private void LocalMusicButton_Click(object sender, RoutedEventArgs e)
         {
             PageFrame.Content = LocalMusic;
+            if (CurrentBackGround != LocalMusicBackGround)
+            {
+                if (CurrentBackGround != null)
+                {
+                    CurrentBackGround.Visibility = Visibility.Hidden;
+                }
+                CurrentBackGround = LocalMusicBackGround;
+                CurrentBackGround.Visibility = Visibility.Visible;
+            }
         }
 
         private void CurrentMusicImageMini_MouesOver(object sender, MouseEventArgs e)
@@ -581,30 +578,17 @@ namespace MusicCollection
                 return;
             }
             PageFrame.Content = NetMusicSearch;
-            NetMusicSearch.LodingImage.Visibility = Visibility.Visible;
+            //NetMusicSearch.LodingImage.Visibility = Visibility.Visible;
+            NetMusicSearch.MusicCount = 0;
+            NetMusicSearch.Offset = 0;
+            NetMusicSearch.SearchStr = searchStr;
             var type = NetMusicSearch.NetMusicTypeRadio.DataContext as NetMusicTypeRadioBtnViewModel;
 
             NetMusicList.Clear();
 
-            Thread thread = new Thread(new ThreadStart(() => GetNetMusicList(searchStr, type.SelectItem())));
+            Thread thread = new Thread(new ThreadStart(() => NetMusicSearch.GetNetMusicList(searchStr, NetMusicSearch.Offset, type.SelectItem())));
             thread.IsBackground = true;
             thread.Start();            
-        }
-
-        private void GetNetMusicList(string searchStr, NetMusicType netMusicType)
-        {
-            var t = NetMusicHelper.GetNetMusicList(searchStr, netMusicType);
-            foreach (var item in t)
-            {
-                Dispatcher.Invoke(new Action(() =>
-                {
-                    NetMusicList.Add(item);
-                }));
-            }
-            Dispatcher.Invoke(new Action(() =>
-            {
-                NetMusicSearch.LodingImage.Visibility = Visibility.Hidden;
-            }));
         }
 
         private void Window_MouseUp(object sender, MouseButtonEventArgs e)
@@ -615,6 +599,15 @@ namespace MusicCollection
         private void DownLoadMusicPageButton_Click(object sender, RoutedEventArgs e)
         {
             PageFrame.Content = DownLoadMusic;
+            if (CurrentBackGround != DownLoadMusicBackGround)
+            {
+                if (CurrentBackGround != null)
+                {
+                    CurrentBackGround.Visibility = Visibility.Hidden;
+                }
+                CurrentBackGround = DownLoadMusicBackGround;
+                CurrentBackGround.Visibility = Visibility.Visible;
+            }
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -623,6 +616,8 @@ namespace MusicCollection
             notifyIcon.Dispose();
             File.WriteAllText("Data\\CurrentMusicList.json", JsonConvert.SerializeObject(CurrentMusicList));
             File.WriteAllText("Data\\HistoryMusicList.json", JsonConvert.SerializeObject(HistoryMusicList));
+            File.WriteAllText("Data\\PlayListCollection.json", JsonConvert.SerializeObject(PlayListCollection));
+            
             LocalMusic.LocalMusicPage_Closing();
             DownLoadMusic.DownLoadMusicPage_Closing();
         }
@@ -655,6 +650,73 @@ namespace MusicCollection
             else
             {
                 MusicDetail.DesktopLyricWin.Visibility = Visibility.Visible;
+            }
+        }
+
+        private void DiscoverMusicButton_Click(object sender, RoutedEventArgs e)
+        {
+            PageFrame.Content = DiscoverMusic;
+            if (CurrentBackGround != DiscoverMusicBackGround)
+            {
+                if (CurrentBackGround != null)
+                {
+                    CurrentBackGround.Visibility = Visibility.Hidden;
+                }
+                CurrentBackGround = DiscoverMusicBackGround;
+                CurrentBackGround.Visibility = Visibility.Visible;
+            }
+        }
+
+        private void PlayListCollectionButton_Click(object sender, RoutedEventArgs e)
+        {
+            var btn = sender as Button;
+            var model = btn.Tag as PlayListCollectionModel;
+            PlayList.Show(model);
+
+            if (CurrentBackGround != null)
+            {
+                CurrentBackGround.Visibility = Visibility.Hidden;
+                CurrentBackGround = null;
+            }
+        }
+
+        private void AddNewPlayListButton_Click(object sender, RoutedEventArgs e)
+        {
+            InputStringWindow inputStringWindow = new InputStringWindow("添加歌单","歌单链接");
+            if (inputStringWindow.ShowDialog() == true)
+            {
+                string url = inputStringWindow.InputString;
+                Thread thread = new Thread(new ThreadStart(() => AddNewPlayList(url)));
+                thread.IsBackground = true;
+                thread.Start();
+            }
+        }
+
+        private void AddNewPlayList(string url)
+        {
+            string name = string.Empty, imgurl = string.Empty;
+            NetMusicType type;
+            if (url.Contains("music.163.com"))
+            {
+                type = NetMusicType.CloudMusic;
+            }
+            else
+            {
+                return;
+            }
+            var nlist = NetMusicHelper.GetPlayListItems(url, type, out name, out imgurl);
+            List<Music> mlist = new List<Music>();
+            foreach (var item in nlist)
+            {
+                mlist.Add(new Music(item));
+            }
+            if (mlist.Count > 0)
+            {
+
+                Dispatcher.Invoke(new Action(() =>
+                {
+                    PlayListCollection.Add(new PlayListCollectionModel(name, imgurl, mlist));
+                }));
             }
         }
     }

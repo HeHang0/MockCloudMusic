@@ -49,6 +49,10 @@
     <ApplicationIcon>logo.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="HtmlAgilityPack, Version=1.7.0.0, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
+      <HintPath>packages\HtmlAgilityPack.1.7.0\lib\Net45\HtmlAgilityPack.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Microsoft.JScript" />
     <Reference Include="Microsoft.WindowsAPICodePack, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\Microsoft.WindowsAPICodePack-Core.1.1.0.2\lib\Microsoft.WindowsAPICodePack.dll</HintPath>
@@ -105,6 +109,9 @@
     <Compile Include="ChildWindows\DesktopLyricWindow.xaml.cs">
       <DependentUpon>DesktopLyricWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ChildWindows\InputStringWindow.xaml.cs">
+      <DependentUpon>InputStringWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ChildWindows\LocalMusicFolderWindow.xaml.cs">
       <DependentUpon>LocalMusicFolderWindow.xaml</DependentUpon>
     </Compile>
@@ -124,8 +131,13 @@
     <Compile Include="MusicManager\MusicInfoHelper.cs" />
     <Compile Include="MusicManager\MusicObservableCollection.cs" />
     <Compile Include="MusicManager\NetMusicObservableCollection.cs" />
+    <Compile Include="MusicManager\Playlist.cs" />
+    <Compile Include="MusicManager\PlayListCollectionModel.cs" />
     <Compile Include="Pages\CurrentMusicListAndHistoriesPages.xaml.cs">
       <DependentUpon>CurrentMusicListAndHistoriesPages.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\DiscoverMusicPage.xaml.cs">
+      <DependentUpon>DiscoverMusicPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Pages\DownLoadMusicPage.xaml.cs">
       <DependentUpon>DownLoadMusicPage.xaml</DependentUpon>
@@ -139,11 +151,18 @@
     <Compile Include="Pages\NetMusicSearchPage.xaml.cs">
       <DependentUpon>NetMusicSearchPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Pages\NetMusicTypeRadioBtnViewModel.cs" />
+    <Compile Include="Pages\PlayListPage.xaml.cs">
+      <DependentUpon>PlayListPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Resources\NetMusicTypeRadioBtnViewModel.cs" />
     <Compile Include="Resources\BoolToVisibility.cs" />
     <Compile Include="SoundPlayer\BSoundPlayer - 复制.cs" />
     <Compile Include="SoundPlayer\BSoundPlayer.cs" />
     <Page Include="ChildWindows\DesktopLyricWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ChildWindows\InputStringWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -171,6 +190,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Pages\DiscoverMusicPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Pages\DownLoadMusicPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -184,6 +207,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Pages\NetMusicSearchPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\PlayListPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -271,6 +298,8 @@
   <ItemGroup>
     <Content Include="packages\NAudio\lib\net\NAudio.dll" />
     <Content Include="packages\TagLib\lib\taglib-sharp.dll" />
+    <Resource Include="Resources\images\item_add.png" />
+    <Resource Include="Resources\images\listbtn_background.png" />
     <Resource Include="Resources\images\quit.png" />
     <Resource Include="Resources\images\last_circle.png" />
     <Resource Include="Resources\images\player.png" />
