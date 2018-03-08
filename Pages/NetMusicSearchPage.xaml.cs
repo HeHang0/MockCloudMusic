@@ -18,6 +18,7 @@ namespace MusicCollection.Pages
         public int Offset { get; set; } = 0;
         public int MusicCount { get; set; } = 0;
         public string SearchStr { get; set; } = string.Empty;
+        public NetMusicType PageType { get; set; } = NetMusicType.CloudMusic;
         public NetMusicSearchPage(MainWindow parentWindow)
         {
             InitializeComponent();
@@ -50,10 +51,10 @@ namespace MusicCollection.Pages
             {
                 DataGridRow dgr = sender as DataGridRow;
                 var netMusic = dgr.Item as NetMusic;
-                if (netMusic != null)
-                {
-                    ParentWindow.DownLoadMusic.DownLoadingList.Add(netMusic);
-                }
+                //if (netMusic != null)
+                //{
+                //    ParentWindow.DownLoadMusic.DownLoadingList.Add(netMusic);
+                //}
                 if (!ParentWindow.Play(null, netMusic))
                 {
                     MessageBox.Show("当前音乐不可在线播放！");
@@ -69,8 +70,7 @@ namespace MusicCollection.Pages
                 MusicCount = 0;
                 Offset = 0;
                 SearchStr = searchStr;
-                var type = NetMusicTypeRadio.DataContext as NetMusicTypeRadioBtnViewModel;
-                Thread thread = new Thread(new ThreadStart(() => GetNetMusicList(searchStr, Offset, type.SelectItem())));
+                Thread thread = new Thread(new ThreadStart(() => GetNetMusicList(searchStr, Offset, PageType)));
                 thread.IsBackground = true;
                 thread.Start();
             }
@@ -104,22 +104,23 @@ namespace MusicCollection.Pages
             ParentWindow.CurrentMusicList.Add(new Music(netMusic));
         }
 
-        private void LastPageButton_Click(object sender, RoutedEventArgs e)
+        private void StartGetMusicListThread()
         {
-            var type = NetMusicTypeRadio.DataContext as NetMusicTypeRadioBtnViewModel;
-            Offset -= 30;
-            Thread thread = new Thread(new ThreadStart(() => GetNetMusicList(SearchStr, Offset, type.SelectItem())));
+            Thread thread = new Thread(new ThreadStart(() => GetNetMusicList(SearchStr, Offset, PageType)));
             thread.IsBackground = true;
             thread.Start();
         }
 
+        private void LastPageButton_Click(object sender, RoutedEventArgs e)
+        {
+            --Offset;
+            StartGetMusicListThread();
+        }
+
         private void NextPageButton_Click(object sender, RoutedEventArgs e)
         {
-            var type = NetMusicTypeRadio.DataContext as NetMusicTypeRadioBtnViewModel;
-            Offset += 30;
-            Thread thread = new Thread(new ThreadStart(() => GetNetMusicList(SearchStr, Offset, type.SelectItem())));
-            thread.IsBackground = true;
-            thread.Start();
+            ++Offset;
+            StartGetMusicListThread();
         }
 
         public void GetNetMusicList(string searchStr, int offset, NetMusicType netMusicType)
@@ -174,6 +175,44 @@ namespace MusicCollection.Pages
                 MusicCount = count;
                 LodingImage.Visibility = Visibility.Hidden;
             }));
+        }
+
+        private void CloudMusicButton_Click(object sender, RoutedEventArgs e)
+        {
+            CloudMusicButton.Visibility = Visibility.Hidden;
+            QQMusicButton.Visibility = Visibility.Visible;
+            XiaMiMusicButton.Visibility = Visibility.Visible;
+            CloudMusicButtonHelper.Visibility = Visibility.Visible;
+            QQMusicButtonHelper.Visibility = Visibility.Hidden;
+            XiaMiMusicButtonHelper.Visibility = Visibility.Hidden;
+            Offset = 0; MusicCount = 0;
+            PageType = NetMusicType.CloudMusic;
+            StartGetMusicListThread();
+        }
+
+        private void QQMusicButton_Click(object sender, RoutedEventArgs e)
+        {
+            CloudMusicButton.Visibility = Visibility.Visible;
+            QQMusicButton.Visibility = Visibility.Hidden;
+            XiaMiMusicButton.Visibility = Visibility.Visible;
+            CloudMusicButtonHelper.Visibility = Visibility.Hidden;
+            QQMusicButtonHelper.Visibility = Visibility.Visible;
+            XiaMiMusicButtonHelper.Visibility = Visibility.Hidden;
+            Offset = 0; MusicCount = 0;
+            PageType = NetMusicType.QQMusic;
+            StartGetMusicListThread();
+        }
+
+        private void XiaMiMusicButton_Click(object sender, RoutedEventArgs e)
+        {
+            CloudMusicButton.Visibility = Visibility.Visible;
+            QQMusicButton.Visibility = Visibility.Visible;
+            XiaMiMusicButton.Visibility = Visibility.Hidden;
+            CloudMusicButtonHelper.Visibility = Visibility.Hidden;
+            QQMusicButtonHelper.Visibility = Visibility.Hidden;
+            XiaMiMusicButtonHelper.Visibility = Visibility.Visible;
+            Offset = 0; MusicCount = 0;
+            PageType = NetMusicType.XiaMiMusic;
         }
     }
 }

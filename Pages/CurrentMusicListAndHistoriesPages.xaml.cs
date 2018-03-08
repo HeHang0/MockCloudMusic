@@ -1,4 +1,5 @@
-﻿using MusicCollection.MusicManager;
+﻿using MusicCollection.ChildWindows;
+using MusicCollection.MusicManager;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -97,6 +98,22 @@ namespace MusicCollection.Pages
                     ParentWindow.Play(music);
                 }
                 e.Handled = true;
+            }
+        }
+
+        private void CollectionCurrentMusicListButton_Click(object sender, RoutedEventArgs e)
+        {
+            string name = "";
+            if (ParentWindow.GetStringFromInputStringWindow(out name))
+            {
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    ParentWindow.PlayListCollection.Add(new PlayListCollectionModel(name, "", ParentWindow.CurrentMusicList.ToList()));
+                }
+                else
+                {
+                    MessageBox.Show("名称不能为空");
+                }
             }
         }
 

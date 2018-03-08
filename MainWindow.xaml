@@ -33,8 +33,8 @@
                         <Border Background="#FFF5F5F7" />
                         <Image Name="DiscoverMusicBackGround" Source="Resources/images/listbtn_background.png"></Image>
                         <StackPanel Orientation="Horizontal">
-                            <Image Source="Resources/images/logo.png" Margin="10,5,0,5"></Image>
-                            <Label Content="发现音乐" VerticalContentAlignment="Center" Margin="10,0,0,0"/>
+                            <Image Source="Resources/images/discover_music.png" Margin="13,5,0,5"></Image>
+                            <Label Content="发现音乐" VerticalContentAlignment="Center" Margin="7,0,0,0"/>
                         </StackPanel>
                     </Grid>
                 </Button>
@@ -43,7 +43,7 @@
                         <Border Background="#FFF5F5F7" />
                         <Image Name="LocalMusicBackGround" Visibility="Hidden" Source="Resources/images/listbtn_background.png"></Image>
                         <StackPanel Orientation="Horizontal">
-                            <Image Source="Resources/images/logo.png" Margin="10,5,0,5"></Image>
+                            <Image Source="Resources/images/local_music.png" Margin="10,5,0,5"></Image>
                             <Label Content="本地音乐" VerticalContentAlignment="Center" Margin="10,0,0,0"/>
                         </StackPanel>
                     </Grid>
@@ -53,7 +53,7 @@
                         <Border Background="#FFF5F5F7" />
                         <Image Name="DownLoadMusicBackGround" Visibility="Hidden" Source="Resources/images/listbtn_background.png"></Image>
                         <StackPanel Orientation="Horizontal">
-                            <Image Source="Resources/images/download.png" Margin="10,5,0,5"></Image>
+                            <Image Source="Resources/images/download_manage.png" Margin="10,5,0,5"></Image>
                             <Label Content="下载管理" VerticalContentAlignment="Center" Margin="10,0,0,0"/>
                         </StackPanel>
                     </Grid>
@@ -76,7 +76,7 @@
                                 <Grid>
                                     <Border Background="#FFF5F5F7" />
                                     <StackPanel Orientation="Horizontal">
-                                        <Image Source="Resources/images/download.png" Margin="10,5,0,5"></Image>
+                                        <Image Source="Resources/images/playlist0.png" Margin="10,5,0,5"></Image>
                                         <Label Content="{Binding Name}" Width="150" VerticalContentAlignment="Center" Margin="10,0,0,0"/>
                                     </StackPanel>
                                 </Grid>

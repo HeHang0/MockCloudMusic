@@ -298,6 +298,13 @@
   <ItemGroup>
     <Content Include="packages\NAudio\lib\net\NAudio.dll" />
     <Content Include="packages\TagLib\lib\taglib-sharp.dll" />
+    <Resource Include="Resources\images\playlist0.png" />
+    <Resource Include="Resources\images\playlist.png" />
+    <Resource Include="Resources\images\download_manage.png" />
+    <Resource Include="Resources\images\local_music.png" />
+    <Resource Include="Resources\images\discover_music.png" />
+    <Resource Include="Resources\images\collection_playlist.png" />
+    <Resource Include="Resources\images\playlist_default.png" />
     <Resource Include="Resources\images\item_add.png" />
     <Resource Include="Resources\images\listbtn_background.png" />
     <Resource Include="Resources\images\quit.png" />

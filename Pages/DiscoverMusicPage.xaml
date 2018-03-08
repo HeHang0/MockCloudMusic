@@ -19,11 +19,11 @@
     <Grid>
         <Image Name="LodingImage" Visibility="Hidden" gif:ImageBehavior.AnimatedSource="..\Resources\images\loading.gif" Height="18" Width="18" Margin="26,16,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
         <Button Name="CloudMusicButtonHelper" Visibility="Visible" IsEnabled="False" Style="{StaticResource LeftHarfCircularButton}" Content="网易云" Foreground="White" Width="100" Background="#7C7D85" BorderBrush="#7C7D85" Height="27" Margin="237,10,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-        <Button Name="QQMusicButtonHelper" Visibility="Hidden" IsEnabled="False" Style="{StaticResource NoHarfCircularButton}" Content="QQ音乐" Foreground="White" Background="#7C7D85" BorderBrush="#7C7D85" Height="27" Margin="336,10,0,0" HorizontalAlignment="Left" Width="100" VerticalAlignment="Top"/>
-        <Button Name="XiaMiMusicButtonHelper" Visibility="Hidden" IsEnabled="False" Style="{StaticResource RightHarfCircularButton}" Content="虾米音乐" Foreground="White" Background="#7C7D85" BorderBrush="#7C7D85" Height="27" Margin="435,10,0,0" HorizontalAlignment="Left" Width="100" VerticalAlignment="Top"/>
+        <Button Name="QQMusicButtonHelper"  IsEnabled="False" Style="{StaticResource NoHarfCircularButton}" Content="QQ音乐" Foreground="White" Background="#7C7D85" BorderBrush="#7C7D85" Height="27" Margin="336,10,0,0" HorizontalAlignment="Left" Width="100" VerticalAlignment="Top"/>
+        <Button Name="XiaMiMusicButtonHelper"  IsEnabled="False" Style="{StaticResource RightHarfCircularButton}" Content="虾米音乐" Foreground="White" Background="#7C7D85" BorderBrush="#7C7D85" Height="27" Margin="435,10,0,0" HorizontalAlignment="Left" Width="100" VerticalAlignment="Top"/>
         <Button Name="CloudMusicButton" Visibility="Hidden" Click="CloudMusicButton_Click" Style="{StaticResource LeftHarfCircularButton}" Content="网易云" Foreground="#FF333333" Width="100" Background="White" BorderBrush="#FFE1E1E2" Height="27" Margin="237,10,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-        <Button Name="QQMusicButton" Click="QQMusicButton_Click" Style="{StaticResource NoHarfCircularButton}" Content="QQ音乐" Foreground="#FF333333" Width="100" Background="White" Height="27" BorderBrush="#FFE1E1E2" Margin="336,10,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-        <Button Name="XiaMiMusicButton" Click="XiaMiMusicButton_Click" Style="{StaticResource RightHarfCircularButton}" Content="虾米音乐" Foreground="#FF333333" Width="100" Background="White" Height="27" BorderBrush="#FFE1E1E2" Margin="435,10,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+        <Button Name="QQMusicButton" Visibility="Visible" Click="QQMusicButton_Click" Style="{StaticResource NoHarfCircularButton}" Content="QQ音乐" Foreground="#FF333333" Width="100" Background="White" Height="27" BorderBrush="#FFE1E1E2" Margin="336,10,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+        <Button Name="XiaMiMusicButton" Visibility="Visible" Click="XiaMiMusicButton_Click" Style="{StaticResource RightHarfCircularButton}" Content="虾米音乐" Foreground="#FF333333" Width="100" Background="White" Height="27" BorderBrush="#FFE1E1E2" Margin="435,10,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
         <Button x:Name="LastPageButton" Click="LastPageButton_Click" ToolTip="上一页" Style="{StaticResource  LeftHarfCircularButton}" Content=">" FontSize="22" FontWeight="Thin" Foreground="#FF333333" Padding="0,-3,0,0" Margin="0,12,75,0" VerticalAlignment="Top" Background="White" BorderBrush="#FFE1E1E2" Height="25" HorizontalAlignment="Right" Width="30"/>
         <Button x:Name="NextPageButton" Click="NextPageButton_Click" IsEnabled="False" ToolTip="下一页" Style="{StaticResource RightHarfCircularButton}" Content=">" FontSize="22" FontWeight="Thin" Foreground="#FF333333" Padding="0,-3,0,0" Margin="0,12,46,0" VerticalAlignment="Top" Background="White" BorderBrush="#FFE1E1E2" Height="25" HorizontalAlignment="Right" Width="30"/>
         <Button x:Name="CloseDataGridButton" Visibility="Hidden" Click="CloseDataGridButton_Click" ToolTip="关闭" Style="{StaticResource AllHarfCircularButton}" Content="×" FontSize="22" FontWeight="Thin" Foreground="#FF333333" Padding="0,-3,1,0" Margin="0,12,10,0" VerticalAlignment="Top" Background="White" BorderBrush="#FFE1E1E2" Height="25" HorizontalAlignment="Right" Width="30"/>
@@ -43,7 +43,10 @@
                     <Border BorderThickness="0,0,0,0" BorderBrush="Black" Width="150" Height="170" ToolTip="{Binding Path=Name}">
                         <Button x:Name="PlayListButton" Style="{StaticResource NoOpacityStyle}" Tag="{Binding}" Click="PlayListButton_Click" Cursor="Hand" BorderBrush="{x:Null}" Width="140" Height="160">
                             <StackPanel Orientation="Vertical" Margin="0,0,0,-44">
-                                <Image Source="{Binding Path=ImgUrl}"/>
+                                <Grid>
+                                    <Image Source="..\Resources\images\playlist_default.png"/>
+                                    <Image Source="{Binding Path=ImgUrl}"/>
+                                </Grid>
                                 <Label Content="{Binding Path=Name}" HorizontalAlignment="Center" VerticalContentAlignment="Center"/>
                             </StackPanel>
                         </Button>

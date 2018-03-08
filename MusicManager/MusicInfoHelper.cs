@@ -64,24 +64,24 @@ namespace MusicCollection.MusicManager
             var url = "AlbumImage\\" + path;
             if (!File.Exists(url))
             {
-                TagLib.File file = TagLib.File.Create(mp3);
-                if (file.Tag.Pictures.Count() > 0)
+                try
                 {
-                    try
+                    TagLib.File file = TagLib.File.Create(mp3);
+                    if (file.Tag.Pictures.Count() > 0)
                     {
                         MemoryStream stream = new MemoryStream(file.Tag.Pictures[0].Data.Data);
                         Image img = Image.FromStream(stream);
                         img.Save(url, System.Drawing.Imaging.ImageFormat.Png);
                     }
-                    catch (Exception)
+                    else
                     {
                         return "";
                     }
                 }
-                else
+                catch (Exception)
                 {
                     return "";
-                }                
+                }              
             }            
             return System.Windows.Forms.Application.StartupPath + "\\" + url; ;
         }

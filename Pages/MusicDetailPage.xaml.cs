@@ -83,7 +83,7 @@ namespace MusicCollection.Pages
             rotateTransform.CenterX = Image.ActualWidth / 2;
             rotateTransform.CenterY = Image.ActualHeight / 2;
             Image.RenderTransform = rotateTransform;
-            if (CurrentLyricIndex > LastLyricLineIndex && Lyric[CurrentLyricIndex].StartTime <= ParentWindow.bsp.CurrentTime)
+            if (CurrentLyricIndex < Lyric.Count && CurrentLyricIndex > LastLyricLineIndex && Lyric[CurrentLyricIndex].StartTime <= ParentWindow.bsp.CurrentTime)
             {
                 LastLyricLineIndex = CurrentLyricIndex++;
                 if (CurrentLyricIndex == Count)
@@ -132,6 +132,18 @@ namespace MusicCollection.Pages
             {
                 if (!string.IsNullOrWhiteSpace(music.LyricPath))
                 {
+                    if (Regex.IsMatch(music.LyricPath, "[a-zA-z]+://[^\\s]*"))
+                    {
+                        if (NetMusicHelper.CheckLink(music.LyricPath))
+                        {
+                            music.LyricPath = NetMusicHelper.GetLyricByUrl(music,music.LyricPath);
+                        }
+                        else
+                        {
+                            lyricPath = NetMusicHelper.GetLyricByMusic(music);
+                            music.LyricPath = lyricPath;
+                        }
+                    }
                     lyricPath = music.LyricPath;
                 }
                 else

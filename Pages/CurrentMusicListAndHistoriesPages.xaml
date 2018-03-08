@@ -28,6 +28,12 @@
         <Canvas Background="#F9F9F9" Canvas.Top="40" Margin="0,41,0,0" Height="28" VerticalAlignment="Top">
             <Label Name="CurrentMusicCountLable" Opacity="0.7" Canvas.Left="20" Canvas.Bottom="2"></Label>
             <Label Name="HistoriesMusicCountLable" Visibility="Hidden" Opacity="0.7" Canvas.Left="20" Canvas.Bottom="2"></Label>
+            <Button Click="CollectionCurrentMusicListButton_Click" Cursor="Hand" Height="30" Width="56" Opacity="1" Canvas.Top="0" Canvas.Right="80" Style="{StaticResource MouseOverOpacity}">
+                <Grid>
+                    <Image Width="23" Height="23" Margin="0,4,0,0" Source="/MusicCollection;component/Resources/images/collection_playlist.png" VerticalAlignment="Top" HorizontalAlignment="Left"/>
+                    <Label Content="收藏" Opacity="0.9" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="20,3,0,0" Foreground="#FF444444"></Label>
+                </Grid>
+            </Button>
             <Button Click="ClearCurrentMusicListButton_Click" Cursor="Hand" Height="30" Width="56" Opacity="1" Canvas.Top="0" Canvas.Right="22" Style="{StaticResource MouseOverOpacity}">
                 <Grid>
                     <Image Width="23" Height="23" Margin="0,4,0,0" Source="/MusicCollection;component/Resources/images/trashcan.png" VerticalAlignment="Top" HorizontalAlignment="Left"/>

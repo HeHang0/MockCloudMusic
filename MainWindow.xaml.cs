@@ -86,6 +86,7 @@ namespace MusicCollection
         {
             if (Visibility == Visibility.Hidden)
             {
+                Hide();
                 WindowState = WindowState.Normal;
                 Show();
             }
@@ -355,9 +356,13 @@ namespace MusicCollection
             {
                 CurrentIndex = 0;
             }
-
             if (CurrentIndex >= 0 && CurrentIndex < CurrentMusicList.Count)
             {
+                if (Regex.IsMatch(CurrentMusicList[CurrentIndex].Path, "[http|https]://") && !NetMusicHelper.CheckLink(CurrentMusicList[CurrentIndex].Path))
+                {
+                    CurrentMusicList[CurrentIndex].Path = string.Empty;
+                    return false;
+                }
                 bsp.Stop();
                 bsp.FileName = CurrentMusicList[CurrentIndex].Path;
                 bsp.Play();
@@ -582,11 +587,11 @@ namespace MusicCollection
             NetMusicSearch.MusicCount = 0;
             NetMusicSearch.Offset = 0;
             NetMusicSearch.SearchStr = searchStr;
-            var type = NetMusicSearch.NetMusicTypeRadio.DataContext as NetMusicTypeRadioBtnViewModel;
+            //var type = NetMusicSearch.NetMusicTypeRadio.DataContext as NetMusicTypeRadioBtnViewModel;
 
             NetMusicList.Clear();
 
-            Thread thread = new Thread(new ThreadStart(() => NetMusicSearch.GetNetMusicList(searchStr, NetMusicSearch.Offset, type.SelectItem())));
+            Thread thread = new Thread(new ThreadStart(() => NetMusicSearch.GetNetMusicList(searchStr, NetMusicSearch.Offset, NetMusicSearch.PageType)));
             thread.IsBackground = true;
             thread.Start();            
         }
@@ -717,6 +722,20 @@ namespace MusicCollection
                 {
                     PlayListCollection.Add(new PlayListCollectionModel(name, imgurl, mlist));
                 }));
+            }
+        }
+        public bool GetStringFromInputStringWindow(out string result)
+        {
+            InputStringWindow inputStringWindow = new InputStringWindow("添加歌单", "歌单名称");
+            if (inputStringWindow.ShowDialog() == true)
+            {
+                result = inputStringWindow.InputString;
+                return true;
+            }
+            else
+            {
+                result = "";
+                return false;
             }
         }
     }

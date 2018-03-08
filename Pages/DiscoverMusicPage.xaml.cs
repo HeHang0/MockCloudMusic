@@ -1,23 +1,12 @@
 ﻿using MusicCollection.MusicAPI;
 using MusicCollection.MusicManager;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Data;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace MusicCollection.Pages
 {
@@ -38,28 +27,84 @@ namespace MusicCollection.Pages
             LastPageButton.Content = "<";
         }
 
+        private void StartGetPlayListThread()
+        {
+                Thread thread = new Thread(new ThreadStart(() => GetPlayList(Offset, PageType)));
+                thread.IsBackground = true;
+                thread.Start();
+        }
+
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
             if (PlayListDisplay.ItemsSource == null)
             {
-                Thread thread = new Thread(new ThreadStart(() => GetPlayList(Offset, PageType)));
-                thread.IsBackground = true;
-                thread.Start();
+                StartGetPlayListThread();
             }
+        }
+
+        private void CloudMusicButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (CloseDataGridButton.Visibility == Visibility.Visible)
+            {
+                CloseDataGridButton_Click(new object(), e);
+            }
+            CloudMusicButton.Visibility = Visibility.Hidden;
+            QQMusicButton.Visibility = Visibility.Visible;
+            XiaMiMusicButton.Visibility = Visibility.Visible;
+            CloudMusicButtonHelper.Visibility = Visibility.Visible;
+            QQMusicButtonHelper.Visibility = Visibility.Hidden;
+            XiaMiMusicButtonHelper.Visibility = Visibility.Hidden;
+            PageType = NetMusicType.CloudMusic;
+            Offset = 0;SearchPageCount = 0;
+            StartGetPlayListThread();
+        }
+
+        private void QQMusicButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (CloseDataGridButton.Visibility == Visibility.Visible)
+            {
+                CloseDataGridButton_Click(new object(), e);
+            }
+            CloudMusicButton.Visibility = Visibility.Visible;
+            QQMusicButton.Visibility = Visibility.Hidden;
+            XiaMiMusicButton.Visibility = Visibility.Visible;
+            CloudMusicButtonHelper.Visibility = Visibility.Hidden;
+            QQMusicButtonHelper.Visibility = Visibility.Visible;
+            XiaMiMusicButtonHelper.Visibility = Visibility.Hidden;
+            PageType = NetMusicType.QQMusic;
+            Offset = 0; SearchPageCount = 0;
+            StartGetPlayListThread();
+        }
+
+        private void XiaMiMusicButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (CloseDataGridButton.Visibility == Visibility.Visible)
+            {
+                CloseDataGridButton_Click(new object(), e);
+            }
+            CloudMusicButton.Visibility = Visibility.Visible;
+            QQMusicButton.Visibility = Visibility.Visible;
+            XiaMiMusicButton.Visibility = Visibility.Hidden;
+            CloudMusicButtonHelper.Visibility = Visibility.Hidden;
+            QQMusicButtonHelper.Visibility = Visibility.Hidden;
+            XiaMiMusicButtonHelper.Visibility = Visibility.Visible;
+            PageType = NetMusicType.XiaMiMusic;
+            Offset = 0; SearchPageCount = 0;
+            StartGetPlayListThread();
         }
 
         private void LastPageButton_Click(object sender, RoutedEventArgs e)
         {
-            Offset -= 35;
-            Thread thread = new Thread(new ThreadStart(() => GetPlayList(Offset, PageType)));
+            //Offset -= 35;
+            Thread thread = new Thread(new ThreadStart(() => GetPlayList(--Offset, PageType)));
             thread.IsBackground = true;
             thread.Start();
         }
 
         private void NextPageButton_Click(object sender, RoutedEventArgs e)
         {
-            Offset += 35;
-            Thread thread = new Thread(new ThreadStart(() => GetPlayList(Offset, PageType)));
+            //Offset += 35;
+            Thread thread = new Thread(new ThreadStart(() => GetPlayList(++Offset, PageType)));
             thread.IsBackground = true;
             thread.Start();
         }
@@ -92,7 +137,7 @@ namespace MusicCollection.Pages
                     LastPageButton.IsEnabled = false;
                     NextPageButton.IsEnabled = true;
                 }
-                else if (offset/35 == count)
+                else if (offset == count)
                 {
                     LastPageButton.IsEnabled = true;
                     NextPageButton.IsEnabled = false;
@@ -155,10 +200,10 @@ namespace MusicCollection.Pages
             {
                 DataGridRow dgr = sender as DataGridRow;
                 var netMusic = dgr.Item as NetMusic;
-                if (netMusic != null)
-                {
-                    ParentWindow.DownLoadMusic.DownLoadingList.Add(netMusic);
-                }
+                //if (netMusic != null)
+                //{
+                //    ParentWindow.DownLoadMusic.DownLoadingList.Add(netMusic);
+                //}
                 if (!ParentWindow.Play(null, netMusic))
                 {
                     MessageBox.Show("当前音乐不可在线播放！");
@@ -236,21 +281,6 @@ namespace MusicCollection.Pages
                 mlist.Add(new Music(item));
             }
             ParentWindow.PlayListCollection.Add(new PlayListCollectionModel(row.Row.ItemArray[0] as string, row.Row.ItemArray[1] as string, mlist));
-        }
-
-        private void QQMusicButton_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
-
-        private void XiaMiMusicButton_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
-
-        private void CloudMusicButton_Click(object sender, RoutedEventArgs e)
-        {
-
         }
 
         private void CloseDataGridButton_Click(object sender, RoutedEventArgs e)
