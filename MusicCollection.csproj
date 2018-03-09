@@ -298,6 +298,7 @@
   <ItemGroup>
     <Content Include="packages\NAudio\lib\net\NAudio.dll" />
     <Content Include="packages\TagLib\lib\taglib-sharp.dll" />
+    <Resource Include="Resources\images\red_point.png" />
     <Resource Include="Resources\images\playlist0.png" />
     <Resource Include="Resources\images\playlist.png" />
     <Resource Include="Resources\images\download_manage.png" />

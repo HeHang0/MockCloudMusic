@@ -339,7 +339,7 @@ namespace MusicCollection
                     if (!NetMusicHelper.CheckLink(url))
                     {
                         CurrentMusicList.RemoveAt(CurrentIndex);
-                        CurrentIndex = -1;
+                        CurrentIndex = tmpIndex;
                         Play();
                         return false;
                     }
@@ -374,7 +374,7 @@ namespace MusicCollection
                 SetMiniLable(CurrentMusicList[CurrentIndex]);
             }
             return true;
-        }       
+        }
 
         private void SetMiniLable(Music music)
         {
@@ -704,6 +704,14 @@ namespace MusicCollection
             if (url.Contains("music.163.com"))
             {
                 type = NetMusicType.CloudMusic;
+            }
+            else if (url.Contains("y.qq.com"))
+            {
+                type = NetMusicType.QQMusic;
+            }
+            else if (url.Contains("xiami.com"))
+            {
+                type = NetMusicType.XiaMiMusic;
             }
             else
             {

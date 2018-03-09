@@ -22,7 +22,8 @@ namespace MusicCollection.MusicAPI
         private static Dictionary<NetMusicType, string> SearchAPI = new Dictionary<NetMusicType, string>()
         {
             { NetMusicType.CloudMusic, "http://music.163.com/api/search/pc?s={0}&offset={1}&limit=30&type=1" },
-            { NetMusicType.QQMusic, "http://i.y.qq.com/s.music/fcgi-bin/search_for_qq_cp?g_tk=938407465&uin=0&format=jsonp&inCharset=utf-8&outCharset=utf-8&notice=0&platform=h5&needNewCode=1&w={0}&zhidaqu=1&catZhida=1&t=0&flag=1&ie=utf-8&sem=1&aggr=0&perpage=30&n=30&p={1}&remoteplace=txt.mqq.all&_=1459991037831&jsonpCallback=jsonp4" }
+            { NetMusicType.QQMusic, "http://i.y.qq.com/s.music/fcgi-bin/search_for_qq_cp?g_tk=938407465&uin=0&format=jsonp&inCharset=utf-8&outCharset=utf-8&notice=0&platform=h5&needNewCode=1&w={0}&zhidaqu=1&catZhida=1&t=0&flag=1&ie=utf-8&sem=1&aggr=0&perpage=30&n=30&p={1}&remoteplace=txt.mqq.all&_=1459991037831&jsonpCallback=jsonp4" },
+            { NetMusicType.XiaMiMusic, "http://api.xiami.com/web?v=2.0&app_key=1&key={0}&page={1}&limit=30&callback=jsonp154&r=search/songs" }
         };
 
         private static Dictionary<NetMusicType, string> LyricAPI = new Dictionary<NetMusicType, string>()
@@ -313,7 +314,10 @@ namespace MusicCollection.MusicAPI
                     retString = SendDataByPOST(string.Format(SearchAPI[type], SearchStr, offset*30));
                     break;
                 case NetMusicType.QQMusic:
-                    retString = SendDataByGET(string.Format(SearchAPI[type], SearchStr, offset+1));
+                    retString = SendDataByGET(string.Format(SearchAPI[type], SearchStr, offset + 1));
+                    break;
+                case NetMusicType.XiaMiMusic:
+                    retString = SendDataByGET(string.Format(SearchAPI[type], SearchStr, offset + 1));
                     break;
 
             }
@@ -447,6 +451,8 @@ namespace MusicCollection.MusicAPI
                     return GetCloudMusicList(Sources, out count);
                 case NetMusicType.QQMusic:
                     return GetQQmusicList(Sources, out count);
+                case NetMusicType.XiaMiMusic:
+                    return GetXiaMimusicList(Sources, out count);
             }
             count = 0;
             return new ObservableCollection<NetMusic>();
@@ -463,6 +469,37 @@ namespace MusicCollection.MusicAPI
             {
                 return "";
             }
+        }
+
+        private static ObservableCollection<NetMusic> GetXiaMimusicList(string JsonStr, out int count)
+        {
+            var list = new ObservableCollection<NetMusic>();
+            try
+            {
+                JsonStr = Regex.Match(JsonStr, "jsonp154\\(([\\S\\s]+)\\)").Groups[1].Value;
+                JObject jo = (JObject)JsonConvert.DeserializeObject(JsonStr);
+                var jt = jo["data"]["songs"];
+                count = int.Parse(jo["data"]["total"].ToString());
+                foreach (var item in jt)
+                {
+                    var music = new NetMusic();
+                    music.Title = item["song_name"].ToString();
+                    music.Singer = item["artist_name"].ToString();
+                    music.MusicID = item["song_id"].ToString();
+                    music.Album = item["album_name"].ToString();
+                    music.AlbumImageUrl = item["album_logo"].ToString();
+                    music.Origin = NetMusicType.XiaMiMusic;
+                    music.Url = item["listen_file"].ToString();
+                    music.LyricPath = item["lyric"].ToString();
+                    //music.Duration = new TimeSpan(0, 0, 0, 0, int.Parse(item["size128"].ToString()));
+                    list.Add(music);
+                }
+            }
+            catch (Exception)
+            {
+                count = 0;
+            }
+            return list;
         }
 
         private static ObservableCollection<NetMusic> GetQQmusicList(string JsonStr, out int count)
@@ -697,6 +734,10 @@ namespace MusicCollection.MusicAPI
         private static List<NetMusic> GetXiaMiMusicPlayListItems(string pid, out string name, out string imgurl)
         {
             name = ""; imgurl = "";
+            if (Regex.IsMatch(pid, "[a-zA-z]+://[^\\s]*"))
+            {
+                pid = Regex.Match(pid, "/([\\d]+)").Groups[1].Value;
+            }
             var url = string.Format(PlayListDetailAPI[NetMusicType.XiaMiMusic], pid);
             var retStr = SendDataByGET(url);
             var list = new List<NetMusic>();
@@ -732,6 +773,10 @@ namespace MusicCollection.MusicAPI
         private static List<NetMusic> GetQQMusicPlayListItems(string ssid, out string name, out string imgurl)
         {
             name = ""; imgurl = "";
+            if (Regex.IsMatch(ssid, "[a-zA-z]+://[^\\s]*"))
+            {
+                ssid = Regex.Match(ssid, "/([\\d]+)").Groups[1].Value;
+            }
             var url = string.Format(PlayListDetailAPI[NetMusicType.QQMusic], ssid);
             var retStr = SendDataByGET(url);
             var list = new List<NetMusic>();
@@ -806,16 +851,16 @@ namespace MusicCollection.MusicAPI
         private static string CloudSendDataByPost(string Url, string paramData, bool IsUrl = true)
         {
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(Url);
-            Url = Url.Replace("http://", "https://");
+            //Url = Url.Replace("http://", "https://");
             //byte[] byteArray = dataEncode.GetBytes(paramData); //转化
-            request.Referer = "https://music.163.com/";
+            request.Referer = "http://music.163.com/";
             request.Method = "POST";
             request.ContentType = "application/x-www-form-urlencoded";
             //request.Timeout = 5000;
             //request.ReadWriteTimeout = 5000;
             request.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.71 Safari/537.36";
 
-            var a = Encoding.ASCII.GetBytes(paramData);
+            var a = Encoding.UTF8.GetBytes(paramData);
             request.ContentLength = a.Length;
             using (Stream reqStream = request.GetRequestStream())
             {
@@ -851,11 +896,11 @@ namespace MusicCollection.MusicAPI
         }
         private static string GetUrlFromCloudMusic(Music music)
         {
-            var param = AesEncrypt("{\"ids\":\"[" + music.MusicID + "]\",\"br\":999000,\"csrf_token\":\"\"}", "0CoJUm6Qyw8W8jud");
+            var param = AesEncrypt("{\"ids\":[" + music.MusicID + "],\"br\":320000,\"csrf_token\":\"\"}", "0CoJUm6Qyw8W8jud");
             param = AesEncrypt(param, "a8LWv2uAtXjzSfkQ");
             param = System.Web.HttpUtility.UrlEncode(param);
             var encSecKey = "&encSecKey=2d48fd9fb8e58bc9c1f14a7bda1b8e49a3520a67a2300a1f73766caee29f2411c5350bceb15ed196ca963d6a6d0b61f3734f0a0f4a172ad853f16dd06018bc5ca8fb640eaa8decd1cd41f66e166cea7a3023bd63960e656ec97751cfc7ce08d943928e9db9b35400ff3d138bda1ab511a06fbee75585191cabe0e6e63f7350d6";
-            var url = "http://music.163.com/weapi/song/enhance/player/url";
+            var url = "http://music.163.com/weapi/song/enhance/player/url?csrf_token=";
             var paramData = "params=" + param + encSecKey;
             var Url = CloudSendDataByPost(url, paramData);
             if (string.IsNullOrWhiteSpace(Url))

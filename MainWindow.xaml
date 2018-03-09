@@ -33,8 +33,8 @@
                         <Border Background="#FFF5F5F7" />
                         <Image Name="DiscoverMusicBackGround" Source="Resources/images/listbtn_background.png"></Image>
                         <StackPanel Orientation="Horizontal">
-                            <Image Source="Resources/images/discover_music.png" Margin="13,5,0,5"></Image>
-                            <Label Content="发现音乐" VerticalContentAlignment="Center" Margin="7,0,0,0"/>
+                            <Image Source="Resources/images/discover_music.png" Margin="11,5,0,5"></Image>
+                            <Label Content="发现音乐" VerticalContentAlignment="Center" Margin="9,0,0,0"/>
                         </StackPanel>
                     </Grid>
                 </Button>
@@ -113,7 +113,7 @@
             <Button x:Name="ExitButton" Click="ExitButton_Click" Style="{StaticResource MouseOverOpacity}" Height="30" Canvas.Right="10" Canvas.Top="10" Width="30" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}">
                 <Image Width="18" Height="18" Source="Resources/images/exit.png"/>
             </Button>
-            <Image x:Name="TitleImage" Height="30" Source="Resources/images/logoandtitle.png" Canvas.Top="10" Canvas.Left="14"/>
+            <Image x:Name="TitleImage" Height="25" Source="Resources/images/logoandtitle.png" Canvas.Top="12" Canvas.Left="14"/>
             <Button x:Name="NoFocusButton" Style="{StaticResource MouseOverOpacity}" Canvas.Left="260" Canvas.Top="25" Width="18"/>
             <TextBox x:Name="SearchTextBox" Padding="8,0" Style="{StaticResource CircularTextBox}" KeyDown="SearchTextBox_KeyDown" Width="218" Height="23" Canvas.Left="255" Canvas.Top="15"
                          VerticalContentAlignment="Center" TextWrapping="Wrap" Background="#FFA82828" Foreground="White" Cursor="IBeam">
@@ -144,12 +144,12 @@
                     <TextBlock Text="{Binding CurrentTime, Mode=OneWay, StringFormat={}{0:mm\\:ss}}"/>
                 </Label.Content>
             </Label>
-            <Label x:Name="ToTalTimeLabel" Canvas.Right="293" Canvas.Top="14">
+            <Label x:Name="ToTalTimeLabel" Canvas.Right="290" Canvas.Top="14">
                 <Label.Content>
                     <TextBlock Text="{Binding TotalTime, Mode=OneWay, StringFormat={}{0:mm\\:ss}}"/>
                 </Label.Content>
             </Label>
-            <Slider x:Name="MusicSlider" Value="{Binding CurrentMusicPosition, Mode=TwoWay}" BorderBrush="{x:Null}" Cursor="Hand" Foreground="#FFF00F0F" IsMoveToPointEnabled="True" Height="18" VerticalAlignment="Bottom" Canvas.Left="243" Width="448" Canvas.Top="18"/>
+            <Slider x:Name="MusicSlider" Style="{StaticResource Slider_CustomStyle}" Value="{Binding CurrentMusicPosition, Mode=TwoWay}" Cursor="Hand" IsMoveToPointEnabled="True" Height="18" VerticalAlignment="Bottom" Canvas.Left="240" Width="448" Canvas.Top="18"/>
             <Button x:Name="VolOpenButton" Visibility="{Binding NoMute, Converter={StaticResource BoolToValueConverter}, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Click="VolOpenButton_Click"  Style="{StaticResource MouseOverOpacity}" Height="30" Canvas.Right="260" Canvas.Top="12" Width="30" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}">
                 <Image Width="23" Height="25" Source="Resources/images/vol_open.png" Margin="11,2,-4,2"/>
             </Button>
@@ -165,7 +165,7 @@
             <Button Name="DesktopLyricButton" Click="DesktopLyricButton_Click" Style="{StaticResource MouseOverOpacity}" Height="22" Width="20" Canvas.Right="125" Canvas.Top="15.5" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" Cursor="Hand" Background="{x:Null}">
                 <Label HorizontalContentAlignment="Center" VerticalContentAlignment="Center" FontSize="14" BorderBrush="#666666" BorderThickness="1" Padding="0" Foreground="#FF666666">词</Label>
             </Button>
-            <Slider x:Name="SoundChangeSlider" Value="{Binding Volume, Mode=TwoWay}" Canvas.Right="160" Canvas.Top="18" Width="100" Cursor="Hand" Background="#FFF5F5F7" IsMoveToPointEnabled="True"/>
+            <Slider x:Name="SoundChangeSlider" Style="{StaticResource Slider_CustomStyle_HoverThumb}" Value="{Binding Volume, Mode=TwoWay}" Canvas.Right="155" Canvas.Top="18" Width="100" Height="18" Cursor="Hand" VerticalAlignment="Bottom" IsMoveToPointEnabled="True"/>
             <Button Click="CurrentMusicListButton_Click" Canvas.Right="15" Canvas.Bottom="16" Width="45" Height="16" BorderThickness="0" Style="{StaticResource HarfCircularButton}" Background="#E1E1E2">
                 <Grid>
                     <Label Name="CurrentMusicListCountLable" Margin="5,-8,-5,-8" FontSize="11" Content="{Binding Count}"></Label>

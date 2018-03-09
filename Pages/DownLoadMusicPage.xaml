@@ -5,6 +5,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:MusicCollection.Pages"
       xmlns:gif="http://wpfanimatedgif.codeplex.com"
+  xmlns:control="clr-namespace:System.Windows.Controls;assembly=PresentationFramework" 
       mc:Ignorable="d" 
       d:DesignHeight="570" d:DesignWidth="822"
       Title="DownLoadMusicPage">
@@ -15,8 +16,11 @@
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Page.Resources>
-
+    
     <Grid>
+        <Grid.Resources>
+            <control:BooleanToVisibilityConverter x:Key="BoolToValueConverter" />
+        </Grid.Resources>
         <Button Name="DownLoadedListButtonHelper" IsEnabled="False" Style="{StaticResource LeftHarfCircularButton}" Content="已下载单曲" Foreground="White" Width="100" Background="#7C7D85" BorderBrush="#7C7D85" Height="27" Margin="277,13,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
         <Button Name="DownLoadingListButtonHelper" Visibility="Hidden" IsEnabled="False" Style="{StaticResource RightHarfCircularButton}" Content="正在下载" Foreground="White" Background="#7C7D85" BorderBrush="#7C7D85" Height="27" Margin="377,13,0,0" HorizontalAlignment="Left" Width="100" VerticalAlignment="Top"/>
         <Button Name="DownLoadedListButton" Click="DownLoadedListButton_Click" Visibility="Hidden" Style="{StaticResource LeftHarfCircularButton}" Content="已下载单曲" Foreground="#FF333333" Width="100" Background="White" BorderBrush="#FFE1E1E2" Height="27" Margin="277,13,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>

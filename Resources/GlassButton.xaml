@@ -8,7 +8,7 @@
     <pages:NetMusicTypeRadioBtnViewModel x:Key="RadioBtnViewModel" />
     <!--<resources:BoolToVisibility x:Key="BoolToVisConverter" />-->
     <control:BooleanToVisibilityConverter x:Key="BoolToValueConverter" />
-    
+
     <Style x:Key="GlassButton" TargetType="{x:Type Button}">
         <Setter Property="SnapsToDevicePixels" Value="True"/>
         <Setter Property="OverridesDefaultStyle" Value="True"/>
@@ -245,7 +245,7 @@
             </Setter.Value>
         </Setter>
     </Style>
-    
+
     <Style x:Key="LeftHarfCircularButton" TargetType="{x:Type Button}">
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="Template">
@@ -461,4 +461,158 @@
         </Setter>
     </Style>
 
+
+    <!--笔刷-->
+    <LinearGradientBrush x:Key="SliderBackground"  StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Offset="0" Color="#59ccfc"/>
+        <GradientStop Offset="0.5" Color="#00b3fe"/>
+        <GradientStop Offset="1" Color="#59ccfc"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="SliderThumb"  StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Offset="0" Color="#FFFFFFFF"/>
+        <!--<GradientStop Offset="1" Color="#dfdfdf"/>-->
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="SliderText"  StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Offset="0" Color="#7cce45"/>
+        <GradientStop Offset="1" Color="#4ea017"/>
+    </LinearGradientBrush>
+    <!--Slider模板-->
+    <Style x:Key="Slider_RepeatButton" TargetType="RepeatButton">
+        <Setter Property="Focusable" Value="false" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RepeatButton">
+                    <Border Background="#E83C3C" Height="5" CornerRadius="2,0,0,2"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="Slider_RepeatButton1" TargetType="RepeatButton">
+        <Setter Property="Focusable" Value="false" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RepeatButton">
+                    <Border Background="Transparent"  CornerRadius="8"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="Slider_Thumb" TargetType="Thumb">
+        <Setter Property="Focusable" Value="false" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Thumb">
+                    <Grid Margin="0,0,0,0">
+                        <Border Margin="0,0,0,0" Width="15" Height="15" CornerRadius="10" BorderThickness="1" BorderBrush="#FFC6C6C6" Background="{DynamicResource SliderThumb}">
+                            <Border Background="Red" CornerRadius="10" Height="5" Width="5"/>
+                        </Border>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <!--Background="{DynamicResource SliderThumb}"-->
+    <Style x:Key="Slider_CustomStyle" TargetType="Slider">
+        <Setter Property="Focusable" Value="false" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Slider">
+                    <Grid>
+                        <!--<Grid.ColumnDefinitions>  
+                                <ColumnDefinition Width="80"/>  
+                                <ColumnDefinition/>  
+                                <ColumnDefinition Width="40"/>  
+                            </Grid.ColumnDefinitions>-->
+                        <!--<Border HorizontalAlignment="Right" BorderBrush="Gray" BorderThickness="1,1,0,1" Background="{StaticResource SliderText}" Width="80" CornerRadius="8,0,0,8"/>-->
+                        <!--<Border Grid.Column="2" HorizontalAlignment="Right" BorderBrush="Gray" BorderThickness="0,1,1,1" Background="{StaticResource SliderText}" Width="40" CornerRadius="0,8,8,0"/>-->
+                        <!--<TextBlock Text="{Binding RelativeSource={RelativeSource TemplatedParent},Path=Tag}" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="14"/>-->
+                        <!--<TextBlock Grid.Column="2" Text="{Binding ElementName=PART_Track,Path=Value,StringFormat=\{0:N0\}}" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="14" DataContext="{Binding}" />-->
+                        <Border Grid.Column="1" CornerRadius="8,8,8,8">
+                            <Grid>
+                                <Border Grid.Column="1" Height="5" Background="#E6E6E8" CornerRadius="2" />
+                                <Track Grid.Column="1" Name="PART_Track">
+                                    <Track.DecreaseRepeatButton>
+                                        <RepeatButton Style="{StaticResource Slider_RepeatButton}"  
+                                Command="Slider.DecreaseLarge"/>
+                                    </Track.DecreaseRepeatButton>
+                                    <Track.IncreaseRepeatButton>
+                                        <RepeatButton Style="{StaticResource Slider_RepeatButton1}"  
+                                Command="Slider.IncreaseLarge"/>
+                                    </Track.IncreaseRepeatButton>
+                                    <Track.Thumb>
+                                        <Thumb Style="{StaticResource Slider_Thumb}" Margin="-5,-5"/>
+                                    </Track.Thumb>
+                                </Track>
+
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="Slider_RepeatButton3" TargetType="RepeatButton">
+        <Setter Property="Focusable" Value="false" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RepeatButton">
+                    <Border Background="#E83C3C" Height="5" CornerRadius="2"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="Slider_Thumb_Hover" TargetType="Thumb">
+        <Setter Property="Focusable" Value="false" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Thumb">
+                    <Grid Margin="0,0,0,0">
+                        <Border Margin="0,0,0,0" Width="15" Height="15" CornerRadius="10" BorderThickness="1" BorderBrush="#FFC6C6C6" Background="{DynamicResource SliderThumb}">
+                            <Border Background="Red" CornerRadius="10" Height="5" Width="5"/>
+                        </Border>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="Slider_CustomStyle_HoverThumb" TargetType="Slider">
+        <Setter Property="Focusable" Value="false" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Slider">
+                    <Grid>
+                        <Border Grid.Column="1" CornerRadius="8,8,8,8">
+                            <Grid>
+                                <Border Grid.Column="1" Height="5" Background="#E6E6E8" CornerRadius="2" />
+                                <Track Grid.Column="1" Name="PART_Track">
+                                    <Track.DecreaseRepeatButton>
+                                        <RepeatButton x:Name="RepeatButton2" Style="{StaticResource Slider_RepeatButton3}"  
+                                Command="Slider.DecreaseLarge"/>
+                                    </Track.DecreaseRepeatButton>
+                                    <Track.IncreaseRepeatButton>
+                                        <RepeatButton Style="{StaticResource Slider_RepeatButton1}"  
+                                Command="Slider.IncreaseLarge"/>
+                                    </Track.IncreaseRepeatButton>
+                                    <Track.Thumb>
+                                        <Thumb x:Name="ThumbHover" Visibility="Hidden" Style="{StaticResource Slider_Thumb_Hover}" Margin="-5,-5"/>
+                                    </Track.Thumb>
+                                </Track>
+
+                            </Grid>
+                        </Border>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="ThumbHover" Property="Visibility" Value="Visible"></Setter>
+                            <!--<Setter TargetName="RepeatButton2" Property="Margin" Value="2,0,0,2"></Setter>-->
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 </ResourceDictionary>

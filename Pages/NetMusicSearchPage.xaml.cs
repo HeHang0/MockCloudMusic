@@ -213,6 +213,7 @@ namespace MusicCollection.Pages
             XiaMiMusicButtonHelper.Visibility = Visibility.Visible;
             Offset = 0; MusicCount = 0;
             PageType = NetMusicType.XiaMiMusic;
+            StartGetMusicListThread();
         }
     }
 }
