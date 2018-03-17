@@ -8,13 +8,8 @@ using System.Threading.Tasks;
 
 namespace MusicCollection.MusicManager
 {
-    public class DownLoadMusic:Music, INotifyPropertyChanged
+    public class DownLoadMusic:Music
     {
-        public event PropertyChangedEventHandler PropertyChanged;
-        public void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
         public DownLoadMusic(NetMusic music) : base(music)
         {
 

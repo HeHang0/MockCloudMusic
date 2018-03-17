@@ -96,7 +96,10 @@ namespace MusicCollection.Pages
                     var run = LyricTextBlock.Inlines.ElementAt(LastLyricLineIndex);
                     run.Foreground = Brushes.Red;
                     LyricBlock.ScrollToVerticalOffset(LyricBlock.ScrollableHeight * LastLyricLineIndex * 1.0 / Count);
-                    DesktopLyricWin.Lyric.Content = ((Run)run).Text;
+                    if (!string.IsNullOrWhiteSpace(((Run)run).Text))
+                    {
+                        DesktopLyricWin.Lyric.Content = ((Run)run).Text;
+                    }
                 }
             }
         }
@@ -119,6 +122,7 @@ namespace MusicCollection.Pages
                 Image.DataContext = "logo.ico";
             }
             LyricBlock.ScrollToVerticalOffset(0);
+            DesktopLyricWin.Lyric.Content = music.Title + music.Singer;
             timer.Stop();
             Thread thread = new Thread(new ThreadStart(() => GetLiric(music)));
             thread.IsBackground = true;
@@ -161,16 +165,17 @@ namespace MusicCollection.Pages
                     var lrcList = System.IO.File.ReadLines(lyricPath, lrcEncoding);
                     foreach (var item in lrcList)
                     {
-                        var pattern = @"\[([0-9.:]*)\]";
+                        var pattern = "\\[([0-9.:]*)\\]";
                         MatchCollection mc = Regex.Matches(item, pattern);
                         foreach (Match line in mc)
                         {
-                            Lyric.Add(new LyricLine(Regex.Replace(item, @"\[([0-9.:]*)\]", ""), TimeSpan.Parse("00:" + line.Groups[1].Value)));
+                            Lyric.Add(new LyricLine(Regex.Replace(item, "\\[([0-9.:]*)\\]", ""), TimeSpan.Parse("00:" + line.Groups[1].Value)));
                         }
                     }
                     Lyric = Lyric.OrderBy(m => m.StartTime).ToList();
                     foreach (var item in Lyric)
                     {
+                        item.Content = Regex.Replace(item.Content, "<[\\d]{1,4}>", "");
                         LyricTextBlock.Inlines.Add(new Run(item.Content + "\n\n"));
                     }
                     Count = LyricTextBlock.Inlines.Count;
@@ -187,7 +192,6 @@ namespace MusicCollection.Pages
                         LyricTextBlock.Inlines.Add("\n");
                     }
                     LyricTextBlock.Inlines.Add(new Run("               用 心 去 感 受 音 乐\n") { Foreground = Brushes.Red, FontSize = 16 });
-                    DesktopLyricWin.Lyric.Content = "               用 心 去 感 受 音 乐\n";
                 }
             }));
         }

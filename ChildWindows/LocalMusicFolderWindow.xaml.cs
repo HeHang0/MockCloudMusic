@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -143,7 +144,14 @@ namespace MusicCollection.ChildWondows
             {
                 get
                 {
-                    return _path;
+                    if (Regex.IsMatch(_path, "C:\\\\Users\\\\([^\\\\]+)\\\\Music\\\\"))
+                    {
+                        return "我的音乐";
+                    }
+                    else
+                    {
+                        return _path;
+                    }
                 }
                 set
                 {

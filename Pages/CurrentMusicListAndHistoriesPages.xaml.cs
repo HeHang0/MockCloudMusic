@@ -104,11 +104,11 @@ namespace MusicCollection.Pages
         private void CollectionCurrentMusicListButton_Click(object sender, RoutedEventArgs e)
         {
             string name = "";
-            if (ParentWindow.GetStringFromInputStringWindow(out name))
+            if (ParentWindow.GetStringFromInputStringWindow("添加歌单", "歌单名称", out name))
             {
                 if (!string.IsNullOrWhiteSpace(name))
                 {
-                    ParentWindow.PlayListCollection.Add(new PlayListCollectionModel(name, "", ParentWindow.CurrentMusicList.ToList()));
+                    ParentWindow.PlayListCollection.Add(new PlayListCollectionModel(name, "", ParentWindow.CurrentMusicList));
                 }
                 else
                 {

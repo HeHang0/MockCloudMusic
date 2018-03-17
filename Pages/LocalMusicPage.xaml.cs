@@ -29,24 +29,12 @@ namespace MusicCollection.Pages
 
         private void Init()
         {
-            var LocalMusicFolderListPath = "Data\\LocalMusicFolderList.json";
-            var LocalMusicListPath = "Data\\LocalMusicList.json";
-
-            if (!File.Exists(LocalMusicFolderListPath))
-            {
-                File.WriteAllText(LocalMusicFolderListPath, JsonConvert.SerializeObject(new ObservableCollection<string>()));
-            }
-            if (!File.Exists(LocalMusicListPath))
-            {
-                File.WriteAllText(LocalMusicListPath, JsonConvert.SerializeObject(new MusicObservableCollection<Music>()));
-            }
-
             var LocalMusicFolderListContent = "";
             var LocalMusicListContent = "";
             try
             {
-                LocalMusicFolderListContent = File.ReadAllText(LocalMusicFolderListPath);
-                LocalMusicListContent = File.ReadAllText(LocalMusicListPath);
+                LocalMusicListContent = File.ReadAllText("Data\\LocalMusicList.json");
+                LocalMusicFolderListContent = File.ReadAllText( "Data\\LocalMusicFolderList.json");
             }
             catch (System.Exception)
             {                

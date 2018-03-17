@@ -34,6 +34,8 @@
                     <Label Content="收藏" Opacity="0.9" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="20,3,0,0" Foreground="#FF444444"></Label>
                 </Grid>
             </Button>
+
+            <GridSplitter Height="20" Cursor="Arrow" Canvas.Right="78" Canvas.Top="5" Width="2" Background="#FFB4B2B2" />
             <Button Click="ClearCurrentMusicListButton_Click" Cursor="Hand" Height="30" Width="56" Opacity="1" Canvas.Top="0" Canvas.Right="22" Style="{StaticResource MouseOverOpacity}">
                 <Grid>
                     <Image Width="23" Height="23" Margin="0,4,0,0" Source="/MusicCollection;component/Resources/images/trashcan.png" VerticalAlignment="Top" HorizontalAlignment="Left"/>

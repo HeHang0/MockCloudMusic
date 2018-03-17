@@ -1,20 +1,10 @@
 ﻿using MusicCollection.SoundPlayer;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Timers;
 using MusicCollection.Pages;
 using MusicCollection.MusicManager;
 using System.Text.RegularExpressions;
@@ -49,6 +39,7 @@ namespace MusicCollection
         private MusicDetailPage MusicDetail;
         private NetMusicSearchPage NetMusicSearch;
         private PlayListPage PlayList;
+        private RankingListPage RankingList;
 
         private System.Windows.Controls.Image CurrentBackGround;
 
@@ -193,6 +184,8 @@ namespace MusicCollection
             MusicDetail = new MusicDetailPage(this);
             NetMusicSearch = new NetMusicSearchPage(this);
             PlayList = new PlayListPage(this);
+            RankingList = new RankingListPage(this);
+            DataContext = NetMusicSearch;
             PageFrame.Content = DiscoverMusic;
             CurrentBackGround = DiscoverMusicBackGround;
             CurrentMusicListFrame.Content = new CurrentMusicListAndHistoriesPages(this);
@@ -202,28 +195,6 @@ namespace MusicCollection
         private void InitMusic()
         {
             CurrentMusicList.CollectionChanged += CurrentMusicList_OnCountChange;
-            var content = Environment.GetFolderPath(Environment.SpecialFolder.MyMusic) + "\\";
-            if (!Directory.Exists("Data\\"))//如果不存在就创建文件夹
-            {
-                Directory.CreateDirectory("Data\\");
-            }
-            if (!File.Exists("Data\\CurrentMusicList.json"))
-            {
-                File.WriteAllText("Data\\CurrentMusicList.json", JsonConvert.SerializeObject(new MusicObservableCollection<Music>()));
-            }
-            if (!File.Exists("Data\\HistoryMusicList.json"))
-            {
-                File.WriteAllText("Data\\HistoryMusicList.json", JsonConvert.SerializeObject(new MusicHistoriesCollection<MusicHistory>()));
-            }
-            if (!File.Exists("Data\\PlayListCollection.json"))
-            {
-                DataTable dt = new DataTable();
-                dt.Columns.Add("Name");
-                dt.Columns.Add("PlayList");
-                File.WriteAllText("Data\\PlayListCollection.json", JsonConvert.SerializeObject(dt));
-            }
-            
-
 
             var CurrentMusicListStr = File.ReadAllText("Data\\CurrentMusicList.json");
             CurrentMusicList = JsonConvert.DeserializeObject<MusicObservableCollection<Music>>(CurrentMusicListStr);
@@ -259,6 +230,24 @@ namespace MusicCollection
                 }
                 Play();
             }
+            else if (e.PropertyName == "DeviceCount" && bsp.IsPlaying)
+            {
+                var tmp = bsp.CurrentMusicPosition;
+                Play();
+                Thread thread = new Thread(new ThreadStart(() => SetPos(tmp)));
+                thread.IsBackground = true;
+                thread.Start();
+                
+            }
+        }
+
+        private void SetPos(double tmp)
+        {
+            Thread.Sleep(2000);
+            Dispatcher.Invoke(new Action(() =>
+            {
+                bsp.CurrentMusicPosition = tmp;
+            }));
         }
 
         private void CurrentMusicList_OnCountChange(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
@@ -352,7 +341,7 @@ namespace MusicCollection
                     return false;
                 }
             }
-            else if (CurrentMusicList.Count > 0 && CurrentIndex < 0)
+            else if (CurrentMusicList.Count > 0 && (CurrentIndex < 0 || CurrentIndex >= CurrentMusicList.Count))
             {
                 CurrentIndex = 0;
             }
@@ -366,10 +355,11 @@ namespace MusicCollection
                 bsp.Stop();
                 bsp.FileName = CurrentMusicList[CurrentIndex].Path;
                 bsp.Play();
+                CurrentMusicList[CurrentIndex].Duration = bsp.TotalTime;
                 PlayMusicButton.Visibility = Visibility.Hidden;
                 PauseMusicButton.Visibility = Visibility.Visible;
                 Title = CurrentMusicList[CurrentIndex].Title + " - " + CurrentMusicList[CurrentIndex].Singer;
-                notifyIcon.Text = Title;
+                notifyIcon.Text = Title.Length >= 63 ? Title.Substring(0,60) + "..." : Title;
                 HistoryMusicList.Add(new MusicHistory(CurrentMusicList[CurrentIndex]));
                 SetMiniLable(CurrentMusicList[CurrentIndex]);
             }
@@ -476,15 +466,7 @@ namespace MusicCollection
         private void LocalMusicButton_Click(object sender, RoutedEventArgs e)
         {
             PageFrame.Content = LocalMusic;
-            if (CurrentBackGround != LocalMusicBackGround)
-            {
-                if (CurrentBackGround != null)
-                {
-                    CurrentBackGround.Visibility = Visibility.Hidden;
-                }
-                CurrentBackGround = LocalMusicBackGround;
-                CurrentBackGround.Visibility = Visibility.Visible;
-            }
+            ChangeLeftListBackGround(LocalMusicBackGround);
         }
 
         private void CurrentMusicImageMini_MouesOver(object sender, MouseEventArgs e)
@@ -604,27 +586,24 @@ namespace MusicCollection
         private void DownLoadMusicPageButton_Click(object sender, RoutedEventArgs e)
         {
             PageFrame.Content = DownLoadMusic;
-            if (CurrentBackGround != DownLoadMusicBackGround)
-            {
-                if (CurrentBackGround != null)
-                {
-                    CurrentBackGround.Visibility = Visibility.Hidden;
-                }
-                CurrentBackGround = DownLoadMusicBackGround;
-                CurrentBackGround.Visibility = Visibility.Visible;
-            }
+            ChangeLeftListBackGround(DownLoadMusicBackGround);
         }
-
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        public void CloseApp()
         {
             bsp.Stop();
             notifyIcon.Dispose();
             File.WriteAllText("Data\\CurrentMusicList.json", JsonConvert.SerializeObject(CurrentMusicList));
             File.WriteAllText("Data\\HistoryMusicList.json", JsonConvert.SerializeObject(HistoryMusicList));
             File.WriteAllText("Data\\PlayListCollection.json", JsonConvert.SerializeObject(PlayListCollection));
-            
+
             LocalMusic.LocalMusicPage_Closing();
             DownLoadMusic.DownLoadMusicPage_Closing();
+            Application.Current.Shutdown();
+        }
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            Hide();
+            e.Cancel = true;
         }
 
         private void PlayBar_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -657,19 +636,28 @@ namespace MusicCollection
                 MusicDetail.DesktopLyricWin.Visibility = Visibility.Visible;
             }
         }
-
-        private void DiscoverMusicButton_Click(object sender, RoutedEventArgs e)
+        private void ChangeLeftListBackGround(System.Windows.Controls.Image img)
         {
-            PageFrame.Content = DiscoverMusic;
-            if (CurrentBackGround != DiscoverMusicBackGround)
+            if (CurrentBackGround != img)
             {
                 if (CurrentBackGround != null)
                 {
                     CurrentBackGround.Visibility = Visibility.Hidden;
                 }
-                CurrentBackGround = DiscoverMusicBackGround;
+                CurrentBackGround = img;
                 CurrentBackGround.Visibility = Visibility.Visible;
             }
+        }
+        private void DiscoverMusicButton_Click(object sender, RoutedEventArgs e)
+        {
+            PageFrame.Content = DiscoverMusic;
+            ChangeLeftListBackGround(DiscoverMusicBackGround);
+        }
+
+        private void RankingListButtonButton_Click(object sender, RoutedEventArgs e)
+        {
+            PageFrame.Content = RankingList;
+            ChangeLeftListBackGround(RankingListBackGround);
         }
 
         private void PlayListCollectionButton_Click(object sender, RoutedEventArgs e)
@@ -718,7 +706,7 @@ namespace MusicCollection
                 return;
             }
             var nlist = NetMusicHelper.GetPlayListItems(url, type, out name, out imgurl);
-            List<Music> mlist = new List<Music>();
+            ObservableCollection<Music> mlist = new ObservableCollection<Music>();
             foreach (var item in nlist)
             {
                 mlist.Add(new Music(item));
@@ -732,9 +720,9 @@ namespace MusicCollection
                 }));
             }
         }
-        public bool GetStringFromInputStringWindow(out string result)
+        public bool GetStringFromInputStringWindow(string title, string subtitle, out string result)
         {
-            InputStringWindow inputStringWindow = new InputStringWindow("添加歌单", "歌单名称");
+            InputStringWindow inputStringWindow = new InputStringWindow(title, subtitle);
             if (inputStringWindow.ShowDialog() == true)
             {
                 result = inputStringWindow.InputString;

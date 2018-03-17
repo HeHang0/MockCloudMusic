@@ -4,6 +4,7 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:MusicCollection.Pages"
+      xmlns:gif="http://wpfanimatedgif.codeplex.com"
       mc:Ignorable="d" 
       d:DesignHeight="570" d:DesignWidth="822"
       Title="PlayListPage">
@@ -27,7 +28,11 @@
         <Label Content="{Binding PlayList.Count}" Margin="0,60,50,0" Padding="0" Height="15" Foreground="#999999" HorizontalContentAlignment="Right" VerticalAlignment="Top" HorizontalAlignment="Right" />
         <GridSplitter Background="#E1E1E2" Margin="0,37,40,0" Width="1" Height="40" VerticalAlignment="Top"/>
         <Button x:Name="PlayAllLocalButton" Click="PlayAllLocalButton_Click" HorizontalAlignment="Left" Style="{StaticResource LeftHarfCircularButton}" Content="播放全部" Foreground="#E03F40" Margin="160,85,0,0" VerticalAlignment="Top" Width="91" Background="White" BorderBrush="#E03F40" Height="30"/>
-        <Button x:Name="AllAddToCurrentListButton" Click="AllAddToCurrentListButton_Click" Style="{StaticResource RightHarfCircularButton}" Content="+" FontSize="22" FontWeight="Thin" Foreground="#E03F40" HorizontalAlignment="Left" Padding="0,-1,0,0"  Margin="250,85,0,0" VerticalAlignment="Top" Width="32" Background="White" Height="30" BorderBrush="#E03F40"/>
+        <Button x:Name="AllAddToCurrentListButton" ToolTip="添加到播放列表" Click="AllAddToCurrentListButton_Click" Style="{StaticResource NoHarfCircularButton}" Content="+" FontSize="22" FontWeight="Thin" Foreground="#E03F40" HorizontalAlignment="Left" Padding="0,-1,0,0"  Margin="250,85,0,0" VerticalAlignment="Top" Width="32" Background="White" Height="30" BorderBrush="#E03F40"/>
+        <Button x:Name="CheckLinkButton" ToolTip="检测是否可播放" Click="CheckLinkButton_Click" Style="{StaticResource RightHarfCircularButton}" Content="√" FontSize="22" FontWeight="Thin" Foreground="#E03F40" HorizontalAlignment="Left" Padding="0,-1,0,0"  Margin="281,85,0,0" VerticalAlignment="Top" Width="32" Background="White" Height="30" BorderBrush="#E03F40"/>
+        <Label x:Name="CheckLinkLable" Visibility="Hidden" Margin="328,95,0,0" Padding="0" Height="15" Foreground="#999999" HorizontalContentAlignment="Center"  VerticalAlignment="Top" HorizontalAlignment="Left" Width="21" FontSize="8" />
+        <Image Name="CheckLinkLodingImage" Visibility="Hidden" gif:ImageBehavior.AnimatedSource="..\Resources\images\loading.gif" Height="30" Width="30" Margin="324,85,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+
         <DataGrid x:Name="PlayListMusicDataGrid" Margin="0,150,0,0" SelectionMode="Single" AlternationCount="2"
                   BorderThickness="0" AutoGenerateColumns="False" CanUserAddRows="False" Opacity="0.7" Background="{x:Null}" BorderBrush="{x:Null}" LoadingRow="PlayListMusicDataGrid_LoadingRow" GridLinesVisibility="None"
                   ItemsSource="{Binding PlayList}" HeadersVisibility="Column" IsReadOnly="True">
@@ -84,6 +89,23 @@
                 <DataGridTextColumn Header="歌手" Width="180*" Binding="{Binding Singer, Mode=OneWay}"/>
                 <DataGridTextColumn Header="专辑" Width="150*" Binding="{Binding Album, Mode=OneWay}"/>
                 <DataGridTextColumn Header="时长" Width="80*" Binding="{Binding Duration, Mode=OneWay, StringFormat={}{0:mm\\:ss}}" />
+                <DataGridTemplateColumn  Header="" Width="100" CanUserSort="False">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" Margin="0,-2">                                
+                                <Button Click="ChangeResourcesButton_Click" ToolTip="更换资源" Tag="{Binding}" Style="{StaticResource MouseOverOpacity}" Margin="2,0" Height="20" Width="20" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}">
+                                    <Image Width="18" Height="18" Source="..\Resources\images\change_resources.png"/>
+                                </Button>
+                                <Button Click="DeleteMusicButton_Click" ToolTip="删除音乐" Tag="{Binding}" Style="{StaticResource MouseOverOpacity}" Margin="2,0" Height="20" Width="20" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}">
+                                    <Image Width="18" Height="18" Source="..\Resources\images\trashcan.png"/>
+                                </Button>
+                                <Button ToolTip="不可播放" Visibility="{Binding IsDisable, Converter={StaticResource BoolToValueConverter}, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MouseOverOpacity}" Margin="2,0" Height="20" Width="20" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}">
+                                    <Image Width="18" Height="18" Source="..\Resources\images\item_disable.png"/>
+                                </Button>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
 

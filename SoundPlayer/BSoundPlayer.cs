@@ -27,7 +27,7 @@ namespace MusicCollection.SoundPlayer
         //    return InnerInstance.instance;
         //}
 
-        private IWavePlayer wavePlayer;
+        private WaveOut wavePlayer;
         private WaveStream audioFileReader;
         private DispatcherTimer timer = new DispatcherTimer();
         public string FileName = string.Empty;
@@ -38,6 +38,8 @@ namespace MusicCollection.SoundPlayer
             timer.Tick += TimerOnTick;
         }
         const double sliderMax = 10.0;
+        private int deviceCount = WaveOut.DeviceCount;
+        private string deviceName = WaveOut.GetCapabilities(0).ProductName;
         private void TimerOnTick(object sender, EventArgs e)
         {
             if (audioFileReader != null)
@@ -45,6 +47,14 @@ namespace MusicCollection.SoundPlayer
                 OnPropertyChanged("CurrentTime");
                 _currentMusicPosition = Math.Min(sliderMax, audioFileReader.Position * sliderMax / audioFileReader.Length);
                 OnPropertyChanged("CurrentMusicPosition");
+            }
+            string name = WaveOut.GetCapabilities(0).ProductName;
+            int count = WaveOut.DeviceCount;
+            if (count != deviceCount && deviceName != name)
+            {
+                deviceCount = count;
+                deviceName = name;
+                OnPropertyChanged("DeviceCount");
             }
         }
 
@@ -199,8 +209,8 @@ namespace MusicCollection.SoundPlayer
                 IsPlaying = true;
                 return;
             }
-
             wavePlayer = new WaveOut();
+            //wavePlayer.DeviceNumber = 1;
             audioFileReader = new MediaFoundationReader(FileName);//AudioFileReader(FileName); 
             //audioFileReader.Volume = volume;
             wavePlayer.Volume = volume;

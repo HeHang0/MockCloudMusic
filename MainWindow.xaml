@@ -38,6 +38,16 @@
                         </StackPanel>
                     </Grid>
                 </Button>
+                <Button Name="RankingListButton" Style="{StaticResource MouseOverOpacity}" Click="RankingListButtonButton_Click" Cursor="Hand" Width="200" Height="33" BorderBrush="{x:Null}" Background="{x:Null}">
+                    <Grid>
+                        <Border Background="#FFF5F5F7" />
+                        <Image Name="RankingListBackGround" Visibility="Hidden" Source="Resources/images/listbtn_background.png"></Image>
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="Resources/images/rankinglist1.png" Margin="11,5,0,5"></Image>
+                            <Label Content="音乐排行" VerticalContentAlignment="Center" Margin="9,0,0,0"/>
+                        </StackPanel>
+                    </Grid>
+                </Button>
                 <Button Name="LocalMusicButton" Style="{StaticResource MouseOverOpacity}" Click="LocalMusicButton_Click" Cursor="Hand" Width="200" Height="33" BorderBrush="{x:Null}">
                     <Grid>
                         <Border Background="#FFF5F5F7" />
@@ -76,7 +86,7 @@
                                 <Grid>
                                     <Border Background="#FFF5F5F7" />
                                     <StackPanel Orientation="Horizontal">
-                                        <Image Source="Resources/images/playlist0.png" Margin="10,5,0,5"></Image>
+                                        <Image Source="Resources/images/playlist.png" Margin="10,5,0,5"></Image>
                                         <Label Content="{Binding Name}" Width="150" VerticalContentAlignment="Center" Margin="10,0,0,0"/>
                                     </StackPanel>
                                 </Grid>
@@ -115,8 +125,8 @@
             </Button>
             <Image x:Name="TitleImage" Height="25" Source="Resources/images/logoandtitle.png" Canvas.Top="12" Canvas.Left="14"/>
             <Button x:Name="NoFocusButton" Style="{StaticResource MouseOverOpacity}" Canvas.Left="260" Canvas.Top="25" Width="18"/>
-            <TextBox x:Name="SearchTextBox" Padding="8,0" Style="{StaticResource CircularTextBox}" KeyDown="SearchTextBox_KeyDown" Width="218" Height="23" Canvas.Left="255" Canvas.Top="15"
-                         VerticalContentAlignment="Center" TextWrapping="Wrap" Background="#FFA82828" Foreground="White" Cursor="IBeam">
+            <TextBox x:Name="SearchTextBox" Text="{Binding SearchStr, Mode=TwoWay}" Padding="8,0,23,0" Style="{StaticResource CircularTextBox}" KeyDown="SearchTextBox_KeyDown" Width="218" Height="23" Canvas.Left="255" Canvas.Top="15"
+                         VerticalContentAlignment="Center" Background="#FFA82828" Foreground="White" Cursor="IBeam">
             </TextBox>
         </Canvas>
         <Button x:Name="SearchNetMusicButton" Click="SearchNetMusicButton_Click" Style="{StaticResource MouseOverOpacity}" Height="22" Width="25" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}" Margin="445,15,0,0" HorizontalAlignment="Left" VerticalAlignment="Top">
@@ -159,7 +169,7 @@
             <Button Name="ShufflePlayButton" Click="ShufflePlayButton_Click" Style="{StaticResource MouseOverOpacity}" Height="30" Canvas.Right="90" Canvas.Top="12" Width="30" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}">
                 <Image Width="23" Height="25" Source="Resources/images/shuffle_play.png" Margin="11,2,-4,2"/>
             </Button>
-            <Button Name="LoopPlayButton" Click="LoopPlayButton_Click" Visibility="Hidden" Style="{StaticResource MouseOverOpacity}" Height="30" Canvas.Right="90" Canvas.Top="12" Width="30" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}">
+            <Button Name="LoopPlayButton" Click="LoopPlayButton_Click" Visibility="Hidden" SnapsToDevicePixels="True" RenderOptions.BitmapScalingMode="NearestNeighbor" UseLayoutRounding="True" Style="{StaticResource MouseOverOpacity}" Height="30" Canvas.Right="90" Canvas.Top="12" Width="30" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}">
                 <Image Width="23" Height="25" Source="Resources/images/loop_play.png" Margin="11,2,-4,2"/>
             </Button>
             <Button Name="DesktopLyricButton" Click="DesktopLyricButton_Click" Style="{StaticResource MouseOverOpacity}" Height="22" Width="20" Canvas.Right="125" Canvas.Top="15.5" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" Cursor="Hand" Background="{x:Null}">

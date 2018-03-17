@@ -1,8 +1,12 @@
-﻿using MusicCollection.MusicManager;
+﻿using MusicCollection.ChildWindows;
+using MusicCollection.MusicAPI;
+using MusicCollection.MusicManager;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -101,6 +105,75 @@ namespace MusicCollection.Pages
                     ParentWindow.bsp.Stop();
                     ParentWindow.Play(music);
                 }
+            }
+        }
+
+        private void ChangeResourcesButton_Click(object sender, RoutedEventArgs e)
+        {
+            Button btn = sender as Button;
+            Music music = btn.Tag as Music;
+            ChangeResourcesWindow changeResources = new ChangeResourcesWindow(ParentWindow, music.Title + " " + music.Singer);
+            if (changeResources.ShowDialog() == true)
+            {
+                var result = changeResources.MusicList.SingleOrDefault(m => m.IsDownLoaded);
+                if (result != null)
+                {
+                    PageModel.PlayList.Remove(music);
+                    PageModel.PlayList.Add(new Music(result));
+                }
+            }
+        }
+
+        private void DeleteMusicButton_Click(object sender, RoutedEventArgs e)
+        {
+            Button btn = sender as Button;
+            Music music = btn.Tag as Music;
+            InputStringWindow inputStringWindow = new InputStringWindow("删除音乐？", "点击确认删除");
+            if (inputStringWindow.ShowDialog() == true)
+            {
+                PageModel.PlayList.Remove(music);
+            }
+        }
+
+        private void CheckLinkButton_Click(object sender, RoutedEventArgs e)
+        {
+            CheckLinkLable.Content = "1";
+            CheckLinkLable.Visibility = Visibility.Visible;
+            CheckLinkLodingImage.Visibility = Visibility.Visible;
+            Thread thread = new Thread(new ThreadStart(() => CheckLink()));
+            thread.IsBackground = true;
+            thread.Start();
+        }
+
+        private void CheckLink()
+        {
+            for (int i = 0; i < PageModel.PlayList.Count; i++)
+            {
+                if (string.IsNullOrWhiteSpace(PageModel.PlayList[i].Path))
+                {
+                    string path = NetMusicHelper.GetUrlByNetMusic(PageModel.PlayList[i]);
+                    Dispatcher.Invoke(new Action(() =>
+                    {
+                        PageModel.PlayList[i].Path = path;
+                    }));
+                }
+                if ((Regex.IsMatch(PageModel.PlayList[i].Path, "[a-zA-z]+://[^\\s]*") && !NetMusicHelper.CheckLink(PageModel.PlayList[i].Path)) || string.IsNullOrWhiteSpace(PageModel.PlayList[i].Path))
+                {
+                    Dispatcher.Invoke(new Action(() =>
+                    {
+                        PageModel.PlayList[i].Path = "";
+                        PageModel.PlayList[i].IsDisable = true;
+                    }));
+                }
+                Dispatcher.Invoke(new Action(() =>
+                {
+                    CheckLinkLable.Content = i+1;
+                    if (i == PageModel.PlayList.Count-1)
+                    {
+                        CheckLinkLable.Visibility = Visibility.Hidden;
+                        CheckLinkLodingImage.Visibility = Visibility.Hidden;
+                    }
+                }));
             }
         }
     }

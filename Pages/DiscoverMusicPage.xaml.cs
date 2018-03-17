@@ -2,6 +2,7 @@
 using MusicCollection.MusicManager;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Data;
 using System.Linq;
 using System.Threading;
@@ -275,7 +276,7 @@ namespace MusicCollection.Pages
                 return;
             }
             var nlist = NetMusicDataGrid.DataContext as List<NetMusic>;
-            var mlist = new List<Music>();
+            var mlist = new ObservableCollection<Music>();
             foreach (var item in nlist)
             {
                 mlist.Add(new Music(item));

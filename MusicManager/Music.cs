@@ -1,10 +1,16 @@
 ﻿using System;
 using MusicCollection.MusicAPI;
+using System.ComponentModel;
 
 namespace MusicCollection.MusicManager
 {
-    public class Music
+    public class Music : INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler PropertyChanged;
+        public void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
         public Music()
         {
 
@@ -110,5 +116,20 @@ namespace MusicCollection.MusicManager
         /// 音乐ID
         /// </summary>
         public string MusicID { get; set; }
+        /// <summary>
+        /// 音乐是否可播放
+        /// </summary>
+        private bool isDisable = false;
+        public bool IsDisable {
+            get
+            {
+                return isDisable;
+            }
+            set
+            {
+                isDisable = value;
+                OnPropertyChanged("IsDisable");
+            }
+        }
     }
 }

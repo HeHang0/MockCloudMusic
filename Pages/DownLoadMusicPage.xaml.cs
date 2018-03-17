@@ -32,17 +32,9 @@ namespace MusicCollection.Pages
 
         private void Init()
         {
-            if (!File.Exists("Data\\DownLoadedList.json"))
-            {
-                File.WriteAllText("Data\\DownLoadedList.json", Newtonsoft.Json.JsonConvert.SerializeObject(new MusicObservableCollection<Music>()));
-            }
             var DownLoadedListStr = File.ReadAllText("Data\\DownLoadedList.json");
             DownLoadedList = Newtonsoft.Json.JsonConvert.DeserializeObject<MusicObservableCollection<Music>>(DownLoadedListStr);
 
-            if (!File.Exists("Data\\DownLoadingList.json"))
-            {
-                File.WriteAllText("Data\\DownLoadingList.json", Newtonsoft.Json.JsonConvert.SerializeObject(new NetMusicObservableCollection<NetMusic>()));
-            }
             var DownLoadingListStr = File.ReadAllText("Data\\DownLoadingList.json");
             DownLoadingList = Newtonsoft.Json.JsonConvert.DeserializeObject<NetMusicObservableCollection<NetMusic>>(DownLoadingListStr);
             DownLoadedMusicDataGrid.DataContext = DownLoadedList;

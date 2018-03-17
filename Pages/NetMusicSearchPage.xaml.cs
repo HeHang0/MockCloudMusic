@@ -1,6 +1,7 @@
 ﻿using MusicCollection.MusicAPI;
 using MusicCollection.MusicManager;
 using System;
+using System.ComponentModel;
 using System.IO;
 using System.Threading;
 using System.Windows;
@@ -12,12 +13,28 @@ namespace MusicCollection.Pages
     /// <summary>
     /// NetMusicSearchPage.xaml 的交互逻辑
     /// </summary>
-    public partial class NetMusicSearchPage : Page
+    public partial class NetMusicSearchPage : Page, INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler PropertyChanged;
+        public void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
         private MainWindow ParentWindow;
         public int Offset { get; set; } = 0;
         public int MusicCount { get; set; } = 0;
-        public string SearchStr { get; set; } = string.Empty;
+        private string searchStr = string.Empty;
+        public string SearchStr
+        {
+            get {
+                return searchStr;
+            }
+            set
+            {
+                searchStr = value;
+                OnPropertyChanged("SearchStr");
+            }
+        }
         public NetMusicType PageType { get; set; } = NetMusicType.CloudMusic;
         public NetMusicSearchPage(MainWindow parentWindow)
         {
@@ -29,11 +46,6 @@ namespace MusicCollection.Pages
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
             NetMusicDataGrid.DataContext = ParentWindow.NetMusicList;
-        }
-
-        private void TimerOnTick(object sender, EventArgs e)
-        {
-            
         }
 
         private void NetMusicDataGrid_LoadingRow(object sender, DataGridRowEventArgs e)

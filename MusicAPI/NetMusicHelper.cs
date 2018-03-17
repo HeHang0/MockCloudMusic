@@ -6,6 +6,7 @@ using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -22,14 +23,14 @@ namespace MusicCollection.MusicAPI
         private static Dictionary<NetMusicType, string> SearchAPI = new Dictionary<NetMusicType, string>()
         {
             { NetMusicType.CloudMusic, "http://music.163.com/api/search/pc?s={0}&offset={1}&limit=30&type=1" },
-            { NetMusicType.QQMusic, "http://i.y.qq.com/s.music/fcgi-bin/search_for_qq_cp?g_tk=938407465&uin=0&format=jsonp&inCharset=utf-8&outCharset=utf-8&notice=0&platform=h5&needNewCode=1&w={0}&zhidaqu=1&catZhida=1&t=0&flag=1&ie=utf-8&sem=1&aggr=0&perpage=30&n=30&p={1}&remoteplace=txt.mqq.all&_=1459991037831&jsonpCallback=jsonp4" },
-            { NetMusicType.XiaMiMusic, "http://api.xiami.com/web?v=2.0&app_key=1&key={0}&page={1}&limit=30&callback=jsonp154&r=search/songs" }
+            { NetMusicType.QQMusic, "http://i.y.qq.com/s.music/fcgi-bin/search_for_qq_cp?g_tk=938407465&uin=0&format=jsonp&inCharset=utf-8&outCharset=utf-8&notice=0&platform=h5&needNewCode=1&w={0}&zhidaqu=1&catZhida=1&t=0&flag=1&ie=utf-8&sem=1&aggr=0&perpage=30&n=30&p={1}&remoteplace=txt.mqq.all&_=1459991037831" },
+            { NetMusicType.XiaMiMusic, "http://api.xiami.com/web?v=2.0&app_key=1&key={0}&page={1}&limit=30&r=search/songs" }
         };
 
         private static Dictionary<NetMusicType, string> LyricAPI = new Dictionary<NetMusicType, string>()
         {
             { NetMusicType.CloudMusic, "http://music.163.com/api/song/lyric?os=pc&id={0}&lv=-1&kv=-1&tv=-1" },
-            { NetMusicType.QQMusic,"http://i.y.qq.com/lyric/fcgi-bin/fcg_query_lyric.fcg?songmid={0}&loginUin=0&hostUin=0&format=jsonp&inCharset=GB2312&outCharset=utf-8&notice=0&platform=yqq&jsonpCallback=MusicJsonCallback&needNewCode=0" }
+            { NetMusicType.QQMusic,"https://i.y.qq.com/lyric/fcgi-bin/fcg_query_lyric.fcg?songmid={0}&loginUin=0&hostUin=0&format=jsonp&inCharset=GB2312&outCharset=utf-8&notice=0&platform=yqq&needNewCode=0" }
         };
 
         private static Dictionary<NetMusicType, string> DownloadLinkAPI = new Dictionary<NetMusicType, string>()
@@ -41,16 +42,46 @@ namespace MusicCollection.MusicAPI
         private static Dictionary<NetMusicType, string> PlayListHotAPI = new Dictionary<NetMusicType, string>()
         {
             { NetMusicType.CloudMusic, "http://music.163.com/discover/playlist/?order=hot&limit=35&offset={0}" },
-            { NetMusicType.QQMusic, "https://c.y.qq.com/splcloud/fcgi-bin/fcg_get_diss_by_tag.fcg?rnd=0.4781484879517406&g_tk=732560869&jsonpCallback=MusicJsonCallback&loginUin=0&hostUin=0&format=jsonp&inCharset=utf8&outCharset=utf-8&notice=0&platform=yqq&needNewCode=0&categoryId=10000000&sortId=5&sin={0}&ein={1}" },
+            { NetMusicType.QQMusic, "https://c.y.qq.com/splcloud/fcgi-bin/fcg_get_diss_by_tag.fcg?rnd=0.4781484879517406&g_tk=732560869&loginUin=0&hostUin=0&format=jsonp&inCharset=utf8&outCharset=utf-8&notice=0&platform=yqq&needNewCode=0&categoryId=10000000&sortId=5&sin={0}&ein={1}" },
             { NetMusicType.XiaMiMusic, "http://www.xiami.com/collect/recommend/page/{0}" }
         };
         private static Dictionary<NetMusicType, string> PlayListDetailAPI = new Dictionary<NetMusicType, string>()
         {
             { NetMusicType.CloudMusic, "http://music.163.com/weapi/v3/playlist/detail" },
-            { NetMusicType.QQMusic, "http://i.y.qq.com/qzone-music/fcg-bin/fcg_ucc_getcdinfo_byids_cp.fcg?type=1&json=1&utf8=1&onlysong=0&jsonpCallback=jsonCallback&nosign=1&disstid={0}&g_tk=5381&loginUin=0&hostUin=0&format=jsonp&inCharset=GB2312&outCharset=utf-8&notice=0&platform=yqq&jsonpCallback=jsonCallback&needNewCode=0" },
-            { NetMusicType.XiaMiMusic, "http://api.xiami.com/web?v=2.0&app_key=1&id={0}&callback=jsonp122&r=collect/detail" }
+            { NetMusicType.QQMusic, "https://i.y.qq.com/qzone-music/fcg-bin/fcg_ucc_getcdinfo_byids_cp.fcg?type=1&json=1&utf8=1&onlysong=0&nosign=1&disstid={0}&g_tk=5381&loginUin=0&hostUin=0&format=jsonp&inCharset=GB2312&outCharset=utf-8&notice=0&platform=yqq&needNewCode=0" },
+            { NetMusicType.XiaMiMusic, "http://api.xiami.com/web?v=2.0&app_key=1&id={0}&r=collect/detail" }
         };
-
+        private static string ThisWeek = Math.Abs(GetWeekOfYear(DateTime.Now) - 1).ToString().PadLeft(2);
+        private static Dictionary<NetMusicType, Dictionary<RankingListType,string>> RankinListAPI = new Dictionary<NetMusicType, Dictionary<RankingListType, string>>()
+        {
+            {
+                NetMusicType.CloudMusic,
+                new Dictionary<RankingListType, string>()
+                {
+                    { RankingListType.HotList, "3778678" },
+                    { RankingListType.NewSongList, "3779629" },
+                    { RankingListType.SoarList, "19723756" }
+                }
+            },
+            {
+                NetMusicType.QQMusic,
+                new Dictionary<RankingListType, string>()
+                {
+                    { RankingListType.HotList, $"https://c.y.qq.com/v8/fcg-bin/fcg_v8_toplist_cp.fcg?tpl=3&page=detail&date={DateTime.Now.Year}_{ThisWeek}&topid=26&type=top&song_begin=0&song_num=100&g_tk=5381&loginUin=0&hostUin=0&format=jsonp&inCharset=utf8&outCharset=utf-8&notice=0&platform=yqq&needNewCode=0" },
+                    { RankingListType.NewSongList, $"https://c.y.qq.com/v8/fcg-bin/fcg_v8_toplist_cp.fcg?tpl=3&page=detail&date={DateTime.Now.AddDays(DateTime.Now.Hour < 10 ? -2 : -1).ToString("yyyy-MM-dd")}&topid=27&type=top&song_begin=0&song_num=100&g_tk=5381&loginUin=0&hostUin=0&format=jsonp&inCharset=utf8&outCharset=utf-8&notice=0&platform=yqq&needNewCode=0" },
+                    { RankingListType.SoarList, $"https://c.y.qq.com/v8/fcg-bin/fcg_v8_toplist_cp.fcg?tpl=3&page=detail&date={DateTime.Now.AddDays(DateTime.Now.Hour < 10 ? -2 : -1).ToString("yyyy-MM-dd")}&topid=4&type=top&song_begin=0&song_num=100&g_tk=5381&loginUin=0&hostUin=0&format=jsonp&inCharset=utf8&outCharset=utf-8&notice=0&platform=yqq&needNewCode=0" }
+                }
+            },
+            {
+                NetMusicType.XiaMiMusic,
+                new Dictionary<RankingListType, string>()
+                {
+                    { RankingListType.HotList, "http://api.xiami.com/web?v=2.0&app_key=1&id=101&page=1&limit=100&r=rank/song-list" },
+                    { RankingListType.NewSongList, "http://api.xiami.com/web?v=2.0&app_key=1&id=102&page=1&limit=100&r=rank/song-list" },
+                    { RankingListType.SoarList, "http://api.xiami.com/web?v=2.0&app_key=1&id=103&page=1&limit=100&r=rank/song-list" }
+                }
+            }
+        };
 
         public static string GetUrlByNetMusic(Music music = null, NetMusic netMusic = null)
         {
@@ -66,6 +97,9 @@ namespace MusicCollection.MusicAPI
                     break;
                 case NetMusicType.QQMusic:
                     Url = GetUrlFromQQMusic(music);
+                    break;
+                case NetMusicType.XiaMiMusic:
+                    Url = GetUrlFromXiaMiMusic(music);
                     break;
             }
             if (!string.IsNullOrWhiteSpace(Url) && CheckLink(Url))
@@ -272,8 +306,7 @@ namespace MusicCollection.MusicAPI
         {
             try
             {
-                lyricStr = Regex.Match(lyricStr, "MusicJsonCallback([\\S\\s]+)").Groups[1].Value;
-                lyricStr = lyricStr.Substring(1, lyricStr.Length - 2);
+                lyricStr = lyricStr.Remove(lyricStr.Length - 1, 1).Replace("MusicJsonCallback(", "");
                 JObject jo = (JObject)JsonConvert.DeserializeObject(lyricStr);
                 lyricStr = jo["lyric"].ToString();
                 lyricStr = Encoding.UTF8.GetString(Convert.FromBase64String(lyricStr));
@@ -311,7 +344,7 @@ namespace MusicCollection.MusicAPI
             switch (type)
             {
                 case NetMusicType.CloudMusic:
-                    retString = SendDataByPOST(string.Format(SearchAPI[type], SearchStr, offset*30));
+                    retString = SendDataByPOST(string.Format(SearchAPI[type], SearchStr, offset * 30));
                     break;
                 case NetMusicType.QQMusic:
                     retString = SendDataByGET(string.Format(SearchAPI[type], SearchStr, offset + 1));
@@ -328,7 +361,55 @@ namespace MusicCollection.MusicAPI
             }
             return GetNetMusicListBySources(retString, type, out count);
         }
-        
+
+        public static List<NetMusic> GetNetMusicList(RankingListType listType, NetMusicType type)
+        {
+            List<NetMusic> list = new List<NetMusic>();
+            string name, imgurl;
+            string retStr = string.Empty;
+            switch (type)
+            {
+                case NetMusicType.CloudMusic:
+                    list = GetCloudMusicPlayListItems(RankinListAPI[type][listType], out name, out imgurl);
+                    if (list.Count == 0) list = GetCloudMusicPlayListItems(RankinListAPI[type][listType], out name, out imgurl);
+                    break;
+                case NetMusicType.QQMusic:
+                    retStr = SendDataByGET(RankinListAPI[type][listType]);
+                    list = GetQQMusicPlayListItemsFromRetStr(retStr, out name, out imgurl, true);
+                    break;
+                case NetMusicType.XiaMiMusic:
+                    retStr = SendDataByGET(RankinListAPI[type][listType]);
+                    list = GetXiaMiMusicPlayListItemsFromRetStr(retStr);
+                    break;
+
+            }
+            return list;
+        }
+
+
+        private static List<NetMusic> GetXiaMiMusicPlayListItemsFromRetStr(string retStr)
+        {
+            var list = new List<NetMusic>();
+            try
+            {
+                JObject jo = (JObject)JsonConvert.DeserializeObject(retStr);
+                var jt = jo["data"];
+                foreach (var item in jt)
+                {
+                    var music = new NetMusic();
+                    music.Title = item["song_name"].ToString();
+                    music.Singer = item["singers"].ToString();
+                    music.MusicID = item["song_id"].ToString();
+                    music.Origin = NetMusicType.XiaMiMusic;
+                    list.Add(music);
+                }
+            }
+            catch (Exception)
+            {
+            }
+            return list;
+        }
+
         private static string GetMusicUrlOfLocal(NetMusic netMusic)
         {
             try
@@ -429,7 +510,6 @@ namespace MusicCollection.MusicAPI
             {
                 request.Referer = Url.Substring(0, Url.IndexOf(".com") + 4);
             }
-            //request.Referer = "http://music.163.com/";
             request.Method = "GET";
             //request.ContentType = "text/html;charset=UTF-8";
             request.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.71 Safari/537.36";
@@ -476,7 +556,6 @@ namespace MusicCollection.MusicAPI
             var list = new ObservableCollection<NetMusic>();
             try
             {
-                JsonStr = Regex.Match(JsonStr, "jsonp154\\(([\\S\\s]+)\\)").Groups[1].Value;
                 JObject jo = (JObject)JsonConvert.DeserializeObject(JsonStr);
                 var jt = jo["data"]["songs"];
                 count = int.Parse(jo["data"]["total"].ToString());
@@ -502,14 +581,13 @@ namespace MusicCollection.MusicAPI
             return list;
         }
 
-        private static ObservableCollection<NetMusic> GetQQmusicList(string JsonStr, out int count)
+        private static ObservableCollection<NetMusic> GetQQmusicList(string jsonStr, out int count)
         {
             var list = new ObservableCollection<NetMusic>();
+            jsonStr = jsonStr.Remove(jsonStr.Length - 1, 1).Replace("callback(", "");
             try
             {
-                JsonStr = Regex.Match(JsonStr, "jsonp4([\\S\\s]+)").Groups[1].Value;
-                JsonStr = JsonStr.Substring(1, JsonStr.Length - 2);
-                JObject jo = (JObject)JsonConvert.DeserializeObject(JsonStr);
+                JObject jo = (JObject)JsonConvert.DeserializeObject(jsonStr);
                 var jt = jo["data"]["song"]["list"];
                 count = int.Parse(jo["data"]["song"]["totalnum"].ToString());
                 foreach (var item in jt)
@@ -648,11 +726,9 @@ namespace MusicCollection.MusicAPI
         {
             count = 0;
             List<Playlist> list = new List<Playlist>();
-
+            retStr = retStr.Remove(retStr.Length - 1, 1).Replace("MusicJsonCallback(", "");
             try
             {
-                retStr = Regex.Match(retStr, "MusicJsonCallback([\\S\\s]+)").Groups[1].Value;
-                retStr = retStr.Substring(1, retStr.Length - 2);
                 JObject jo = (JObject)JsonConvert.DeserializeObject(retStr);
                 var jt = jo["data"]["list"];
                 var Sum = 0;
@@ -743,8 +819,6 @@ namespace MusicCollection.MusicAPI
             var list = new List<NetMusic>();
             try
             {
-                retStr = Regex.Match(retStr, "jsonp122\\(([\\S\\s]+)\\)$").Groups[1].Value;
-
                 JObject jo = (JObject)JsonConvert.DeserializeObject(retStr);
                 var jt = jo["data"]["songs"];
                 name = jo["data"]["collect_name"].ToString();
@@ -779,18 +853,36 @@ namespace MusicCollection.MusicAPI
             }
             var url = string.Format(PlayListDetailAPI[NetMusicType.QQMusic], ssid);
             var retStr = SendDataByGET(url);
+
+            return GetQQMusicPlayListItemsFromRetStr(retStr, out name, out imgurl);
+        }
+        private static List<NetMusic> GetQQMusicPlayListItemsFromRetStr(string retStr, out string name, out string imgurl, bool isRl = false)
+        {
+            name = "";imgurl = "";
             var list = new List<NetMusic>();
+            if (!isRl)
+            {
+                retStr = retStr.Remove(retStr.Length - 1, 1).Replace("jsonCallback(", "");
+            }
             try
             {
-                retStr = Regex.Match(retStr, "jsonCallback([\\S\\s]+)").Groups[1].Value;
-                retStr = retStr.Substring(1, retStr.Length - 2);
-
                 JObject jo = (JObject)JsonConvert.DeserializeObject(retStr);
-                var jt = jo["cdlist"][0]["songlist"];
-                name = jo["cdlist"][0]["dissname"].ToString();
-                imgurl = jo["cdlist"][0]["logo"].ToString().Replace("300?n=1", "150?n=1");
-                foreach (var item in jt)
+                JToken jt;
+                if (isRl)
                 {
+                    jt = jo["songlist"];
+                }
+                else
+                {
+                    jt = jo["cdlist"][0]["songlist"];
+                    name = jo["cdlist"][0]["dissname"].ToString();
+                    imgurl = jo["cdlist"][0]["logo"].ToString().Replace("300?n=1", "150?n=1");
+                }
+                
+                foreach (var item0 in jt)
+                {
+                    JToken item = item0;
+                    if (isRl) item = item0["data"];
                     var music = new NetMusic();
                     music.Title = item["songname"].ToString();
                     music.Singer = item["singer"][0]["name"].ToString();
@@ -801,14 +893,13 @@ namespace MusicCollection.MusicAPI
                     music.AlbumImageUrl = "http://imgcache.qq.com/music/photo/mid_album_300/" + s + ".jpg";
                     music.Origin = NetMusicType.QQMusic;
                     music.Url = "";
-                    music.Duration = new TimeSpan(0, 0, 0, 0, int.Parse(item["size128"].ToString())/16);
+                    music.Duration = new TimeSpan(0, 0, 0, 0, int.Parse(item["size128"].ToString()) / 16);
                     list.Add(music);
                 }
             }
             catch (Exception)
             {
             }
-
             return list;
         }
 
@@ -816,7 +907,7 @@ namespace MusicCollection.MusicAPI
         {
             name = ""; imgurl = "";
             List<NetMusic> list = new List<NetMusic>();
-            string id = Regex.Match(playlisyUrl, "playlist\\?id=([\\d]+)").Groups[1].Value;
+            string id = Regex.IsMatch(playlisyUrl, "^[\\d]+$") ? playlisyUrl : Regex.Match(playlisyUrl, "playlist\\?id=([\\d]+)").Groups[1].Value;
             var param = AesEncrypt("{\"id\":\"" + id + "\",\"offset\":0,\"total\":true,\"limit\":1000,\"n\":1000,\"csrf_token\":\"\"}", "0CoJUm6Qyw8W8jud");
             param = AesEncrypt(param, "a8LWv2uAtXjzSfkQ");
             param = System.Web.HttpUtility.UrlEncode(param);
@@ -936,12 +1027,10 @@ namespace MusicCollection.MusicAPI
         private static string GetUrlFromQQMusic(Music music)
         {
             var Url = "";
-            var retStr = SendDataByGET("http://base.music.qq.com/fcgi-bin/fcg_musicexpress.fcg?json=3&guid=780782017&g_tk=938407465&loginUin=0&hostUin=0&format=jsonp&inCharset=GB2312&outCharset=GB2312&notice=0&platform=yqq&jsonpCallback=jsonCallback&needNewCode=0");
+            var retStr = SendDataByGET("http://base.music.qq.com/fcgi-bin/fcg_musicexpress.fcg?json=3&guid=780782017&g_tk=938407465&loginUin=0&hostUin=0&format=jsonp&inCharset=GB2312&outCharset=GB2312&notice=0&platform=yqq&needNewCode=0");
             try
             {
-                retStr = Regex.Match(retStr, "jsonCallback([\\S\\s]+)").Groups[1].Value;
-                retStr = retStr.Substring(1, retStr.Length - 3);
-
+                retStr = retStr.Replace("jsonCallback(", "").Replace(");", "");
                 JObject jo = (JObject)JsonConvert.DeserializeObject(retStr);
                 var token = jo["key"].ToString();
                 Url = "http://dl.stream.qqmusic.qq.com/C200" + music.MusicID + ".m4a?vkey=" + token + "&fromtag=0&guid=780782017";
@@ -951,6 +1040,30 @@ namespace MusicCollection.MusicAPI
             }
             return Url;
         }
+        private static string GetUrlFromXiaMiMusic(Music music)
+        {
+            var retStr = SendDataByGET($"http://api.xiami.com/web?v=2.0&app_key=1&id={music.MusicID}&r=song/detail");
+            try
+            {
+                JObject jo = (JObject)JsonConvert.DeserializeObject(retStr);
+                JToken item = jo["data"]["song"];
+                //music.Title = item["song_name"].ToString();
+                //music.Singer = item["singers"].ToString();
+                //music.MusicID = item["song_id"].ToString();
+                music.Album = item["album_name"].ToString();
+                music.AlbumImageUrl = item["logo"].ToString();
+                //music.Origin = NetMusicType.XiaMiMusic;
+                music.Path = item["listen_file"].ToString();
+                music.LyricPath = item["lyric"].ToString();
+                string secondstr = Regex.Match(music.LyricPath, "/([\\d]{2,4})/").Groups[1].Value;
+                music.Duration = new TimeSpan(0, 0, 0, int.Parse(secondstr), 0);
+            }
+            catch (Exception)
+            {
+            }
+            return music.Path;
+        }
+
         private static string AesEncrypt(string plaintextData, string key, string iv = "0102030405060708")
         {
             try
@@ -991,9 +1104,24 @@ namespace MusicCollection.MusicAPI
 
             return "http://p2.music.126.net/" + result + "/" + input + ".mp3";
         }
+        /// <summary>
+        /// 获取指定期第几周
+        /// </summary>
+        /// <param name="dt">指定间</param>
+        /// <reutrn>返第几周</reutrn>
+        private static int GetWeekOfYear(DateTime dt)
+        {
+            GregorianCalendar gc = new GregorianCalendar();
+            int weekOfYear = gc.GetWeekOfYear(dt, CalendarWeekRule.FirstDay, DayOfWeek.Monday);
+            return weekOfYear;
+        }
     }
     public enum NetMusicType
     {
         LocalMusic,CloudMusic, QQMusic, XiaMiMusic, BaiduMusic, KuwoMusic, KuGouMusic
+    }
+    public enum RankingListType
+    {
+        SoarList,HotList,NewSongList
     }
 }

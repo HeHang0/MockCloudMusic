@@ -42,7 +42,7 @@ namespace MusicCollection.ChildWondows
         
         private void ExitButton_Click(object sender, RoutedEventArgs e)
         {
-            Application.Current.Shutdown();
+            ParentWindow.CloseApp();
         }
 
         private void Window_Deactivated(object sender, EventArgs e)
