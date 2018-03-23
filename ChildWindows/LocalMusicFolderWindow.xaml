@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MusicCollection.ChildWondows"
-        mc:Ignorable="d" ShowInTaskbar="False" ShowActivated="False" WindowStyle="None"
+        mc:Ignorable="d" ShowInTaskbar="False" ShowActivated="False" WindowStyle="None" Topmost="True"
         Title="LocalMusicFolderWindow" Height="300" Width="300" Loaded="Window_Loaded" ResizeMode="NoResize"
         AllowsTransparency="True" Background="#FAFAFA" BorderThickness="1" BorderBrush="#C8C8C8">
     <Window.Resources>

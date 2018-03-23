@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MusicCollection.ChildWindows"
         mc:Ignorable="d" ShowInTaskbar="False" ShowActivated="False" WindowStyle="None"
-        Title="InputStringWindow" Height="200" Width="300" ResizeMode="NoResize"
+        Title="InputStringWindow" Height="200" Width="300" ResizeMode="NoResize" Topmost="True"
         AllowsTransparency="True" Background="#FAFAFA" BorderThickness="1" BorderBrush="#C8C8C8" WindowStartupLocation="CenterScreen">
     <Window.Resources>
         <ResourceDictionary>

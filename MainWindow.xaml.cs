@@ -69,7 +69,8 @@ namespace MusicCollection
             notifyIcon.Icon = FromImageSource(Icon);//程序图标
             notifyIcon.Visible = true;
             notifyIcon.MouseDoubleClick += NotifyIcon_MouseDoubleClick;
-            notifyIcon.MouseDown += NotifyIcon_MouseDown;
+            //notifyIcon.MouseDown += NotifyIcon_MouseDown;
+            notifyIcon.MouseClick += NotifyIcon_MouseDown;
             BalloonTips("Just Listen");
         }
 
@@ -77,8 +78,6 @@ namespace MusicCollection
         {
             if (Visibility == Visibility.Hidden)
             {
-                Hide();
-                WindowState = WindowState.Normal;
                 Show();
             }
             else if (Visibility == Visibility.Visible)
@@ -108,22 +107,17 @@ namespace MusicCollection
                 NotifyWin.Top = pt.Y - NotifyWin.ActualHeight;
                 NotifyWin.Activate();
             }
-            else if (e.Button == System.Windows.Forms.MouseButtons.Left)
-            {
-                if (this.Visibility == Visibility.Hidden)
-                {
-                    this.Visibility = Visibility.Visible;
-                }
-                else if (WindowState != WindowState.Normal)
-                {
-                    WindowState = WindowState.Normal;
-                }
-                else if(this.Visibility == Visibility.Hidden)
-                {
-                    this.Visibility = Visibility.Hidden;
-                }
-                Show();
-            }
+            //else if (e.Button == System.Windows.Forms.MouseButtons.Left)
+            //{
+            //    if (Visibility == Visibility.Hidden)
+            //    {
+            //        Show();
+            //    }
+            //    else if (Visibility == Visibility.Visible)
+            //    {
+            //        WindowState = WindowState.Normal;
+            //    }
+            //}
         }
 
         private static Icon FromImageSource(ImageSource icon)

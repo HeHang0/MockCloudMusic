@@ -70,6 +70,7 @@
                     <Setter Property="Background" Value="{x:Null}"/>
                     <Setter Property="BorderBrush" Value="{x:Null}"/>
                     <Setter Property="Foreground" Value="Black"/>
+                    <Setter Property="ToolTip" Value="{Binding RelativeSource={RelativeSource Mode=Self},Path=Content.Text}" />
                 </Style>
             </DataGrid.CellStyle>
             <DataGrid.Columns>
