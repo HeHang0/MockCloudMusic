@@ -903,11 +903,11 @@ namespace MusicCollection.MusicAPI
             return list;
         }
 
-        private static List<NetMusic> GetCloudMusicPlayListItems(string playlisyUrl, out string name,out string imgurl)
+        private static List<NetMusic> GetCloudMusicPlayListItems(string playlistUrl, out string name,out string imgurl)
         {
             name = ""; imgurl = "";
             List<NetMusic> list = new List<NetMusic>();
-            string id = Regex.IsMatch(playlisyUrl, "^[\\d]+$") ? playlisyUrl : Regex.Match(playlisyUrl, "playlist\\?id=([\\d]+)").Groups[1].Value;
+            string id = Regex.IsMatch(playlistUrl, "^[\\d]+$") ? playlistUrl : Regex.Match(playlistUrl, "playlist\\?id=([\\d]+)").Groups[1].Value;
             var param = AesEncrypt("{\"id\":\"" + id + "\",\"offset\":0,\"total\":true,\"limit\":1000,\"n\":1000,\"csrf_token\":\"\"}", "0CoJUm6Qyw8W8jud");
             param = AesEncrypt(param, "a8LWv2uAtXjzSfkQ");
             param = System.Web.HttpUtility.UrlEncode(param);
