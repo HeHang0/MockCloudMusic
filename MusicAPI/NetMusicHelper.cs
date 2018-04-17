@@ -51,7 +51,7 @@ namespace MusicCollection.MusicAPI
             { NetMusicType.QQMusic, "https://i.y.qq.com/qzone-music/fcg-bin/fcg_ucc_getcdinfo_byids_cp.fcg?type=1&json=1&utf8=1&onlysong=0&nosign=1&disstid={0}&g_tk=5381&loginUin=0&hostUin=0&format=jsonp&inCharset=GB2312&outCharset=utf-8&notice=0&platform=yqq&needNewCode=0" },
             { NetMusicType.XiaMiMusic, "http://api.xiami.com/web?v=2.0&app_key=1&id={0}&r=collect/detail" }
         };
-        private static string ThisWeek = Math.Abs(GetWeekOfYear(DateTime.Now) - 1).ToString().PadLeft(2);
+        private static string ThisWeek = Math.Abs(GetWeekOfYear(DateTime.Now) - 2).ToString().PadLeft(2);
         private static Dictionary<NetMusicType, Dictionary<RankingListType,string>> RankinListAPI = new Dictionary<NetMusicType, Dictionary<RankingListType, string>>()
         {
             {
@@ -306,7 +306,9 @@ namespace MusicCollection.MusicAPI
         {
             try
             {
-                lyricStr = lyricStr.Remove(lyricStr.Length - 1, 1).Replace("MusicJsonCallback(", "");
+                lyricStr = Regex.Replace(lyricStr, "^[a-zA-Z]{0,10}[C|c]allback\\(", "");
+                lyricStr = Regex.Replace(lyricStr, ";$", "");
+                lyricStr = Regex.Replace(lyricStr, "\\)$", "");
                 JObject jo = (JObject)JsonConvert.DeserializeObject(lyricStr);
                 lyricStr = jo["lyric"].ToString();
                 lyricStr = Encoding.UTF8.GetString(Convert.FromBase64String(lyricStr));
@@ -584,7 +586,9 @@ namespace MusicCollection.MusicAPI
         private static ObservableCollection<NetMusic> GetQQmusicList(string jsonStr, out int count)
         {
             var list = new ObservableCollection<NetMusic>();
-            jsonStr = jsonStr.Remove(jsonStr.Length - 1, 1).Replace("callback(", "");
+            jsonStr = Regex.Replace(jsonStr, "^[a-zA-Z]{0,10}[C|c]allback\\(", "");
+            jsonStr = Regex.Replace(jsonStr, ";$", "");
+            jsonStr = Regex.Replace(jsonStr, "\\)$", "");
             try
             {
                 JObject jo = (JObject)JsonConvert.DeserializeObject(jsonStr);
@@ -726,7 +730,9 @@ namespace MusicCollection.MusicAPI
         {
             count = 0;
             List<Playlist> list = new List<Playlist>();
-            retStr = retStr.Remove(retStr.Length - 1, 1).Replace("MusicJsonCallback(", "");
+            retStr = Regex.Replace(retStr, "^[a-zA-Z]{0,10}[C|c]allback\\(", "");
+            retStr = Regex.Replace(retStr, ";$", "");
+            retStr = Regex.Replace(retStr, "\\)$", "");
             try
             {
                 JObject jo = (JObject)JsonConvert.DeserializeObject(retStr);
@@ -860,10 +866,9 @@ namespace MusicCollection.MusicAPI
         {
             name = "";imgurl = "";
             var list = new List<NetMusic>();
-            if (!isRl)
-            {
-                retStr = retStr.Remove(retStr.Length - 1, 1).Replace("jsonCallback(", "");
-            }
+            retStr = Regex.Replace(retStr, "^[a-zA-Z]{0,10}[C|c]allback\\(", "");
+            retStr = Regex.Replace(retStr, ";$", "");
+            retStr = Regex.Replace(retStr, "\\)$", "");
             try
             {
                 JObject jo = (JObject)JsonConvert.DeserializeObject(retStr);
@@ -1030,7 +1035,9 @@ namespace MusicCollection.MusicAPI
             var retStr = SendDataByGET("http://base.music.qq.com/fcgi-bin/fcg_musicexpress.fcg?json=3&guid=780782017&g_tk=938407465&loginUin=0&hostUin=0&format=jsonp&inCharset=GB2312&outCharset=GB2312&notice=0&platform=yqq&needNewCode=0");
             try
             {
-                retStr = retStr.Replace("jsonCallback(", "").Replace(");", "");
+                retStr = Regex.Replace(retStr, "^[a-zA-Z]{0,10}[C|c]allback\\(", "");
+                retStr = Regex.Replace(retStr, ";$", "");
+                retStr = Regex.Replace(retStr, "\\)$", "");
                 JObject jo = (JObject)JsonConvert.DeserializeObject(retStr);
                 var token = jo["key"].ToString();
                 Url = "http://dl.stream.qqmusic.qq.com/C200" + music.MusicID + ".m4a?vkey=" + token + "&fromtag=0&guid=780782017";

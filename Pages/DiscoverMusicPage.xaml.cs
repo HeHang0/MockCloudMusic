@@ -173,6 +173,7 @@ namespace MusicCollection.Pages
             var list = NetMusicHelper.GetPlayListItems(url, PageType);
             Dispatcher.Invoke(new Action(() =>
             {
+                ButtonGroup.Visibility = Visibility.Hidden;
                 LodingImage.Visibility = Visibility.Hidden;
                 NetMusicDataGrid.DataContext = list;
                 NetMusicDataGrid.Visibility = Visibility.Visible;
@@ -287,6 +288,7 @@ namespace MusicCollection.Pages
         private void CloseDataGridButton_Click(object sender, RoutedEventArgs e)
         {
             CloseDataGridButton.Visibility = Visibility.Hidden;
+            ButtonGroup.Visibility = Visibility.Visible;
             NetMusicDataGrid.Visibility = Visibility.Hidden;
             PlayAllLocalButton.Visibility = Visibility.Hidden;
             AllAddToCurrentListButton.Visibility = Visibility.Hidden;
