@@ -174,6 +174,6 @@ namespace MusicCollection.MusicManager
             }
             return "";
         }
-        public enum MusicInfos { Title, Singer, Album, Duration, BitRate, Size, AlbumImageUrl, LyricUrl };
+        public enum MusicInfos { Title, Singer, Album, Duration, BitRate, Size, AlbumImageUrl, LyricUrl }
     }
 }

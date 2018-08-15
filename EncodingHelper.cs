@@ -9,7 +9,7 @@ namespace MusicCollection
 {
     class EncodingHelper
     {
-        public static System.Text.Encoding GetType(string FILE_NAME)
+        public static Encoding GetType(string FILE_NAME)
         {
             FileStream fs = new FileStream(FILE_NAME, FileMode.Open, FileAccess.Read);
             Encoding r = GetType(fs);
