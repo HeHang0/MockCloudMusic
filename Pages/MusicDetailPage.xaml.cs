@@ -94,6 +94,11 @@ namespace MusicCollection.Pages
                 else
                 {
                     var run = LyricTextBlock.Inlines.ElementAt(LastLyricLineIndex);
+                    if (LastLyricLineIndex > 0)
+                    {
+                        var lastRun = LyricTextBlock.Inlines.ElementAt(LastLyricLineIndex - 1);
+                        lastRun.Foreground = run.Foreground;
+                    }
                     run.Foreground = Brushes.Red;
                     LyricBlock.ScrollToVerticalOffset(LyricBlock.ScrollableHeight * LastLyricLineIndex * 1.0 / Count);
                     if (!string.IsNullOrWhiteSpace(((Run)run).Text))

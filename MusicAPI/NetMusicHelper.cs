@@ -115,6 +115,7 @@ namespace MusicCollection.MusicAPI
 
         public static bool CheckLink(string url)
         {
+            if (string.IsNullOrWhiteSpace(url)) return false;
             HttpWebRequest req = null;
             try
             {
@@ -992,13 +993,15 @@ namespace MusicCollection.MusicAPI
         }
         private static string GetUrlFromCloudMusic(Music music)
         {
+            string Url = GetNewUrlFromCloudMusic("http://music.163.com/song/media/outer/url?id=" + music.MusicID);
+            if (!string.IsNullOrWhiteSpace(Url)) return Url;
             var param = AesEncrypt("{\"ids\":[" + music.MusicID + "],\"br\":320000,\"csrf_token\":\"\"}", "0CoJUm6Qyw8W8jud");
             param = AesEncrypt(param, "a8LWv2uAtXjzSfkQ");
             param = System.Web.HttpUtility.UrlEncode(param);
             var encSecKey = "&encSecKey=2d48fd9fb8e58bc9c1f14a7bda1b8e49a3520a67a2300a1f73766caee29f2411c5350bceb15ed196ca963d6a6d0b61f3734f0a0f4a172ad853f16dd06018bc5ca8fb640eaa8decd1cd41f66e166cea7a3023bd63960e656ec97751cfc7ce08d943928e9db9b35400ff3d138bda1ab511a06fbee75585191cabe0e6e63f7350d6";
             var url = "http://music.163.com/weapi/song/enhance/player/url?csrf_token=";
             var paramData = "params=" + param + encSecKey;
-            var Url = CloudSendDataByPost(url, paramData);
+            Url = CloudSendDataByPost(url, paramData);
             if (string.IsNullOrWhiteSpace(Url))
             {
                 Url = CloudSendDataByPost(url, paramData);
@@ -1032,15 +1035,20 @@ namespace MusicCollection.MusicAPI
         private static string GetUrlFromQQMusic(Music music)
         {
             var Url = "";
-            var retStr = SendDataByGET("http://base.music.qq.com/fcgi-bin/fcg_musicexpress.fcg?json=3&guid=780782017&g_tk=938407465&loginUin=0&hostUin=0&format=jsonp&inCharset=GB2312&outCharset=GB2312&notice=0&platform=yqq&needNewCode=0");
+            //var retStr = SendDataByGET("http://base.music.qq.com/fcgi-bin/fcg_musicexpress.fcg?json=3&guid=4935867420&g_tk=938407465&loginUin=0&hostUin=0&format=jsonp&inCharset=GB2312&outCharset=GB2312&notice=0&platform=yqq&needNewCode=0");
             try
             {
-                retStr = Regex.Replace(retStr, "^[a-zA-Z]{0,10}[C|c]allback\\(", "");
-                retStr = Regex.Replace(retStr, ";$", "");
-                retStr = Regex.Replace(retStr, "\\)$", "");
-                JObject jo = (JObject)JsonConvert.DeserializeObject(retStr);
-                var token = jo["key"].ToString();
-                Url = "http://dl.stream.qqmusic.qq.com/C200" + music.MusicID + ".m4a?vkey=" + token + "&fromtag=0&guid=780782017";
+                //var tokenMatch = Regex.Match(retStr, "\"key\"\\s*:\\s*\"(?<key>[0-9a-zA-Z]+)\"");
+                //var token = tokenMatch?.Groups["key"]?.Value ?? "";
+                //var idMatchs = Regex.Matches(retStr, "\"testfile[^\"]+\"\\s*:\\s*\"(?<id>[^\"]+)\\.m4a\"");
+                //string id = string.Empty;
+                //foreach (Match item in idMatchs)
+                //{
+                //    id = item.Groups["id"]?.Value ?? "";
+                //}
+                //music.MusicID = string.IsNullOrWhiteSpace(id) ? "" : id;
+                Url = $"http://ws.stream.qqmusic.qq.com/C100{music.MusicID}.m4a?fromtag=0&guid=126548448";
+                //Url = "http://dl.stream.qqmusic.qq.com/C400" + music.MusicID + ".m4a?vkey=" + token + "&guid=493586742&fromtag=66";
             }
             catch (Exception)
             {
@@ -1110,6 +1118,24 @@ namespace MusicCollection.MusicAPI
             result = result.Replace("/", "_");
 
             return "http://p2.music.126.net/" + result + "/" + input + ".mp3";
+        }
+        public static string GetNewUrlFromCloudMusic(string url)
+        {
+            HttpWebRequest httpReq = (HttpWebRequest)WebRequest.Create(url);
+            httpReq.AllowAutoRedirect = false;
+            using(HttpWebResponse httpRes = (HttpWebResponse)httpReq.GetResponse())
+            {
+                try
+                {
+                    url = Regex.Replace(httpRes.Headers["Location"], "^http","https");
+                }
+                catch (Exception)
+                {
+                    url = "";
+                }
+            }
+
+            return url;
         }
         /// <summary>
         /// 获取指定期第几周

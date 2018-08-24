@@ -200,11 +200,11 @@ namespace MusicCollection
             PlayListCollection = JsonConvert.DeserializeObject<ObservableCollection<PlayListCollectionModel>>(PlayListCollectionStr);
             PlayListListBox.DataContext = PlayListCollection;
 
-            if (CurrentMusicList.Count > 0)
-            {
-                PlayMusicButton_Click(new object(), new RoutedEventArgs());
-                PlayMusicButton_Click(new object(), new RoutedEventArgs());
-            }
+            //if (CurrentMusicList.Count > 0)
+            //{
+            //    PlayMusicButton_Click(new object(), new RoutedEventArgs());
+            //    PlayMusicButton_Click(new object(), new RoutedEventArgs());
+            //}
             CurrentMusicListCountLable.DataContext = CurrentMusicList;
             bsp.PropertyChanged += Bsp_PropertyChanged;
         }
