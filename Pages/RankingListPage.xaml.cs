@@ -93,6 +93,11 @@ namespace MusicCollection.Pages
 
         private void StartGetMusicListThread()
         {
+
+            if (!(ParentWindow?.IsConnectInternet() ?? false))
+            {
+                return;
+            }
             Thread thread = new Thread(new ThreadStart(() => GetNetMusicList(PageListType, PageType)));
             thread.IsBackground = true;
             thread.Start();

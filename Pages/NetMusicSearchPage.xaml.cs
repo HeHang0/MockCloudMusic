@@ -40,7 +40,6 @@ namespace MusicCollection.Pages
         {
             InitializeComponent();
             ParentWindow = parentWindow;
-            LastPageButton.Content = "<";
         }
 
         private void Page_Loaded(object sender, RoutedEventArgs e)

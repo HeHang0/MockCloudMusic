@@ -26,7 +26,7 @@
         <Button Name="XiaMiMusicButton" Visibility="Visible" Click="XiaMiMusicButton_Click" Style="{StaticResource RightHarfCircularButton}" Content="虾米音乐" Foreground="#FF333333" Width="100" Background="White" Height="27" BorderBrush="#FFE1E1E2" Margin="378,10,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
 
         <Label x:Name="CountLabel" Margin="0,12,90,0" Content="{Binding}" ToolTip="{Binding}" VerticalAlignment="Top" Height="24" MaxWidth="256" HorizontalAlignment="Right"/>
-        <Button x:Name="LastPageButton" Click="LastPageButton_Click" ToolTip="上一页" Style="{StaticResource  LeftHarfCircularButton}" Content=">" FontSize="22" FontWeight="Thin" Foreground="#FF333333" Padding="0,-3,0,0" Margin="0,12,55,0" VerticalAlignment="Top" Background="White" BorderBrush="#FFE1E1E2" Height="25" HorizontalAlignment="Right" Width="30"/>
+        <Button x:Name="LastPageButton" Click="LastPageButton_Click" ToolTip="上一页" Style="{StaticResource  LeftHarfCircularButton}" Content="&lt;" FontSize="22" FontWeight="Thin" Foreground="#FF333333" Padding="0,-3,0,0" Margin="0,12,55,0" VerticalAlignment="Top" Background="White" BorderBrush="#FFE1E1E2" Height="25" HorizontalAlignment="Right" Width="30"/>
         <Button x:Name="NextPageButton" Click="NextPageButton_Click" IsEnabled="False" ToolTip="下一页" Style="{StaticResource RightHarfCircularButton}" Content=">" FontSize="22" FontWeight="Thin" Foreground="#FF333333" Padding="0,-3,0,0" Margin="0,12,26,0" VerticalAlignment="Top" Background="White" BorderBrush="#FFE1E1E2" Height="25" HorizontalAlignment="Right" Width="30"/>
 
         <DataGrid x:Name="NetMusicDataGrid" Margin="0,50,0,0" SelectionMode="Single" AlternationCount="2"

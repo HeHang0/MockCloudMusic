@@ -25,7 +25,6 @@ namespace MusicCollection.Pages
         {
             ParentWindow = mainWindow;
             InitializeComponent();
-            LastPageButton.Content = "<";
         }
 
         private void StartGetPlayListThread()
@@ -112,6 +111,10 @@ namespace MusicCollection.Pages
 
         private void GetPlayList(int offset, NetMusicType pageType)
         {
+            if (!(ParentWindow?.IsConnectInternet() ?? false))
+            {
+                return;
+            }
             int count = 0;
             Dispatcher.Invoke(new Action(() =>
             {

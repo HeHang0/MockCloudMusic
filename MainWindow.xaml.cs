@@ -17,6 +17,7 @@ using System.Windows.Interop;
 using System.Drawing;
 using System.Data;
 using MusicCollection.ChildWindows;
+using System.Runtime.InteropServices;
 
 namespace MusicCollection
 {
@@ -25,6 +26,38 @@ namespace MusicCollection
     /// </summary>
     public partial class MainWindow : Window
     {
+        [DllImport("wininet.dll")]
+        private extern static bool InternetGetConnectedState(int Description, int ReservedValue);
+        [DllImport("user32.dll")]
+        public static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr GetDC(IntPtr hwnd);
+
+        [DllImport("gdi32.dll")]
+        static extern int GetDeviceCaps(IntPtr hdc, int nIndex);
+
+        private float GetDpi()
+        {
+            IntPtr desktopWnd = IntPtr.Zero;
+            IntPtr dc = GetDC(desktopWnd);
+            var dpi = 100f;
+            const int LOGPIXELSX = 88;
+            try
+            {
+                dpi = GetDeviceCaps(dc, LOGPIXELSX);
+            }
+            finally
+            {
+                ReleaseDC(desktopWnd, dc);
+            }
+            return dpi / 96f;
+        }
+        public bool IsConnectInternet()
+        {
+            int Description = 0;
+            return InternetGetConnectedState(Description, 0);
+        }
         public BSoundPlayer bsp = new BSoundPlayer();
         public MusicObservableCollection<Music> CurrentMusicList = new MusicObservableCollection<Music>();
         public MusicHistoriesCollection<MusicHistory> HistoryMusicList = new MusicHistoriesCollection<MusicHistory>();
@@ -103,8 +136,9 @@ namespace MusicCollection
                 }
                 System.Drawing.Point pt = System.Windows.Forms.Control.MousePosition;//WPF方法
                 NotifyWin.Show();
-                NotifyWin.Left = pt.X;
-                NotifyWin.Top = pt.Y - NotifyWin.ActualHeight;
+                float dpi = GetDpi();
+                NotifyWin.Left = pt.X/dpi;
+                NotifyWin.Top = pt.Y/dpi - NotifyWin.ActualHeight;
                 NotifyWin.Activate();
             }
             //else if (e.Button == System.Windows.Forms.MouseButtons.Left)
