@@ -1,4 +1,4 @@
-﻿<Window x:Class="MusicCollection.MainWindow"
+<Window x:Class="MusicCollection.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -166,11 +166,14 @@
             <Button x:Name="VolCloseButton" Visibility="{Binding IsMute, Converter={StaticResource BoolToValueConverter}, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Click="VolCloseButton_Click" Style="{StaticResource MouseOverOpacity}" Height="30" Canvas.Right="260" Canvas.Top="12" Width="30" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}">
                 <Image Width="23" Height="25" Source="Resources/images/vol_close.png" Margin="11,2,-4,2"/>
             </Button>
-            <Button Name="ShufflePlayButton" Click="ShufflePlayButton_Click" Style="{StaticResource MouseOverOpacity}" Height="30" Canvas.Right="90" Canvas.Top="12" Width="30" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}">
+            <Button Name="ShufflePlayButton" ToolTip="随机播放" Click="ShufflePlayButton_Click" Style="{StaticResource MouseOverOpacity}" Height="30" Canvas.Right="90" Canvas.Top="12" Width="30" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}">
                 <Image Width="23" Height="25" Source="Resources/images/shuffle_play.png" Margin="11,2,-4,2"/>
             </Button>
-            <Button Name="LoopPlayButton" Click="LoopPlayButton_Click" Visibility="Hidden" SnapsToDevicePixels="True" RenderOptions.BitmapScalingMode="NearestNeighbor" UseLayoutRounding="True" Style="{StaticResource MouseOverOpacity}" Height="30" Canvas.Right="90" Canvas.Top="12" Width="30" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}">
+            <Button Name="LoopPlayButton" ToolTip="循环播放" Click="LoopPlayButton_Click" Visibility="Hidden" SnapsToDevicePixels="True" RenderOptions.BitmapScalingMode="NearestNeighbor" UseLayoutRounding="True" Style="{StaticResource MouseOverOpacity}" Height="30" Canvas.Right="90" Canvas.Top="12" Width="30" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}">
                 <Image Width="23" Height="25" Source="Resources/images/loop_play.png" Margin="11,2,-4,2"/>
+            </Button>
+            <Button Name="SinglePlayButton" ToolTip="单曲循环" Click="SinglePlayButton_Click" Visibility="Hidden" SnapsToDevicePixels="True" RenderOptions.BitmapScalingMode="NearestNeighbor" UseLayoutRounding="True" Style="{StaticResource MouseOverOpacity}" Height="30" Canvas.Right="90" Canvas.Top="12" Width="30" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}">
+                <Image Width="23" Height="25" Source="Resources/images/single-play.png" Margin="11,2,-4,2"/>
             </Button>
             <Button Name="DesktopLyricButton" Click="DesktopLyricButton_Click" Style="{StaticResource MouseOverOpacity}" Height="22" Width="20" Canvas.Right="125" Canvas.Top="15.5" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" Cursor="Hand" Background="{x:Null}">
                 <Label HorizontalContentAlignment="Center" VerticalContentAlignment="Center" FontSize="14" BorderBrush="#666666" BorderThickness="1" Padding="0" Foreground="#FF666666">词</Label>
