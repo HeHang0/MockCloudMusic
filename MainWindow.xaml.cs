@@ -1,4 +1,4 @@
-﻿using MusicCollection.SoundPlayer;
+using MusicCollection.SoundPlayer;
 using System;
 using System.IO;
 using System.Windows;
@@ -247,14 +247,18 @@ namespace MusicCollection
         {
             if (e.PropertyName == "MusicEnd" && CurrentMusicList.Count > 0)
             {
-                if (++CurrentIndex >= CurrentMusicList.Count)
-                {
-                    CurrentIndex = 0;
-                }
-                if (IsShufflePlay)
+                //if (++CurrentIndex >= CurrentMusicList.Count)
+                //{
+                //    CurrentIndex = 0;
+                //}
+                if (IsShufflePlay == PlayMode.ShufflePlay)
                 {
                     Random ran = new Random();
                     CurrentIndex = ran.Next(0, CurrentMusicList.Count);
+                }
+                else if (IsShufflePlay == PlayMode.LoopPlay && ++CurrentIndex >= CurrentMusicList.Count)
+                {
+                    CurrentIndex = 0;
                 }
                 Play();
             }
@@ -408,14 +412,14 @@ namespace MusicCollection
         }
         public void LastMusicPlay()
         {
-            if (--CurrentIndex < 0)
-            {
-                CurrentIndex = CurrentMusicList.Count - 1;
-            }
-            if (IsShufflePlay && CurrentMusicList.Count > 0)
+            if (IsShufflePlay == PlayMode.ShufflePlay)
             {
                 Random ran = new Random();
                 CurrentIndex = ran.Next(0, CurrentMusicList.Count);
+            }
+            else if (IsShufflePlay == PlayMode.LoopPlay && --CurrentIndex < 0)
+            {
+                CurrentIndex = CurrentMusicList.Count - 1;
             }
             bsp.Stop();
             Play();
@@ -428,14 +432,14 @@ namespace MusicCollection
         public void NextMusicPlay()
         {
             var count = CurrentMusicList.Count;
-            if (((++CurrentIndex >= count) || CurrentIndex == -1) && count > 0)
-            {
-                CurrentIndex = 0;
-            }
-            if (IsShufflePlay && count > 0)
+            if (IsShufflePlay == PlayMode.ShufflePlay)
             {
                 Random ran = new Random();
                 CurrentIndex = ran.Next(0, CurrentMusicList.Count);
+            }
+            else if (IsShufflePlay == PlayMode.LoopPlay && ((++CurrentIndex >= count) || CurrentIndex == -1) && count > 0)
+            {
+                CurrentIndex = 0;
             }
             bsp.Stop();
             Play();
@@ -641,16 +645,26 @@ namespace MusicCollection
 
         private void ShufflePlayButton_Click(object sender, RoutedEventArgs e)
         {
-            IsShufflePlay = false;
+            IsShufflePlay = PlayMode.LoopPlay;
             ShufflePlayButton.Visibility = Visibility.Hidden;
             LoopPlayButton.Visibility = Visibility.Visible;
+            SinglePlayButton.Visibility = Visibility.Hidden;
         }
-        private bool IsShufflePlay = true;
+        private PlayMode IsShufflePlay = PlayMode.ShufflePlay;
         private void LoopPlayButton_Click(object sender, RoutedEventArgs e)
         {
-            IsShufflePlay = true;
+            IsShufflePlay = PlayMode.SinglePlay;
+            ShufflePlayButton.Visibility = Visibility.Hidden;
+            LoopPlayButton.Visibility = Visibility.Hidden;
+            SinglePlayButton.Visibility = Visibility.Visible;
+        }
+
+        private void SinglePlayButton_Click(object sender, RoutedEventArgs e)
+        {
+            IsShufflePlay = PlayMode.ShufflePlay;
             ShufflePlayButton.Visibility = Visibility.Visible;
             LoopPlayButton.Visibility = Visibility.Hidden;
+            SinglePlayButton.Visibility = Visibility.Hidden;
         }
 
         private void DesktopLyricButton_Click(object sender, RoutedEventArgs e)
@@ -761,6 +775,11 @@ namespace MusicCollection
                 result = "";
                 return false;
             }
+        }
+
+        enum PlayMode
+        {
+            ShufflePlay, LoopPlay, SinglePlay
         }
     }
 }
