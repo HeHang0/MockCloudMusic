@@ -8,9 +8,6 @@
         Icon="logo.ico"
         Title="听" Height="670" Width="1022" MinHeight="670" MinWidth="1022" Loaded="Window_Loaded" StateChanged="Window_StateChanged" MouseUp="Window_MouseUp"
         Closing="Window_Closing" WindowStartupLocation="CenterScreen" AllowsTransparency="True" WindowStyle="None" SizeChanged="Window_SizeChanged">
-    <Window.Effect>
-        <DropShadowEffect BlurRadius="10" Color="#FFDADADA" Direction="1" ShadowDepth="1"/>
-    </Window.Effect>
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -19,6 +16,9 @@
         </ResourceDictionary>
     </Window.Resources>
     <Grid Name="MainWindowGrid">
+        <!--<Grid.Effect> Margin="3"
+            <DropShadowEffect Color="Black" Direction="50" Opacity="0.7" RenderingBias="Performance" ShadowDepth="0" />
+        </Grid.Effect>-->
         <Canvas Name="ContentBar" Background="#FFF5F5F7" Margin="0,50,0,50" HorizontalAlignment="Left" Width="200">
             <!--<Label x:Name="LocalMusicLabel" Cursor="Hand" Canvas.Top="25" VerticalContentAlignment="Center" IsEnabled="False" Width="200" Height="33" Background="#e6e7ea">
                     <Grid>
