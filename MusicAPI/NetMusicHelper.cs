@@ -47,7 +47,7 @@ namespace MusicCollection.MusicAPI
         };
         private static Dictionary<NetMusicType, string> PlayListDetailAPI = new Dictionary<NetMusicType, string>()
         {
-            { NetMusicType.CloudMusic, "http://music.163.com/weapi/v3/playlist/detail" },
+            { NetMusicType.CloudMusic, "https://music.163.com/weapi/v3/playlist/detail" },
             { NetMusicType.QQMusic, "https://i.y.qq.com/qzone-music/fcg-bin/fcg_ucc_getcdinfo_byids_cp.fcg?type=1&json=1&utf8=1&onlysong=0&nosign=1&disstid={0}&g_tk=5381&loginUin=0&hostUin=0&format=jsonp&inCharset=GB2312&outCharset=utf-8&notice=0&platform=yqq&needNewCode=0" },
             { NetMusicType.XiaMiMusic, "http://api.xiami.com/web?v=2.0&app_key=1&id={0}&r=collect/detail" }
         };
@@ -915,9 +915,11 @@ namespace MusicCollection.MusicAPI
             List<NetMusic> list = new List<NetMusic>();
             string id = Regex.IsMatch(playlistUrl, "^[\\d]+$") ? playlistUrl : Regex.Match(playlistUrl, "playlist\\?id=([\\d]+)").Groups[1].Value;
             var param = AesEncrypt("{\"id\":\"" + id + "\",\"offset\":0,\"total\":true,\"limit\":1000,\"n\":1000,\"csrf_token\":\"\"}", "0CoJUm6Qyw8W8jud");
-            param = AesEncrypt(param, "a8LWv2uAtXjzSfkQ");
+            //param = AesEncrypt(param, "a8LWv2uAtXjzSfkQ");
+            param = AesEncrypt(param, "t9Y0m4pdsoMznMlL");
             param = System.Web.HttpUtility.UrlEncode(param);
-            var encSecKey = "&encSecKey=2d48fd9fb8e58bc9c1f14a7bda1b8e49a3520a67a2300a1f73766caee29f2411c5350bceb15ed196ca963d6a6d0b61f3734f0a0f4a172ad853f16dd06018bc5ca8fb640eaa8decd1cd41f66e166cea7a3023bd63960e656ec97751cfc7ce08d943928e9db9b35400ff3d138bda1ab511a06fbee75585191cabe0e6e63f7350d6";
+            //var encSecKey = "&encSecKey=2d48fd9fb8e58bc9c1f14a7bda1b8e49a3520a67a2300a1f73766caee29f2411c5350bceb15ed196ca963d6a6d0b61f3734f0a0f4a172ad853f16dd06018bc5ca8fb640eaa8decd1cd41f66e166cea7a3023bd63960e656ec97751cfc7ce08d943928e9db9b35400ff3d138bda1ab511a06fbee75585191cabe0e6e63f7350d6";
+            var encSecKey = "&encSecKey=409afd10f2fa06173df57525287c4a1cdf6fa08bd542c6400da953704eb92dc1ad3c582e82f51a707ebfa0f6a25bcd185139fc1509d40dd97b180ed21641df55e90af4884a0b587bd25256141a9270b1b6f18908c6a626b74167e5a55a796c0f808a2eb12c33e63d34a7c4d358bab1dc661637dd1e888a1268b81a89f6136053";
             var url = PlayListDetailAPI[NetMusicType.CloudMusic];
             var paramData = "params=" + param + encSecKey;
             var retStr = CloudSendDataByPost(url, paramData, false);
@@ -950,13 +952,14 @@ namespace MusicCollection.MusicAPI
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(Url);
             //Url = Url.Replace("http://", "https://");
             //byte[] byteArray = dataEncode.GetBytes(paramData); //转化
-            request.Referer = "http://music.163.com/";
+            request.Referer = "https://music.163.com";
             request.Method = "POST";
             request.ContentType = "application/x-www-form-urlencoded";
             //request.Timeout = 5000;
             //request.ReadWriteTimeout = 5000;
-            request.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.71 Safari/537.36";
+            request.UserAgent = "Mozilla/5.0 (iPad; CPU OS 11_0 like Mac OS X) AppleWebKit/604.1.34 (KHTML, like Gecko) Version/11.0 Mobile/15A5341f Safari/604.1";
 
+            request.Headers.Add("Cookie", "os=ios;");
             var a = Encoding.UTF8.GetBytes(paramData);
             request.ContentLength = a.Length;
             using (Stream reqStream = request.GetRequestStream())
