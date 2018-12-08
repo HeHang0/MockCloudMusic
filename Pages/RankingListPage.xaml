@@ -111,10 +111,10 @@
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal" Margin="0,-2">
-                                <Button Click="NetMusicDownloadButton_Click" Tag="{Binding}" Style="{StaticResource MouseOverOpacity}" Margin="2,0" Height="20" Width="20" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}">
+                                <Button Click="NetMusicDownloadButton_Click" Tag="{Binding}" ToolTip="下载" Style="{StaticResource MouseOverOpacity}" Margin="2,0" Height="20" Width="20" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}">
                                     <Image Width="18" Height="18" Source="..\Resources\images\download.png"/>
                                 </Button>
-                                <Button Click="NetMusicPlayButton_Click" Tag="{Binding}" Style="{StaticResource MouseOverOpacity}" Height="20" Margin="2,0" Width="20" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}">
+                                <Button Click="NetMusicPlayButton_Click" Tag="{Binding}" ToolTip="播放" Style="{StaticResource MouseOverOpacity}" Height="20" Margin="2,0" Width="20" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}">
                                     <Image Width="18" Height="18" Source="..\Resources\images\item_play.png"/>
                                 </Button>
                                 <Button Click="NetMusicAddToListButton_Click" Tag="{Binding}" ToolTip="添加到当前列表" Style="{StaticResource MouseOverOpacity}" Height="20" Margin="2,0" Width="20" FocusVisualStyle="{x:Null}"  Foreground="{x:Null}" BorderBrush="{x:Null}" Cursor="Hand" Background="{x:Null}">
