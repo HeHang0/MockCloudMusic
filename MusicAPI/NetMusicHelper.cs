@@ -1038,17 +1038,16 @@ namespace MusicCollection.MusicAPI
             //var retStr = SendDataByGET("http://base.music.qq.com/fcgi-bin/fcg_musicexpress.fcg?json=3&guid=4935867420&g_tk=938407465&loginUin=0&hostUin=0&format=jsonp&inCharset=GB2312&outCharset=GB2312&notice=0&platform=yqq&needNewCode=0");
             try
             {
-                //var tokenMatch = Regex.Match(retStr, "\"key\"\\s*:\\s*\"(?<key>[0-9a-zA-Z]+)\"");
-                //var token = tokenMatch?.Groups["key"]?.Value ?? "";
-                //var idMatchs = Regex.Matches(retStr, "\"testfile[^\"]+\"\\s*:\\s*\"(?<id>[^\"]+)\\.m4a\"");
-                //string id = string.Empty;
-                //foreach (Match item in idMatchs)
-                //{
-                //    id = item.Groups["id"]?.Value ?? "";
-                //}
-                //music.MusicID = string.IsNullOrWhiteSpace(id) ? "" : id;
-                Url = $"http://ws.stream.qqmusic.qq.com/C100{music.MusicID}.m4a?fromtag=0&guid=126548448";
-                //Url = "http://dl.stream.qqmusic.qq.com/C400" + music.MusicID + ".m4a?vkey=" + token + "&guid=493586742&fromtag=66";
+                    //Url = $"http://ws.stream.qqmusic.qq.com/C100{music.MusicID}.m4a?fromtag=0&guid=126548448";
+                var t = DateTime.Now.Millisecond;
+                var guid = ((int)Math.Abs((int)Math.Round(2147483647 * new Random().NextDouble()) * t % 1e10)).ToString();
+                string callback = "getplaysongvkey" + (new Random().NextDouble() + "").Replace("0.", "");
+                string data = $"{{\"req\":{{\"module\":\"CDN.SrfCdnDispatchServer\",\"method\":\"GetCdnDispatch\",\"param\":{{\"guid\":\"{guid}\",\"calltype\":0,\"userip\":\"\"}}}},\"req_0\":{{\"module\":\"vkey.GetVkeyServer\",\"method\":\"CgiGetVkey\",\"param\":{{\"guid\":\"{guid}\",\"songmid\":[\"{music.MusicID}\"],\"songtype\":[0],\"uin\":\"0\",\"loginflag\":1,\"platform\":\"20\"}}}},\"comm\":{{\"uin\":0,\"format\":\"json\",\"ct\":20,\"cv\":0}}}}";
+                data = System.Web.HttpUtility.UrlEncode(data);
+                Url = $"https://u.y.qq.com/cgi-bin/musicu.fcg?callback={callback}&g_tk=5381&jsonpCallback={callback}&loginUin=0&hostUin=0&format=jsonp&inCharset=utf8&outCharset=utf-8&notice=0&platform=yqq&needNewCode=0&data={data}";
+                var retStr = SendDataByGET(Url).Substring(callback.Length+1);
+                JObject jo = (JObject)JsonConvert.DeserializeObject(retStr.Substring(0,retStr.Length-1));
+                Url = "http://dl.stream.qqmusic.qq.com/"+ jo["req_0"]["data"]["midurlinfo"][0]["purl"];
             }
             catch (Exception)
             {
