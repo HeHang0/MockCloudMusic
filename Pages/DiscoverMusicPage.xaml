@@ -53,9 +53,10 @@
                             <StackPanel Orientation="Vertical" Margin="0,0,0,-44">
                                 <Grid>
                                     <Image Source="..\Resources\images\playlist_default.png"/>
-                                    <Image Source="{Binding Path=ImgUrl}"/>
+                                    <Image MaxWidth="140" MaxHeight="140" Source="{Binding Path=ImgUrl}" Stretch="UniformToFill"/>
                                 </Grid>
-                                <Label Content="{Binding Path=Name}" HorizontalAlignment="Center" VerticalContentAlignment="Center"/>
+                                <!--<Label Content="{Binding Path=Name}" Width="140" HorizontalAlignment="Center" VerticalContentAlignment="Center"/>-->
+                                <TextBlock Text="{Binding Path=Name}" Margin="0,5,0,0" HorizontalAlignment="Center" TextTrimming="CharacterEllipsis"  TextWrapping="NoWrap" />
                             </StackPanel>
                         </Button>
                     </Border>

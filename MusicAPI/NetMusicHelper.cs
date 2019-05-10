@@ -20,37 +20,42 @@ namespace MusicCollection.MusicAPI
 {
     class NetMusicHelper
     {
-        private static Dictionary<NetMusicType, string> SearchAPI = new Dictionary<NetMusicType, string>()
+        private static readonly Dictionary<NetMusicType, string> SearchAPI = new Dictionary<NetMusicType, string>()
         {
             { NetMusicType.CloudMusic, "http://music.163.com/api/search/pc?s={0}&offset={1}&limit=30&type=1" },
             { NetMusicType.QQMusic, "http://i.y.qq.com/s.music/fcgi-bin/search_for_qq_cp?g_tk=938407465&uin=0&format=jsonp&inCharset=utf-8&outCharset=utf-8&notice=0&platform=h5&needNewCode=1&w={0}&zhidaqu=1&catZhida=1&t=0&flag=1&ie=utf-8&sem=1&aggr=0&perpage=30&n=30&p={1}&remoteplace=txt.mqq.all&_=1459991037831" },
             { NetMusicType.XiaMiMusic, "http://api.xiami.com/web?v=2.0&app_key=1&key={0}&page={1}&limit=30&r=search/songs" }
         };
 
-        private static Dictionary<NetMusicType, string> LyricAPI = new Dictionary<NetMusicType, string>()
+        private static readonly Dictionary<NetMusicType, string> LyricAPI = new Dictionary<NetMusicType, string>()
         {
             { NetMusicType.CloudMusic, "http://music.163.com/api/song/lyric?os=pc&id={0}&lv=-1&kv=-1&tv=-1" },
             { NetMusicType.QQMusic,"https://i.y.qq.com/lyric/fcgi-bin/fcg_query_lyric.fcg?songmid={0}&loginUin=0&hostUin=0&format=jsonp&inCharset=GB2312&outCharset=utf-8&notice=0&platform=yqq&needNewCode=0" }
         };
 
-        private static Dictionary<NetMusicType, string> DownloadLinkAPI = new Dictionary<NetMusicType, string>()
+        private static readonly Dictionary<NetMusicType, string> DownloadLinkAPI = new Dictionary<NetMusicType, string>()
         {
             { NetMusicType.CloudMusic, "http://link.hhtjim.com/163/{0}.mp3" },
             { NetMusicType.XiaMiMusic, "https://music-api-jwzcyzizya.now.sh/api/search/song/xiami?&limit=1&page=1&key={0}-{1}-{2}/" }
         };
 
-        private static Dictionary<NetMusicType, string> PlayListHotAPI = new Dictionary<NetMusicType, string>()
+        private static readonly Dictionary<NetMusicType, string> PlayListHotAPI = new Dictionary<NetMusicType, string>()
         {
             { NetMusicType.CloudMusic, "http://music.163.com/discover/playlist/?order=hot&limit=35&offset={0}" },
             { NetMusicType.QQMusic, "https://c.y.qq.com/splcloud/fcgi-bin/fcg_get_diss_by_tag.fcg?rnd=0.4781484879517406&g_tk=732560869&loginUin=0&hostUin=0&format=jsonp&inCharset=utf8&outCharset=utf-8&notice=0&platform=yqq&needNewCode=0&categoryId=10000000&sortId=5&sin={0}&ein={1}" },
-            { NetMusicType.XiaMiMusic, "http://www.xiami.com/collect/recommend/page/{0}" }
+            //{ NetMusicType.XiaMiMusic, "http://www.xiami.com/collect/recommend/page/{0}" }
+            { NetMusicType.XiaMiMusic, "https://www.xiami.com/api/list/collect?_q={{\"pagingVO\":{{\"page\":{0},\"pageSize\":30}},\"dataType\":\"system\"}}&_s={1}" }
         };
-        private static Dictionary<NetMusicType, string> PlayListDetailAPI = new Dictionary<NetMusicType, string>()
+        private static readonly Dictionary<NetMusicType, string> PlayListDetailAPI = new Dictionary<NetMusicType, string>()
         {
             { NetMusicType.CloudMusic, "http://music.163.com/weapi/v3/playlist/detail" },
             { NetMusicType.QQMusic, "https://i.y.qq.com/qzone-music/fcg-bin/fcg_ucc_getcdinfo_byids_cp.fcg?type=1&json=1&utf8=1&onlysong=0&nosign=1&disstid={0}&g_tk=5381&loginUin=0&hostUin=0&format=jsonp&inCharset=GB2312&outCharset=utf-8&notice=0&platform=yqq&needNewCode=0" },
-            { NetMusicType.XiaMiMusic, "http://api.xiami.com/web?v=2.0&app_key=1&id={0}&r=collect/detail" }
+            //{ NetMusicType.XiaMiMusic, "http://api.xiami.com/web?v=2.0&app_key=1&id={0}&r=collect/detail" }
+            { NetMusicType.XiaMiMusic, "https://www.xiami.com/api/collect/initialize?_q=%7B%22listId%22:{0}%7D&_s={1}" }
         };
+        private static string XMToken = "";
+        private static string XMTokenPre = "";
+        private static string XMTokenSig = "";
         private static string ThisWeek = Math.Abs(GetWeekOfYear(DateTime.Now) - 2).ToString().PadLeft(2);
         private static Dictionary<NetMusicType, Dictionary<RankingListType,string>> RankinListAPI = new Dictionary<NetMusicType, Dictionary<RankingListType, string>>()
         {
@@ -502,6 +507,21 @@ namespace MusicCollection.MusicAPI
             
         }
 
+        private static void GetXMToken()
+        {
+            HttpWebRequest myHttpWebRequest = (HttpWebRequest)WebRequest.Create("https://www.xiami.com");
+            myHttpWebRequest.CookieContainer = new CookieContainer(); //暂存到新实例</span>  
+            myHttpWebRequest.GetResponse().Close();
+            var cookies = myHttpWebRequest.CookieContainer.GetCookies(myHttpWebRequest.RequestUri);
+            XMToken = cookies["xm_sg_tk"]?.Value ?? "";
+            XMTokenSig = cookies["xm_sg_tk.sig"]?.Value ?? "";
+            var ss = XMToken.Split('_');
+            if(ss.Length > 0)
+            {
+                XMTokenPre = ss[0];
+            }
+        }
+
         private static string SendDataByGET(string Url)	//读取string
         {
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(Url);
@@ -515,8 +535,11 @@ namespace MusicCollection.MusicAPI
             }
             request.Method = "GET";
             //request.ContentType = "text/html;charset=UTF-8";
-            request.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.71 Safari/537.36";
-
+            request.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.131 Safari/537.36";
+            if (Url.Contains("xiami.com/api"))
+            {
+                request.Headers.Add("Cookie", $"xm_sg_tk={XMToken}; xm_sg_tk.sig={XMTokenSig}; ");
+            }
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             Stream myResponseStream = response.GetResponseStream();
             StreamReader myStreamReader = new StreamReader(myResponseStream, Encoding.GetEncoding("utf-8"));
@@ -687,11 +710,47 @@ namespace MusicCollection.MusicAPI
                     retStr = SendDataByGET(string.Format(PlayListHotAPI[type], offset*35, offset * 35+34));
                     return GetQQMusicPlayList(retStr, out count);
                 case NetMusicType.XiaMiMusic:
-                    retStr = SendDataByGET(string.Format(PlayListHotAPI[type], offset +1));
-                    return GetXimaMiMusicPlayList(retStr, out count);
+                    GetXMToken();
+                    var _p = XMTokenPre+"_xmMain_/api/list/collect_{\"pagingVO\":{\"page\":" + (offset + 1) + ",\"pageSize\":30},\"dataType\":\"system\"}";
+                    retStr = SendDataByGET(string.Format(PlayListHotAPI[type], offset +1, GetMD5(_p).ToLower()));
+                    return GetXimaMiMusicPlayListByJson(retStr, out count);
             }
             count = 0;
             return new List<Playlist>();
+        }
+
+        private static string GetMD5(string param)
+        {
+            byte[] result = Encoding.Default.GetBytes(param);    //tbPass为输入密码的文本框
+            MD5 md5 = new MD5CryptoServiceProvider();
+            byte[] output = md5.ComputeHash(result);
+            return BitConverter.ToString(output).Replace("-", "");
+        }
+
+        private static List<Playlist> GetXimaMiMusicPlayListByJson(string retStr, out int count)
+        {
+            count = 0;
+            List<Playlist> list = new List<Playlist>();
+            try
+            {
+                JObject jo = (JObject)JsonConvert.DeserializeObject(retStr);
+                var jt = jo["result"]["data"];
+                int.TryParse(jt["pagingVO"]["pages"].ToString(), out count);
+                var collects = jt["collects"];
+                foreach (var item in collects)
+                {
+                    var model = new Playlist();
+                    model.Name = item["collectName"].ToString();
+                    model.ImgUrl = item["collectLogo"].ToString().Replace("http://", "https://")+ "@0e_0c_0i_1o_100Q_192w.webp";
+                    model.Url = item["listId"].ToString();
+                    list.Add(model);
+                }
+            }
+            catch (Exception)
+            {
+            }
+
+            return list;
         }
 
         private static List<Playlist> GetXimaMiMusicPlayList(string retStr, out int count)
@@ -714,8 +773,11 @@ namespace MusicCollection.MusicAPI
                     nodeDocument.LoadHtml(item.InnerHtml);
                     var a = nodeDocument.DocumentNode.SelectSingleNode("//div[@class='block_cover']/a");
                     string Name = a?.GetAttributeValue("title", "");
-                    string ImgUrl = a.SelectSingleNode("//img").GetAttributeValue("src","");//nodeDocument.DocumentNode.SelectNodes("//img[@class='j-flag']").FirstOrDefault()?.GetAttributeValue("src", "");
-                    //var u = nodeDocument.DocumentNode.SelectSingleNode("//div[@class='block_overlay']/a").GetAttributeValue("onclick", "");
+                    string ImgUrl = a.SelectSingleNode("//img").GetAttributeValue("src","");
+                    if (ImgUrl.StartsWith("//"))
+                    {
+                        ImgUrl = "https:" + ImgUrl;
+                    }
                     string Url = Regex.Match(a?.GetAttributeValue("href", ""), "/collect/([\\d]+)").Groups[1].Value;
                     list.Add(new Playlist(Name, ImgUrl, Url));
                 }
@@ -821,27 +883,27 @@ namespace MusicCollection.MusicAPI
             {
                 pid = Regex.Match(pid, "/([\\d]+)").Groups[1].Value;
             }
-            var url = string.Format(PlayListDetailAPI[NetMusicType.XiaMiMusic], pid);
+            var _p = XMTokenPre+"_xmMain_/api/collect/initialize_{\"listId\":" + pid +"}";
+            var url = string.Format(PlayListDetailAPI[NetMusicType.XiaMiMusic], pid, GetMD5(_p).ToLower());
             var retStr = SendDataByGET(url);
             var list = new List<NetMusic>();
             try
             {
                 JObject jo = (JObject)JsonConvert.DeserializeObject(retStr);
-                var jt = jo["data"]["songs"];
-                name = jo["data"]["collect_name"].ToString();
-                imgurl = jo["data"]["logo"].ToString();
-                foreach (var item in jt)
+                var jt = jo["result"]["data"];
+                var collectDetail = jt["collectDetail"];
+                name = collectDetail["collectName"].ToString();
+                imgurl = collectDetail["collectLogoSmall"].ToString();
+                foreach (var item in jt["collectSongs"])
                 {
                     var music = new NetMusic();
-                    music.Title = item["song_name"].ToString();
+                    music.Title = item["songName"].ToString();
                     music.Singer = item["singers"].ToString();
-                    music.MusicID = item["song_id"].ToString();
-                    music.Album = item["album_name"].ToString();
-                    music.AlbumImageUrl = item["album_logo"].ToString();
+                    music.MusicID = item["songId"].ToString();
+                    music.Album = item["albumName"].ToString();
+                    music.AlbumImageUrl = item["albumLogo"].ToString()+ "@0e_0c_0i_1o_100Q_192w.webp";
                     music.Origin = NetMusicType.XiaMiMusic;
-                    music.Url = item["listen_file"].ToString();
-                    music.Duration = new TimeSpan(0, 0, 0, int.Parse(item["length"].ToString()), 0);
-                    music.LyricPath = item["lyric"].ToString();
+                    music.Duration = new TimeSpan(0, 0, 0, 0, int.Parse(item["length"].ToString()));
                     list.Add(music);
                 }
             }
@@ -1056,21 +1118,29 @@ namespace MusicCollection.MusicAPI
         }
         private static string GetUrlFromXiaMiMusic(Music music)
         {
-            var retStr = SendDataByGET($"http://api.xiami.com/web?v=2.0&app_key=1&id={music.MusicID}&r=song/detail");
+            //var retStr = SendDataByGET($"http://api.xiami.com/web?v=2.0&app_key=1&id={music.MusicID}&r=song/detail");
+            var _p = XMTokenPre + "_xmMain_/api/song/getPlayInfo_{\"songIds\":[" + music.MusicID + "]}";
+            var retStr = SendDataByGET($"https://www.xiami.com/api/song/getPlayInfo?_q=%7B%22songIds%22:["+music.MusicID+"]%7D&_s="+ GetMD5(_p).ToLower());
             try
             {
                 JObject jo = (JObject)JsonConvert.DeserializeObject(retStr);
-                JToken item = jo["data"]["song"];
-                //music.Title = item["song_name"].ToString();
-                //music.Singer = item["singers"].ToString();
-                //music.MusicID = item["song_id"].ToString();
-                music.Album = item["album_name"].ToString();
-                music.AlbumImageUrl = item["logo"].ToString();
-                //music.Origin = NetMusicType.XiaMiMusic;
-                music.Path = item["listen_file"].ToString();
-                music.LyricPath = item["lyric"].ToString();
-                string secondstr = Regex.Match(music.LyricPath, "/([\\d]{2,4})/").Groups[1].Value;
-                music.Duration = new TimeSpan(0, 0, 0, int.Parse(secondstr), 0);
+                JToken songPlayInfos = jo["result"]["data"]["songPlayInfos"][0]["playInfos"];
+                foreach (var item in songPlayInfos)
+                {
+                    var listenFile = item["listenFile"].ToString();
+                    if(listenFile.Length > 0)
+                    {
+                        music.Path = listenFile;
+                        break;
+                    }
+                }
+                //music.Album = item["album_name"].ToString();
+                //music.AlbumImageUrl = item["logo"].ToString();
+                ////music.Origin = NetMusicType.XiaMiMusic;
+                //music.Path = item["listen_file"].ToString();
+                //music.LyricPath = item["lyric"].ToString();
+                //string secondstr = Regex.Match(music.LyricPath, "/([\\d]{2,4})/").Groups[1].Value;
+                //music.Duration = new TimeSpan(0, 0, 0, int.Parse(secondstr), 0);
             }
             catch (Exception)
             {
