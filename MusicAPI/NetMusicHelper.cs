@@ -81,9 +81,12 @@ namespace MusicCollection.MusicAPI
                 NetMusicType.XiaMiMusic,
                 new Dictionary<RankingListType, string>()
                 {
-                    { RankingListType.HotList, "http://api.xiami.com/web?v=2.0&app_key=1&id=101&page=1&limit=100&r=rank/song-list" },
-                    { RankingListType.NewSongList, "http://api.xiami.com/web?v=2.0&app_key=1&id=102&page=1&limit=100&r=rank/song-list" },
-                    { RankingListType.SoarList, "http://api.xiami.com/web?v=2.0&app_key=1&id=103&page=1&limit=100&r=rank/song-list" }
+                    //{ RankingListType.HotList, "http://api.xiami.com/web?v=2.0&app_key=1&id=101&page=1&limit=100&r=rank/song-list" },
+                    //{ RankingListType.NewSongList, "http://api.xiami.com/web?v=2.0&app_key=1&id=102&page=1&limit=100&r=rank/song-list" },
+                    //{ RankingListType.SoarList, "http://api.xiami.com/web?v=2.0&app_key=1&id=103&page=1&limit=100&r=rank/song-list" }
+                    { RankingListType.HotList, "102" },
+                    { RankingListType.NewSongList, "103" },
+                    { RankingListType.SoarList, "104" }
                 }
             }
         };
@@ -386,7 +389,9 @@ namespace MusicCollection.MusicAPI
                     list = GetQQMusicPlayListItemsFromRetStr(retStr, out name, out imgurl, true);
                     break;
                 case NetMusicType.XiaMiMusic:
-                    retStr = SendDataByGET(RankinListAPI[type][listType]);
+                    GetXMToken();
+                    var _p = XMTokenPre + "_xmMain_/api/billboard/getBillboardDetail_{\"billboardId\":\""+ RankinListAPI[type][listType] + "\"}";
+                    retStr = SendDataByGET(string.Format("https://www.xiami.com/api/billboard/getBillboardDetail?_q=%7B%22billboardId%22:%22{0}%22%7D&_s={1}", RankinListAPI[type][listType], GetMD5(_p).ToLower()));
                     list = GetXiaMiMusicPlayListItemsFromRetStr(retStr);
                     break;
 
@@ -401,13 +406,16 @@ namespace MusicCollection.MusicAPI
             try
             {
                 JObject jo = (JObject)JsonConvert.DeserializeObject(retStr);
-                var jt = jo["data"];
+                var jt = jo["result"]["data"]["billboard"]["songs"];
                 foreach (var item in jt)
                 {
                     var music = new NetMusic();
-                    music.Title = item["song_name"].ToString();
+                    music.Title = item["songName"].ToString();
+                    music.Album = item["albumName"].ToString();
+                    music.AlbumImageUrl = item["albumLogoS"].ToString();
                     music.Singer = item["singers"].ToString();
-                    music.MusicID = item["song_id"].ToString();
+                    music.MusicID = item["songId"].ToString();
+                    music.Duration = new TimeSpan(0, 0, 0, 0, int.Parse(item["length"].ToString()));
                     music.Origin = NetMusicType.XiaMiMusic;
                     list.Add(music);
                 }

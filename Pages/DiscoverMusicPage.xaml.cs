@@ -300,5 +300,10 @@ namespace MusicCollection.Pages
             LastPageButton.Visibility = Visibility.Visible;
             NextPageButton.Visibility = Visibility.Visible;
         }
+
+        private void Page_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+
+        }
     }
 }

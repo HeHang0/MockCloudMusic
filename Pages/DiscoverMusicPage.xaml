@@ -5,7 +5,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:gif="http://wpfanimatedgif.codeplex.com"
       xmlns:local="clr-namespace:MusicCollection.Pages"
-      mc:Ignorable="d" Loaded="Page_Loaded"
+      mc:Ignorable="d" Loaded="Page_Loaded" SizeChanged="Page_SizeChanged"
       d:DesignHeight="570" d:DesignWidth="822"
       Title="DiscoverMusic">
     <Page.Resources>

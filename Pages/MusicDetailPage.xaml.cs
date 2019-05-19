@@ -9,6 +9,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 
@@ -42,8 +43,20 @@ namespace MusicCollection.Pages
             ParentWindow.bsp.PropertyChanged += Bsp_PropertyChanged;
         }
 
+        private Storyboard AlbumLogoStoryboard = new Storyboard();
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
+            var animation = new DoubleAnimation()
+            {
+                From = 0,
+                To = 360,
+                Duration = TimeSpan.FromSeconds(8),
+                RepeatBehavior = System.Windows.Media.Animation.RepeatBehavior.Forever,
+            };
+            Storyboard.SetTargetName(animation, "AlbumLogoAnimation");
+            Storyboard.SetTargetProperty(animation, new PropertyPath("(0)", new DependencyProperty[] { RotateTransform.AngleProperty }));
+            AlbumLogoStoryboard.Children.Add(animation);
+            AlbumLogoStoryboard.Begin(Image, true);
         }
 
         private bool haveLyric = false;
@@ -55,9 +68,11 @@ namespace MusicCollection.Pages
                 if (bsp.IsPlaying)
                 {
                     timer.Start();
+                    AlbumLogoStoryboard.Resume(Image);
                 }
                 else
                 {
+                    AlbumLogoStoryboard.Pause(Image);
                     timer.Stop();
                 }
             }
@@ -65,12 +80,11 @@ namespace MusicCollection.Pages
             {
                 if (bsp.IsStop)
                 {
-                    RotateTransform rotateTransform = new RotateTransform(0);
-                    Image.RenderTransform = rotateTransform;//Spirit = new Image();
+                    AlbumLogoStoryboard.Stop(Image);
                 }
             }
         }
-        private float angle = 0;
+        //private float angle = 0;
         private void TimerOnTick(object sender, EventArgs e)
         {
             //ChildWindows.DesktopLyricWindow.TopMostTool.SetTopMost(DesktopLyricWin);
@@ -79,10 +93,10 @@ namespace MusicCollection.Pages
                 timer.Stop();
                 return;
             }
-            RotateTransform rotateTransform = new RotateTransform((angle+=0.03f) * 180 / 3.142);
-            rotateTransform.CenterX = Image.ActualWidth / 2;
-            rotateTransform.CenterY = Image.ActualHeight / 2;
-            Image.RenderTransform = rotateTransform;
+            //RotateTransform rotateTransform = new RotateTransform((angle+=0.03f) * 180 / 3.142);
+            //rotateTransform.CenterX = Image.ActualWidth / 2;
+            //rotateTransform.CenterY = Image.ActualHeight / 2;
+            //Image.RenderTransform = rotateTransform;
             if (CurrentLyricIndex < Lyric.Count && CurrentLyricIndex > LastLyricLineIndex && Lyric[CurrentLyricIndex].StartTime <= ParentWindow.bsp.CurrentTime)
             {
                 LastLyricLineIndex = CurrentLyricIndex++;
@@ -115,7 +129,7 @@ namespace MusicCollection.Pages
 
         public void Init( Music music, ImageSource source)
         {
-            angle = 0;
+            //angle = 0;
             Lyric.Clear();
             LyricTextBlock.Inlines.Clear();
             if (source != null)

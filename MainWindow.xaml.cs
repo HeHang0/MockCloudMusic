@@ -18,6 +18,7 @@ using System.Drawing;
 using System.Data;
 using MusicCollection.ChildWindows;
 using System.Runtime.InteropServices;
+using System.ComponentModel;
 
 namespace MusicCollection
 {
@@ -90,6 +91,7 @@ namespace MusicCollection
             InitTaskBar();
             InitPages();
             InitMusic();
+            SystemParameters.StaticPropertyChanged += SystemParameters_StaticPropertyChanged;
         }
 
         System.Windows.Forms.NotifyIcon notifyIcon;
@@ -452,34 +454,119 @@ namespace MusicCollection
 
         private void MaxButton_Click(object sender, RoutedEventArgs e)
         {
-            Height = SystemParameters.WorkArea.Height;//获取屏幕的宽高  使之不遮挡任务栏  
-            Width = SystemParameters.WorkArea.Width;
-            Top = 0;
-            Left = 0;
-
-            MaxButton.Visibility = Visibility.Hidden;
-            NormalButton.Visibility = Visibility.Visible;
-
+            NormalLeft = Left;
+            NormalTop = Top;
+            NormalWidth = Width;
+            NormalHeight = Height;
+            MainWindowGrid.Margin = new Thickness(6);
+            WindowState = WindowState.Maximized;
         }
+        private double NormalLeft = 0;
+        private double NormalTop = 0;
+        private double NormalWidth = 0;
+        private double NormalHeight = 0;
         private void NormalButton_Click(object sender, RoutedEventArgs e)
         {
-            Height = MinHeight;
-            Width = MinWidth;
-            Top = (SystemParameters.WorkArea.Height - Height) / 2;
-            Left = (SystemParameters.WorkArea.Width - Width) / 2;
-            MaxButton.Visibility = Visibility.Visible;
-            NormalButton.Visibility = Visibility.Hidden;
+            MainWindowGrid.Margin = new Thickness(8);
             if (WindowState == WindowState.Maximized)
             {
                 WindowState = WindowState.Normal;
             }
+            Width = NormalWidth;
+            Height = NormalHeight;
+            Left = NormalLeft;
+            Top = NormalTop;
+            GridRow1.Height = GridLength.Auto;
+            GridRow2.Height = GridLength.Auto;
+            GridCol1.Width = GridLength.Auto;
+            GridCol2.Width = GridLength.Auto;
         }
+
+
+        private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if(e.ClickCount == 2)
+            {
+                if (WindowState == WindowState.Maximized)
+                {
+                    NormalButton_Click(null, null);
+                }
+                else
+                {
+                    MaxButton_Click(null, null);
+                }
+            }
+        }
+
         private void Window_StateChanged(object sender, EventArgs e)
         {
             if (WindowState == WindowState.Maximized)
             {
                 MaxButton.Visibility = Visibility.Hidden;
                 NormalButton.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                MaxButton.Visibility = Visibility.Visible;
+                NormalButton.Visibility = Visibility.Hidden;
+            }
+            ProcessWorkArea();
+        }
+
+        private void SystemParameters_StaticPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == "WorkArea")
+            {
+                if (WindowState == WindowState.Maximized)
+                {
+                    ProcessWorkArea();
+                }
+            }
+        }
+
+        private void ProcessWorkArea()
+        {
+            var StatusBarWidth = SystemParameters.PrimaryScreenWidth - SystemParameters.WorkArea.Size.Width;
+            var StatusBarHeight = SystemParameters.PrimaryScreenHeight - SystemParameters.WorkArea.Size.Height;
+
+
+            //GridRow1.Height = GridLength.Auto;
+            //GridRow2.Height = GridLength.Auto;
+            //GridCol1.Width = GridLength.Auto;
+            //GridCol2.Width = GridLength.Auto;
+            GridRow1.Height = new GridLength(1);
+            GridRow2.Height = new GridLength(1);
+            GridCol1.Width = new GridLength(1);
+            GridCol2.Width = new GridLength(1);
+            if (StatusBarWidth == 0 && StatusBarHeight == 0) return;
+            if (StatusBarWidth == 0) StatusBarWidth = SystemParameters.PrimaryScreenWidth;
+            if (StatusBarHeight == 0) StatusBarHeight = SystemParameters.PrimaryScreenHeight;
+
+            if(SystemParameters.PrimaryScreenWidth == SystemParameters.WorkArea.Size.Width)
+            {
+                if (SystemParameters.WorkArea.Top == 0)
+                {
+                    //下
+                    GridRow2.Height = new GridLength(StatusBarHeight);
+                }
+                else if (SystemParameters.WorkArea.Top > 0)
+                {
+                    //上
+                    GridRow1.Height = new GridLength(StatusBarHeight);
+                }
+            }
+            else if(SystemParameters.PrimaryScreenHeight == SystemParameters.WorkArea.Size.Height)
+            {
+                if (SystemParameters.WorkArea.Right == SystemParameters.PrimaryScreenWidth)
+                {
+                    //左
+                    GridCol1.Width = new GridLength(StatusBarWidth);
+                }
+                else if (SystemParameters.WorkArea.Right == SystemParameters.WorkArea.Size.Width)
+                {
+                    //右
+                    GridCol2.Width = new GridLength(StatusBarWidth);
+                }
             }
         }
 
@@ -488,11 +575,12 @@ namespace MusicCollection
             Hide();
         }
 
+        private void Window_LocationChanged(object sender, EventArgs e)
+        {
+        }
+
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            //TitleBar.Width = Width;
-            //PlayBar.Width = Width;
-            //ContentBar.Height = Height-100;
         }
 
         private void LocalMusicButton_Click(object sender, RoutedEventArgs e)

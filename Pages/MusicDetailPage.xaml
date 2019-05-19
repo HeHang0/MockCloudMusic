@@ -22,7 +22,7 @@
         <ScrollViewer Name="LyricBlock" VerticalScrollBarVisibility="Hidden"  Margin="517,105,62,56">
             <TextBlock x:Name="LyricTextBlock" Padding="80,0" TextWrapping="Wrap"/>
         </ScrollViewer>
-        <Ellipse Margin="231,266,0,0"  Name="Image" HorizontalAlignment="Left" Width="115" Height="115" VerticalAlignment="Top">
+        <Ellipse Margin="231,266,0,0" RenderTransformOrigin="0.5,0.5"  Name="Image" HorizontalAlignment="Left" Width="115" Height="115" VerticalAlignment="Top">
             <Ellipse.Fill>
                 <ImageBrush>
                     <ImageBrush.ImageSource>
@@ -34,6 +34,21 @@
                     </ImageBrush.ImageSource>
                 </ImageBrush>
             </Ellipse.Fill>
+            <Ellipse.RenderTransform>
+                <RotateTransform x:Name="AlbumLogoAnimation" Angle="0"/>
+                
+            </Ellipse.RenderTransform>
+            <!--<Ellipse.Triggers>
+                <EventTrigger RoutedEvent="Loaded">
+                    <BeginStoryboard Name="AlbumLogoStoryboard">
+                        <Storyboard>
+                            <DoubleAnimation From="0" To="360" RepeatBehavior="Forever" Duration="0:0:8"
+                                             Storyboard.TargetName="AlbumLogoAnimation"
+                                             Storyboard.TargetProperty="Angle"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </EventTrigger>
+            </Ellipse.Triggers>-->
         </Ellipse>
 
         <Image Name="ImageBack" HorizontalAlignment="Left" VerticalAlignment="Bottom" Source="..\Resources\images\disc.png" Margin="60,86,505,56"/>
