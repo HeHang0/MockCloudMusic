@@ -63,7 +63,7 @@
         </StackPanel>
         <StackPanel Grid.Row="2" Orientation="Horizontal">
             <Label VerticalAlignment="Center" Width="63" Cursor="Hand" MouseLeftButtonUp="OpenUrlTag"
-                   Tag="https://passport.migu.cn/login?sourceid=220042&amp;callbackURL=https%3A%2F%2Fm.music.migu.cn">
+                   Tag="https://music.migu.cn/v3">
                 咪咕音乐：
             </Label>
             <StackPanel x:Name="MiguMusicNoLogin" Orientation="Horizontal" Visibility="Collapsed">

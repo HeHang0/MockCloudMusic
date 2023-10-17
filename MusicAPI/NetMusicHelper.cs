@@ -3,9 +3,7 @@ using MusicCollection.MusicManager;
 using MusicCollection.Setting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using OpenCvSharp.ML;
 using System;
-using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
@@ -13,12 +11,10 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
-using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Windows;
 
 namespace MusicCollection.MusicAPI
 {
@@ -1027,6 +1023,60 @@ namespace MusicCollection.MusicAPI
             catch (Exception)
             {
             }
+            if (list.Count == 0) return GetMiguMusicDigitalListItems(pid);
+            return list;
+        }
+
+        private static List<NetMusic> GetMiguMusicDigitalListItems(string pid)
+        {
+            var url = "https://m.music.migu.cn/migumusic/h5/digitalAlbum/info?pageSize=500&digitalAlbumId=" + pid;
+            var headers = new Dictionary<string, string>()
+            {
+                {"By", "22210ca73bf1af2ec2eace74a96ee356"},
+                {"Referer", "https://m.music.migu.cn/v4/music/playlist"},
+                {"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36"}
+            };
+            var retStr = SendDataByGET(url, headers);
+            var list = new List<NetMusic>();
+            try
+            {
+                JObject jo = (JObject)JsonConvert.DeserializeObject(retStr);
+                var jt = jo["data"];
+                var detailInfo = jt["detailInfo"];
+                string album = string.Empty;
+                string singer = string.Empty;
+                try
+                {
+                    album = detailInfo["name"].ToString();
+                    singer = detailInfo["singers"][0]["name"].ToString();
+                }
+                catch (Exception)
+                {
+                }
+                foreach (var item in jt["songs"]["items"])
+                {
+                    var music = new NetMusic();
+                    music.Title = item["name"].ToString();
+                    music.Album = album;
+                    music.Singer = singer;
+                    music.MusicID = item["copyrightId"].ToString();
+                    music.Origin = NetMusicType.MiguMusic;
+                    try
+                    {
+                        music.Remark = item["fullSong"]["productId"].ToString();
+                        music.AlbumImageUrl = item["mediumPic"].ToString();
+                        if (music.AlbumImageUrl.StartsWith("//")) music.AlbumImageUrl = "https:" + music.AlbumImageUrl;
+                        music.Duration = TimeSpan.Parse(item["length"].ToString());
+                    }
+                    catch (Exception)
+                    {
+                    }
+                    list.Add(music);
+                }
+            }
+            catch (Exception)
+            {
+            }
             return list;
         }
 
@@ -1075,8 +1125,11 @@ namespace MusicCollection.MusicAPI
                     music.MusicID = item["songmid"].ToString();
                     music.Album = item["albumname"].ToString();
                     var AlbumMid = item["albummid"].ToString();
-                    var s = AlbumMid[AlbumMid.Length - 2] + "/" + AlbumMid[AlbumMid.Length - 1] + "/" + AlbumMid;
-                    music.AlbumImageUrl = "http://imgcache.qq.com/music/photo/mid_album_300/" + s + ".jpg";
+                    if (!string.IsNullOrWhiteSpace(AlbumMid))
+                    {
+                        var s = AlbumMid[AlbumMid.Length - 2] + "/" + AlbumMid[AlbumMid.Length - 1] + "/" + AlbumMid;
+                        music.AlbumImageUrl = "http://imgcache.qq.com/music/photo/mid_album_300/" + s + ".jpg";
+                    }
                     music.Origin = NetMusicType.QQMusic;
                     music.Url = "";
                     music.Duration = new TimeSpan(0, 0, 0, 0, int.Parse(item["size128"].ToString()) / 16);
@@ -1185,14 +1238,13 @@ namespace MusicCollection.MusicAPI
 
         private static List<Playlist> GetUserPlaylistFromMigu()
         {
-            var urlMy = "https://m.music.migu.cn/migumusic/h5/playlist/auth/getUserPlaylist";
-            var urlCollection = "https://m.music.migu.cn/migumusic/h5/collection/auth/getCollectedSongLists?pageNo=1&pageSize=30";
+            var urlMy = "https://music.migu.cn/v3/api/my/playlist/list";
+            var urlCollection = "https://music.migu.cn/v3/api/my/collect/list?type=playlist";
+            var urlDigital = "https://music.migu.cn/v3/api/my/digitalAlbum/list";
             var headers = new Dictionary<string, string>()
             {
-                {"by", "22210ca73bf1af2ec2eace74a96ee356"},
-                {"Referer", "https://m.music.migu.cn/v4/my/collect"},
+                {"Referer", "https://music.migu.cn/v3"},
                 {"Cookie", MiguMusicU},
-                {"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36"},
             };
             List<string> resultStrs = new List<string>()
             {
@@ -1204,11 +1256,11 @@ namespace MusicCollection.MusicAPI
                 try
                 {
                     JObject jo = (JObject)JsonConvert.DeserializeObject(retStr);
-                    var jt = jo["data"] is JArray ? jo["data"] : jo["data"]["items"];
+                    var jt = jo["playLists"] is JArray ? jo["playLists"] : jo["data"]["items"];
                     foreach (var item in jt)
                     {
                         string name = item["playListName"].ToString();
-                        string imgurl = item["image"].ToString();
+                        string imgurl = item["playListPic"] == null ? item["image"].ToString() : item["playListPic"].ToString();
                         if (imgurl.StartsWith("//")) imgurl = "https:" + imgurl;
                         string plUrl = item["playListId"].ToString();
                         list.Add(new Playlist(name, imgurl, plUrl));
@@ -1217,6 +1269,23 @@ namespace MusicCollection.MusicAPI
                 catch (Exception)
                 {
                 }
+            }
+            var digitalJson = SendDataByGET(urlDigital, headers);
+            try
+            {
+                JObject jo = (JObject)JsonConvert.DeserializeObject(digitalJson);
+                var jt = jo["data"];
+                foreach (var item in jt)
+                {
+                    string name = item["name"].ToString();
+                    string imgurl = item["picUrl"].ToString();
+                    if (imgurl.StartsWith("//")) imgurl = "https:" + imgurl;
+                    string plUrl = item["id"].ToString();
+                    list.Add(new Playlist(name, imgurl, plUrl));
+                }
+            }
+            catch (Exception)
+            {
             }
             return list;
         }
@@ -1377,33 +1446,45 @@ namespace MusicCollection.MusicAPI
 
         public static List<NetMusic> GetMyRecommendSongsFromMiguMusic()
         {
-            var url = "https://app.c.nf.migu.cn/MIGUM3.0/v1.0/template/todayRecommendList/release?actionId=1&actionSong=&index=&templateVersion=6";
+            var urlIds = "https://music.migu.cn/v3/api/music/index/39";
             var headers = new Dictionary<string, string>()
             {
-                {"by", "22210ca73bf1af2ec2eace74a96ee356"},
-                {"Referer", "https://m.music.migu.cn/v4/my/collect"},
+                {"Referer", "https://music.migu.cn/v3"},
                 {"Cookie", MiguMusicU},
-                {"IMEI", "000000"},
-                {"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36"},
             };
-            var retStr = SendDataByGET(url, headers);
+            var retStr = SendDataByGET(urlIds, headers);
             var list = new List<NetMusic>();
+            var ids = string.Empty;
             try
             {
                 JObject jo = (JObject)JsonConvert.DeserializeObject(retStr);
-                var jt = jo["data"]["recommendData"]["data"];
+                var jt = jo["data"] as JArray;
+                ids = string.Join("%2C", jt.Values().Select(m => m.ToString()));
+            }
+            catch (Exception)
+            {
+                return list;
+            }
+            if(string.IsNullOrWhiteSpace(ids)) return list;
+            var urlSongs = "https://music.migu.cn/v3/api/music/audioPlayer/songs";
+            var data = "type=1&copyrightId=" + ids;
+            headers["content-type"] = "application/x-www-form-urlencoded; charset=UTF-8";
+            retStr = SendDataByPOST(urlSongs, Encoding.UTF8.GetBytes(data), headers);
+            try
+            {
+                JObject jo = (JObject)JsonConvert.DeserializeObject(retStr);
+                var jt = jo["items"];
                 foreach (var item in jt)
                 {
                     NetMusic music = new NetMusic
                     {
                         Title = item["songName"].ToString(),
-                        Singer = item["singerList"][0]["name"].ToString(),
+                        Singer = item["singers"][0]["artistName"].ToString(),
                         MusicID = item["copyrightId"].ToString(),
-                        Album = item["album"].ToString(),
-                        AlbumImageUrl = item["img3"].ToString(),
                         Origin = NetMusicType.MiguMusic,
-                        Duration = new TimeSpan(0, 0, 0, int.Parse(item["duration"].ToString()), 0),
-                        Remark = item["contentId"].ToString(),
+                        Duration = TimeSpan.Parse(item["length"].ToString()),
+                        Remark = item["songId"].ToString(),
+                        Album = item["albums"] is JArray ? item["albums"][0]["albumName"].ToString() : string.Empty,
                     };
                     list.Add(music);
                 }
@@ -1546,48 +1627,23 @@ namespace MusicCollection.MusicAPI
             }
         }
 
-        private static readonly string MiguPublicKey = "MIGeMA0GCSqGSIb3DQEBAQUAA4GMADCBiAKBgEsxO1eMxBy4Oa+Nls8KNhrqXBCAyjRrzTZjBCYSQygansdaZNNBs/2Uj9fnHs/ff1XyYhCuTtzqAs+vJyvMBvCfTwrPN0F6lbmY/+lwEsuAhlqrBdCnRjshosP89Qm0hSDBti1LtBkcE4yLE/f4BWEDCrCdYzDgOrpmNrz3zabZAgMBAAE=";
-        private static readonly string MiguPrivateKey = @"-----BEGIN RSA PRIVATE KEY-----
-MIICWwIBAAKBgEsxO1eMxBy4Oa+Nls8KNhrqXBCAyjRrzTZjBCYSQygansdaZNNB
-s/2Uj9fnHs/ff1XyYhCuTtzqAs+vJyvMBvCfTwrPN0F6lbmY/+lwEsuAhlqrBdCn
-RjshosP89Qm0hSDBti1LtBkcE4yLE/f4BWEDCrCdYzDgOrpmNrz3zabZAgMBAAEC
-gYAQRExUOm3K0MgaBIWVsN3XoM/d+h7EjHXOyEkDe3vv1yJ2ekXJtjMcLuGXkbaG
-vhEsJM22Uh9Zh36oM3pD7VWqyKRh9XkN1kbYdB7/eXXB6xOFa7Obxk1gm5MMf5CT
-uEUrgzJwlV+IyPO3EXJ34fnH7hIRMHG4PIscrHD+sqpi6QJBAIrHiH374O2+CR6f
-A6tm3YXc+ACdlLO2Z8Dx/Zkm74Dp4F6K7zTWazk7z/AbiR02jVZ0JLqsQCiDTy7g
-ylB/5n8CQQCKtCtKEDxE9325CxDgx+RJN0w3xKetDMH9kYlZWWZ91lXLm0RN06Md
-qR2LvUsPNoHGMRWSkKYkGelBj745gLanAkEAhRDzUBFOR8caSXEg/J0iNPN+HGD8
-LyDr9PZTOiE6LnqR9zTyTdB2eSdfpxNP8mHXPZkZiqAU2IOnTgSeGHe6kwJATsVh
-bE9qGvS+9q7dJ/r9n8MCyw0o+LMtHHdhnFeUSFTIJriIAvb1ROv9NpYLIZmf+9F2
-YeU6JXh9qtkafAeoMwJAK6L1JLDwkm6xhuPxuO97Y7NsMjKwWFW7FWn/it48nXia
-eZ74Qmm+6d+nLEccUdpoxyRkEe/ZIc+FswOLu/P71Q==
------END RSA PRIVATE KEY-----";
-        private static readonly RSACryptoServiceProvider MiguRSA = CodecHelper.PemDecodeX509PrivateKey(CodecHelper.PemUnpack(MiguPrivateKey));
         public static User GetAccountFromMigu(string cookie)
         {
             if (string.IsNullOrWhiteSpace(cookie)) return null;
-            var url = "https://m.music.migu.cn/migumusic/h5/user/auth/getUserInfo?publicKey="+WebUtility.UrlEncode(MiguPublicKey);
+            var url = "https://music.migu.cn/v3/api/user/getUserInfo";
             var headers = new Dictionary<string, string>()
             {
-                {"By", "22210ca73bf1af2ec2eace74a96ee356"},
-                {"Referer", "https://m.music.migu.cn/v4/my"},
+                {"Referer", "https://music.migu.cn/v3/my/collect"},
                 {"Cookie", cookie},
-                {"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36"},
             };
-            var resultStr = SendDataByGET(url, headers);
+            var jsonStr = SendDataByGET(url, headers);
             try
             {
-                JObject jo = (JObject)JsonConvert.DeserializeObject(resultStr);
-                string encryptedData = jo.GetValue("aesKey").ToString();
-                byte[] encryptedBytes = Convert.FromBase64String(encryptedData);
-                byte[] decryptedBytes = MiguRSA.Decrypt(encryptedBytes, false);
-                string aesKey = Encoding.UTF8.GetString(decryptedBytes);
-                var jsonStr = CodecHelper.AESDecode(jo.GetValue("data").ToString(), aesKey);
-                jo = (JObject)JsonConvert.DeserializeObject(jsonStr);
-                var profile = jo.GetValue("data");
+                JObject jo = (JObject)JsonConvert.DeserializeObject(jsonStr);
+                var profile = jo.GetValue("user");
                 var avatar = profile["avatar"]["smallAvatar"].ToString();
                 if (avatar.StartsWith("//")) avatar = "https:" + avatar;
-                var user = new User(profile["userId"].ToString(), profile["nickName"].ToString(), avatar);
+                var user = new User(profile["uid"].ToString(), profile["nickname"].ToString(), avatar);
                 MiguMusicU = cookie;
                 File.WriteAllText(EnvironmentSingle.MiguMusicUPath, cookie);
                 return user;
