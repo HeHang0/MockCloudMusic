@@ -5,6 +5,8 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:gif="http://wpfanimatedgif.codeplex.com"
       xmlns:local="clr-namespace:MusicCollection.Pages"
+      xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"  
+      xmlns:control="clr-namespace:System.Windows.Controls;assembly=PresentationFramework" 
       mc:Ignorable="d" Loaded="Page_Loaded" SizeChanged="Page_SizeChanged"
       d:DesignHeight="570" d:DesignWidth="822"
       Title="DiscoverMusic">
@@ -17,6 +19,9 @@
     </Page.Resources>
 
     <Grid>
+        <Grid.Resources>
+            <control:BooleanToVisibilityConverter x:Key="BoolToValueConverter" />
+        </Grid.Resources>
         <Image Name="LodingImage" Visibility="Hidden" gif:ImageBehavior.AnimatedSource="..\Resources\images\loading.gif" Height="18" Margin="26,16,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="18"/>
         <Grid Name="ButtonGroup">
 
@@ -25,14 +30,14 @@
                 <ColumnDefinition Width="100"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <Button Name="CloudMusicButtonHelper" Visibility="Visible" IsEnabled="False" Style="{StaticResource LeftHarfCircularButton}" Content="网易云" Foreground="White" Background="#7C7D85" BorderBrush="#7C7D85" Height="27" Margin="0,10,0,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="100"/>
+            <Button Name="CloudMusicButtonHelper" Visibility="Visible" IsEnabled="False" Style="{StaticResource LeftHarfCircularButton}" Content="网易云" Foreground="White" Background="#7C7D85" BorderBrush="#7C7D85" Height="27" Margin="0,10,-1,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="100"/>
             <Button Name="QQMusicButtonHelper"  IsEnabled="False" Style="{StaticResource NoHarfCircularButton}" Content="QQ音乐" Foreground="White" Background="#7C7D85" BorderBrush="#7C7D85" Height="27" Margin="0,10,0,0" HorizontalAlignment="Left" Width="100" VerticalAlignment="Top" Grid.Column="1"/>
-            <Button Name="XiaMiMusicButtonHelper"  IsEnabled="False" Style="{StaticResource RightHarfCircularButton}" Content="虾米音乐" Foreground="White" Background="#7C7D85" BorderBrush="#7C7D85" Height="27" Margin="0,10,0,0" HorizontalAlignment="Left" Width="100" VerticalAlignment="Top" Grid.Column="2"/>
-            <Button Name="CloudMusicButton" Visibility="Hidden" Click="CloudMusicButton_Click" Style="{StaticResource LeftHarfCircularButton}" Content="网易云" Foreground="#FF333333" Width="100" Background="White" BorderBrush="#FFE1E1E2" Height="27" Margin="0,10,0,0" VerticalAlignment="Top" HorizontalAlignment="Right"/>
+            <Button Name="MiguMusicButtonHelper"  IsEnabled="False" Style="{StaticResource RightHarfCircularButton}" Content="咪咕音乐" Foreground="White" Background="#7C7D85" BorderBrush="#7C7D85" Height="27" Margin="-1,10,0,0" HorizontalAlignment="Left" Width="100" VerticalAlignment="Top" Grid.Column="2"/>
+            <Button Name="CloudMusicButton" Visibility="Hidden" Click="CloudMusicButton_Click" Style="{StaticResource LeftHarfCircularButton}" Content="网易云" Foreground="#FF333333" Width="100" Background="White" BorderBrush="#FFE1E1E2" Height="27" Margin="0,10,-1,0" VerticalAlignment="Top" HorizontalAlignment="Right"/>
             <Button Name="QQMusicButton" Visibility="Visible" Click="QQMusicButton_Click" Style="{StaticResource NoHarfCircularButton}" Content="QQ音乐" Foreground="#FF333333" Width="100" Background="White" Height="27" BorderBrush="#FFE1E1E2" Margin="0,10,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Column="1"/>
-            <Button Name="XiaMiMusicButton" Visibility="Visible" Click="XiaMiMusicButton_Click" Style="{StaticResource RightHarfCircularButton}" Content="虾米音乐" Foreground="#FF333333" Width="100" Background="White" Height="27" BorderBrush="#FFE1E1E2" Margin="0,10,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Column="2"/>
-            <Button x:Name="LastPageButton" Click="LastPageButton_Click" ToolTip="上一页" Style="{StaticResource  LeftHarfCircularButton}" Content="&lt;" FontSize="22" FontWeight="Thin" Foreground="#FF333333" Padding="0,-3,0,0" Margin="0,12,55,0" VerticalAlignment="Top" Background="White" BorderBrush="#FFE1E1E2" Height="25" HorizontalAlignment="Right" Width="30" Grid.Column="2"/>
-            <Button x:Name="NextPageButton" Click="NextPageButton_Click" IsEnabled="False" ToolTip="下一页" Style="{StaticResource RightHarfCircularButton}" Content=">" FontSize="22" FontWeight="Thin" Foreground="#FF333333" Padding="0,-3,0,0" Margin="0,12,26,0" VerticalAlignment="Top" Background="White" BorderBrush="#FFE1E1E2" Height="25" HorizontalAlignment="Right" Width="30" Grid.Column="2"/>
+            <Button Name="XiaMiMusicButton" Visibility="Visible" Click="MiguMusicButton_Click" Style="{StaticResource RightHarfCircularButton}" Content="咪咕音乐" Foreground="#FF333333" Width="100" Background="White" Height="27" BorderBrush="#FFE1E1E2" Margin="-1,10,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Column="2"/>
+            <Button x:Name="LastPageButton" Click="LastPageButton_Click" Visibility="Collapsed" ToolTip="上一页" Style="{StaticResource  LeftHarfCircularButton}" Content="&lt;" FontSize="22" FontWeight="Thin" Foreground="#FF333333" Padding="0,-3,0,0" Margin="0,12,55,0" VerticalAlignment="Top" Background="White" BorderBrush="#FFE1E1E2" Height="25" HorizontalAlignment="Right" Width="30" Grid.Column="2"/>
+            <Button x:Name="NextPageButton" Click="NextPageButton_Click" Visibility="Collapsed" IsEnabled="False" ToolTip="下一页" Style="{StaticResource RightHarfCircularButton}" Content=">" FontSize="22" FontWeight="Thin" Foreground="#FF333333" Padding="0,-3,0,0" Margin="0,12,26,0" VerticalAlignment="Top" Background="White" BorderBrush="#FFE1E1E2" Height="25" HorizontalAlignment="Right" Width="30" Grid.Column="2"/>
         </Grid>
         <Button x:Name="CloseDataGridButton" Visibility="Hidden" Click="CloseDataGridButton_Click" ToolTip="关闭" Style="{StaticResource AllHarfCircularButton}" Content="×" FontSize="22" FontWeight="Thin" Foreground="#FF333333" Padding="0,-3,1,0" Margin="21,10,0,0" VerticalAlignment="Top" Background="White" BorderBrush="#FFE1E1E2" Height="30" HorizontalAlignment="Left" Width="30"/>
         <GridSplitter Background="#E1E1E2" Margin="0,48,0,0" Height="1" HorizontalAlignment="Stretch" VerticalAlignment="Top"/>
@@ -51,9 +56,34 @@
                     <Border BorderThickness="0,0,0,0" BorderBrush="Black" Width="150" Height="170" ToolTip="{Binding Path=Name}">
                         <Button x:Name="PlayListButton" Style="{StaticResource NoOpacityStyle}" Tag="{Binding}" Click="PlayListButton_Click" Cursor="Hand" BorderBrush="{x:Null}" Width="140" Height="160">
                             <StackPanel Orientation="Vertical" Margin="0,0,0,-44">
-                                <Grid>
+                                <Grid Visibility="{Binding IdCommonPlaylist, Converter={StaticResource BoolToValueConverter}, Mode=OneWay}">
                                     <Image Source="..\Resources\images\playlist_default.png"/>
-                                    <Image MaxWidth="140" MaxHeight="140" Source="{Binding Path=ImgUrl}" Stretch="UniformToFill"/>
+                                    <Image MaxWidth="140" MaxHeight="140" Source="{Binding Path=LocalImgUrl}" Stretch="UniformToFill"/>
+                                </Grid>
+                                <Grid Visibility="{Binding IsMyDailyRecommand, Converter={StaticResource BoolToValueConverter}, Mode=OneWay}">
+                                    <Image Width="140" Height="140" Source="..\Resources\images\date.png"/>
+                                    <StackPanel>
+                                        <Label Width="140" Height="32" Content="{Binding DayOfWeek, Mode=OneWay}" VerticalAlignment="Top" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Foreground="#fed9d9"></Label>
+                                        <Canvas Height="54">
+                                            <Canvas.Background>
+                                                <LinearGradientBrush StartPoint="0.5, 0" EndPoint="0.5, 1">
+                                                    <GradientStop Offset="0" Color="#fbfbfb"></GradientStop>
+                                                    <GradientStop Offset="1" Color="#dedede"></GradientStop>
+                                                </LinearGradientBrush>
+                                            </Canvas.Background>
+                                        </Canvas>
+                                        <Canvas Height="54">
+                                            <Canvas.Background>
+                                                <LinearGradientBrush StartPoint="0.5, 0" EndPoint="0.5, 1">
+                                                    <GradientStop Offset="0" Color="#fbfbfb"></GradientStop>
+                                                    <GradientStop Offset="1" Color="#dedede"></GradientStop>
+                                                </LinearGradientBrush>
+                                            </Canvas.Background>
+                                        </Canvas>
+                                    </StackPanel>
+                                    <Label Width="140" Height="140" Padding="0, 35, 10, 0" FontSize="90"  FontWeight="Bold" FontFamily="Arial"
+                                            HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Foreground="#202020"
+                                            Content="{Binding DayOfMonth, Mode=OneWay}"/>
                                 </Grid>
                                 <!--<Label Content="{Binding Path=Name}" Width="140" HorizontalAlignment="Center" VerticalContentAlignment="Center"/>-->
                                 <TextBlock Text="{Binding Path=Name}" Margin="0,5,0,0" HorizontalAlignment="Center" TextTrimming="CharacterEllipsis"  TextWrapping="NoWrap" />
@@ -66,7 +96,10 @@
 
         <Button x:Name="PlayAllLocalButton" Visibility="Hidden" Click="PlayAllLocalButton_Click" HorizontalAlignment="Left" Style="{StaticResource LeftHarfCircularButton}" Content="播放全部" Foreground="#FF333333" Margin="60,10,0,0" VerticalAlignment="Top" Width="91" Background="White" BorderBrush="#FFE1E1E2" Height="30"/>
         <Button x:Name="AllAddToCurrentListButton" Visibility="Hidden" Click="AllAddToCurrentListButton_Click" Style="{StaticResource RightHarfCircularButton}" Content="+" FontSize="22" FontWeight="Thin" Foreground="#FF333333" HorizontalAlignment="Left" Padding="0,-1,0,0"  Margin="150,10,0,0" VerticalAlignment="Top" Width="32" Background="White" Height="30" BorderBrush="#FFE1E1E2"/>
-        <Button x:Name="AddToMyPlayListButton" Visibility="Hidden" Click="AddToMyPlayListButton_Click" Style="{StaticResource AllHarfCircularButton}" Content="收藏" Foreground="#FF333333" Margin="0,10,25,0" VerticalAlignment="Top" Background="White" BorderBrush="#FFE1E1E2" Height="30" HorizontalAlignment="Right" Width="91"/>
+        <Button x:Name="AllDownloadButton" Visibility="Hidden" Click="AllDownloadButton_Click" Style="{StaticResource LeftHarfCircularButton}" FontSize="22" FontWeight="Thin" Foreground="#FF333333" VerticalAlignment="Top" Padding="0,-1,0,0"  Margin="0,10,115,0" HorizontalAlignment="Right" Width="32" Background="White" Height="30" BorderBrush="#FFE1E1E2">
+            <Image Width="18" Height="18" Source="..\Resources\images\download.png"/>
+        </Button>
+        <Button x:Name="AddToMyPlayListButton" Visibility="Hidden" Click="AddToMyPlayListButton_Click" Style="{StaticResource RightHarfCircularButton}" Content="收藏" Foreground="#FF333333" Margin="0,10,25,0" VerticalAlignment="Top" Background="White" BorderBrush="#FFE1E1E2" Height="30" HorizontalAlignment="Right" Width="91"/>
 
         <DataGrid x:Name="NetMusicDataGrid" Visibility="Hidden" Margin="0,48,0,0" SelectionMode="Single" AlternationCount="2"
                   BorderThickness="0" AutoGenerateColumns="False" CanUserAddRows="False" Opacity="0.7" Background="{x:Null}" BorderBrush="{x:Null}" LoadingRow="NetMusicDataGrid_LoadingRow" GridLinesVisibility="None"

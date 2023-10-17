@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:MusicCollection.ChildWondows"
+        xmlns:local="clr-namespace:MusicCollection.ChildWondows" 
         mc:Ignorable="d" ResizeMode="NoResize" MouseUp="Window_MouseUp" Topmost="True" Deactivated="Window_Deactivated" Loaded="Window_Loaded" IsVisibleChanged="Window_IsVisibleChanged"
         Height="350" Width="215" ShowInTaskbar="False" ShowActivated="True" AllowsTransparency="False" WindowStyle="None"  Background="#FAFAFA" BorderThickness="1" BorderBrush="#C8C8C8">
     <Window.Effect>
@@ -48,6 +48,15 @@
             </Grid>
         </Button>
         <GridSplitter HorizontalAlignment="Stretch" Height="1" Margin="0,140,0,0" VerticalAlignment="Top"/>
+        <Button Click="NotifyLyricButton_Click" Style="{StaticResource MouseOverNotifyButton}" Height="35" Background="#FAFAFC" Cursor="Arrow" VerticalAlignment="Top" Margin="0,141,0,0">
+            <Grid>
+                <Border Margin="10,2,182,3" Width="21" Height="21" BorderBrush="#666666" BorderThickness="1" CornerRadius="50">
+                    <Label HorizontalContentAlignment="Center" VerticalContentAlignment="Center" FontSize="12" Padding="0" Foreground="#FF666666">词</Label>
+                </Border>
+                <!--<Label Margin="10,2,182,3" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Width="21" Height="21" FontSize="13"  BorderBrush="#666666" BorderThickness="1" Padding="0" Foreground="#FF666666">词</Label>-->
+                <Label Margin="48,0,0,0" Padding="0,9" Foreground="#FF666666" FontWeight="Medium">桌面歌词</Label>
+            </Grid>
+        </Button>
         
         
         <GridSplitter HorizontalAlignment="Stretch" Height="1" Margin="0,280,0,0" VerticalAlignment="Top"/>

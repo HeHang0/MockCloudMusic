@@ -9,6 +9,7 @@ using System.Threading;
 using System;
 using System.Windows;
 using System.Linq;
+using MusicCollection.Setting;
 
 namespace MusicCollection.Pages
 {
@@ -33,17 +34,21 @@ namespace MusicCollection.Pages
             var LocalMusicListContent = "";
             try
             {
-                LocalMusicListContent = File.ReadAllText("Data\\LocalMusicList.json");
-                LocalMusicFolderListContent = File.ReadAllText( "Data\\LocalMusicFolderList.json");
+                LocalMusicListContent = File.ReadAllText(EnvironmentSingle.ConfigLocalMusicList);
+                LocalMusicFolderListContent = File.ReadAllText(EnvironmentSingle.ConfigLocalMusicFolderList);
             }
-            catch (System.Exception)
+            catch (Exception)
             {                
             }
 
             FolderList = JsonConvert.DeserializeObject<ObservableCollection<string>>(LocalMusicFolderListContent);
             if (FolderList.Count == 0)
             {
-                FolderList.Add(Environment.GetFolderPath(Environment.SpecialFolder.MyMusic) + "\\");
+                string myMusicPath = Environment.GetFolderPath(Environment.SpecialFolder.MyMusic);
+                string myMusicCollectionPath = Path.Combine(myMusicPath, "MusicCollection", "Music");
+                if (Directory.Exists(myMusicPath)) FolderList.Add(myMusicPath.TrimEnd('\\'));
+                if (Directory.Exists(myMusicCollectionPath)) FolderList.Add(myMusicCollectionPath.TrimEnd('\\'));
+
             }
             LocalMusicList = JsonConvert.DeserializeObject<MusicObservableCollection<Music>>(LocalMusicListContent);
             if (LocalMusicList.Count == 0)
@@ -221,8 +226,8 @@ namespace MusicCollection.Pages
 
         public void LocalMusicPage_Closing()
         {
-            File.WriteAllText("Data\\LocalMusicFolderList.json", JsonConvert.SerializeObject(FolderList));
-            File.WriteAllText("Data\\LocalMusicList.json", JsonConvert.SerializeObject(LocalMusicList));
+            File.WriteAllText(EnvironmentSingle.ConfigLocalMusicFolderList, JsonConvert.SerializeObject(FolderList));
+            File.WriteAllText(EnvironmentSingle.ConfigLocalMusicList, JsonConvert.SerializeObject(LocalMusicList));
         }
         private void SelectContent_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {

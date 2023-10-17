@@ -95,7 +95,7 @@ namespace MusicCollection.ChildWindows
             CloudMusicButtonHelper.Visibility = Visibility.Hidden;
             QQMusicButtonHelper.Visibility = Visibility.Hidden;
             XiaMiMusicButtonHelper.Visibility = Visibility.Visible;
-            PageType = NetMusicType.XiaMiMusic;
+            PageType = NetMusicType.MiguMusic;
             StartGetMusicListThread();
         }
 

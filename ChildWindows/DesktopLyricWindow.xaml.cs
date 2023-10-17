@@ -25,6 +25,11 @@ namespace MusicCollection.ChildWindows
         public DesktopLyricWindow()
         {
             InitializeComponent();
+            SetTopMost();
+        }
+
+        public void SetTopMost()
+        {
             TopMostTool.SetTopMost(this);
         }
 
@@ -55,6 +60,22 @@ namespace MusicCollection.ChildWindows
             else
             {
                 Lyric.FontSize--;
+            }
+        }
+
+        private void LyricScroll_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+            double oldWidth = Width;
+            //double oldHeight = Height;
+            var workSize = SystemParameters.WorkArea.Size;
+            var tmpWidth = Math.Min(LyricScroll.ExtentWidth, workSize.Width);
+            var tmpHeight = Math.Min(LyricScroll.ExtentHeight, workSize.Height);
+            if(Math.Abs(tmpWidth - Width) > 15 || Math.Abs(tmpHeight - Height) > 15)
+            {
+                Width = tmpWidth;
+                Height = tmpHeight;
+                Left += (oldWidth - Width) / 2;
+                //Top += (Height - oldHeight) / 2;
             }
         }
     }

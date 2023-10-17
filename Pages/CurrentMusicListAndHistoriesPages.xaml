@@ -45,7 +45,7 @@
         </Canvas>
         <DataGrid Name="CurrentMusicOrHistoriesDataGrid"  Margin="0,70,0,0" SelectionMode="Single" AlternationCount="2" Background="{x:Null}" BorderBrush="{x:Null}"
                   BorderThickness="0" AutoGenerateColumns="False" CanUserAddRows="False" Opacity="0.7" GridLinesVisibility="None"
-                  ItemsSource="{Binding}" HeadersVisibility="None" IsReadOnly="True">
+                  ItemsSource="{Binding}" SelectionUnit="FullRow" HeadersVisibility="None" IsReadOnly="True">
             <DataGrid.RowStyle>
                 <Style TargetType = "{x:Type DataGridRow}" >
                     <Setter Property="Height" Value="28"/>

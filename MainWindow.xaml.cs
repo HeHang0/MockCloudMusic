@@ -15,10 +15,11 @@ using System.Threading;
 using Microsoft.WindowsAPICodePack.Taskbar;
 using System.Windows.Interop;
 using System.Drawing;
-using System.Data;
 using MusicCollection.ChildWindows;
 using System.Runtime.InteropServices;
 using System.ComponentModel;
+using MusicCollection.Setting;
+using System.Linq;
 
 namespace MusicCollection
 {
@@ -87,11 +88,20 @@ namespace MusicCollection
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             PlayBar.DataContext = bsp;
+            SetNetEasyKey();
             InitNotyfy();
             InitTaskBar();
             InitPages();
             InitMusic();
             SystemParameters.StaticPropertyChanged += SystemParameters_StaticPropertyChanged;
+        }
+
+        private void SetNetEasyKey()
+        {
+            NetMusicHelper.NetEasyCsrfToken = File.ReadAllText(EnvironmentSingle.NetEasyCsrfTokenPath);
+            NetMusicHelper.NetEasyMusicU = File.ReadAllText(EnvironmentSingle.NetEasyMusicUPath);
+            NetMusicHelper.QQMusicU = File.ReadAllText(EnvironmentSingle.QQMusicUPath);
+            NetMusicHelper.MiguMusicU = File.ReadAllText(EnvironmentSingle.MiguMusicUPath);
         }
 
         System.Windows.Forms.NotifyIcon notifyIcon;
@@ -106,7 +116,7 @@ namespace MusicCollection
             notifyIcon.MouseDoubleClick += NotifyIcon_MouseDoubleClick;
             //notifyIcon.MouseDown += NotifyIcon_MouseDown;
             notifyIcon.MouseClick += NotifyIcon_MouseDown;
-            BalloonTips("Just Listen");
+            //BalloonTips("Just Listen");
         }
 
         private void NotifyIcon_MouseDoubleClick(object sender, System.Windows.Forms.MouseEventArgs e)
@@ -114,6 +124,11 @@ namespace MusicCollection
             if (Visibility == Visibility.Hidden)
             {
                 Show();
+                Activate();
+                if(WindowState == WindowState.Minimized)
+                {
+                    WindowState = WindowState.Normal;
+                }
             }
             else if (Visibility == Visibility.Visible)
             {
@@ -137,23 +152,17 @@ namespace MusicCollection
                     NotifyWin.Owner = this;
                 }
                 System.Drawing.Point pt = System.Windows.Forms.Control.MousePosition;//WPF方法
+
                 NotifyWin.Show();
                 float dpi = GetDpi();
                 NotifyWin.Left = pt.X/dpi;
                 NotifyWin.Top = pt.Y/dpi - NotifyWin.ActualHeight;
                 NotifyWin.Activate();
             }
-            //else if (e.Button == System.Windows.Forms.MouseButtons.Left)
-            //{
-            //    if (Visibility == Visibility.Hidden)
-            //    {
-            //        Show();
-            //    }
-            //    else if (Visibility == Visibility.Visible)
-            //    {
-            //        WindowState = WindowState.Normal;
-            //    }
-            //}
+            else if (e.Button == System.Windows.Forms.MouseButtons.Left)
+            {
+                NotifyIcon_MouseDoubleClick(null, null);
+            }
         }
 
         private static Icon FromImageSource(ImageSource icon)
@@ -169,17 +178,17 @@ namespace MusicCollection
         private void InitTaskBar()
         {
             //播放按钮
-            ToolBarPlayPauseButton = new ThumbnailToolBarButton(Properties.Resources.Play, "播放");
+            ToolBarPlayPauseButton = new ThumbnailToolBarButton(Properties.Resources.play, "播放");
             ToolBarPlayPauseButton.Enabled = true;
             ToolBarPlayPauseButton.Click += new EventHandler<ThumbnailButtonClickedEventArgs>(btnPlayPause_Click);
 
 
-            ThumbnailToolBarButton btnNext = new ThumbnailToolBarButton(Properties.Resources.Next, "下一曲");
+            ThumbnailToolBarButton btnNext = new ThumbnailToolBarButton(Properties.Resources.ff, "下一曲");
             btnNext.Enabled = true;
             btnNext.Click += new EventHandler<ThumbnailButtonClickedEventArgs>(btnNext_Click);
 
             //上一首按钮  
-            ThumbnailToolBarButton btnPre = new ThumbnailToolBarButton(Properties.Resources.Last, "上一曲");
+            ThumbnailToolBarButton btnPre = new ThumbnailToolBarButton(Properties.Resources.rw, "上一曲");
             btnNext.Enabled = true;
             btnPre.Click += new EventHandler<ThumbnailButtonClickedEventArgs>(btnPre_Click);
 
@@ -217,7 +226,8 @@ namespace MusicCollection
             RankingList = new RankingListPage(this);
             DataContext = NetMusicSearch;
             PageFrame.Content = DiscoverMusic;
-            CurrentBackGround = DiscoverMusicBackGround;
+            CurrentBackGround = MyFavoriteBackGround;
+            DiscoverMusic.SetMyFavorite(true);
             CurrentMusicListFrame.Content = new CurrentMusicListAndHistoriesPages(this);
             MusicDetailFrame.Content = MusicDetail;
         }
@@ -226,16 +236,15 @@ namespace MusicCollection
         {
             CurrentMusicList.CollectionChanged += CurrentMusicList_OnCountChange;
 
-            var CurrentMusicListStr = File.ReadAllText("Data\\CurrentMusicList.json");
+            var CurrentMusicListStr = File.ReadAllText(EnvironmentSingle.ConfigCurrentMusicList);
             CurrentMusicList = JsonConvert.DeserializeObject<MusicObservableCollection<Music>>(CurrentMusicListStr);
 
-            var HistoryMusicListStr = File.ReadAllText("Data\\HistoryMusicList.json");
+            var HistoryMusicListStr = File.ReadAllText(EnvironmentSingle.ConfigHistoryMusicList);
             HistoryMusicList = JsonConvert.DeserializeObject<MusicHistoriesCollection<MusicHistory>>(HistoryMusicListStr);
 
-            var PlayListCollectionStr = File.ReadAllText("Data\\PlayListCollection.json");
+            var PlayListCollectionStr = File.ReadAllText(EnvironmentSingle.ConfigPlayListCollection);
             PlayListCollection = JsonConvert.DeserializeObject<ObservableCollection<PlayListCollectionModel>>(PlayListCollectionStr);
             PlayListListBox.DataContext = PlayListCollection;
-
             //if (CurrentMusicList.Count > 0)
             //{
             //    PlayMusicButton_Click(new object(), new RoutedEventArgs());
@@ -245,7 +254,7 @@ namespace MusicCollection
             bsp.PropertyChanged += Bsp_PropertyChanged;
         }
 
-        private void Bsp_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        private void Bsp_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == "MusicEnd" && CurrentMusicList.Count > 0)
             {
@@ -324,7 +333,7 @@ namespace MusicCollection
             }
             PlayMusicButton.Visibility = Visibility.Hidden;
             PauseMusicButton.Visibility = Visibility.Visible;
-            ToolBarPlayPauseButton.Icon = Properties.Resources.Pause;
+            ToolBarPlayPauseButton.Icon = Properties.Resources.suspend;
             NotifyWin.NotifyPalyButton.Visibility = Visibility.Hidden;
             NotifyWin.NotifyPauseButton.Visibility = Visibility.Visible;
         }
@@ -333,7 +342,7 @@ namespace MusicCollection
             bsp.Pause();
             NotifyWin.NotifyPalyButton.Visibility = Visibility.Visible;
             NotifyWin.NotifyPauseButton.Visibility = Visibility.Hidden;
-            ToolBarPlayPauseButton.Icon = Properties.Resources.Play;
+            ToolBarPlayPauseButton.Icon = Properties.Resources.play;
             PlayMusicButton.Visibility = Visibility.Visible;
             PauseMusicButton.Visibility = Visibility.Hidden;
         }
@@ -396,16 +405,18 @@ namespace MusicCollection
                 notifyIcon.Text = Title.Length >= 63 ? Title.Substring(0,60) + "..." : Title;
                 HistoryMusicList.Add(new MusicHistory(CurrentMusicList[CurrentIndex]));
                 SetMiniLable(CurrentMusicList[CurrentIndex]);
+                (CurrentMusicListFrame.Content as CurrentMusicListAndHistoriesPages).MusicChange(CurrentIndex);
             }
             return true;
         }
 
         private void SetMiniLable(Music music)
         {
-            CurrentMusicImageMini.DataContext = string.IsNullOrWhiteSpace(music.AlbumImageUrl) ? "logo.ico" : music.AlbumImageUrl;
+            CurrentMusicImageMini.DataContext = string.IsNullOrWhiteSpace(music.AlbumImageUrl) ? "logo.ico" : NetMusicHelper.GetImgFromRemote(music.AlbumImageUrl);
             CurrentMusicTitleMini.Content = music.Title;
             CurrentMusicSingerMini.Content = music.Singer;
             MusicDetail.Init(CurrentMusicList[CurrentIndex], CurrentMusicImageMini.Source);
+            CurrentMusicCanvasMini.Visibility = Visibility.Visible;
         }
 
         private void LastMusicButton_Click(object sender, RoutedEventArgs e)
@@ -447,6 +458,16 @@ namespace MusicCollection
             Play();
         }
 
+        private void LoginButton_Click(object sender, RoutedEventArgs e)
+        {
+            LoginWindow loginWindow = new LoginWindow();
+            loginWindow.Owner = this;
+            if (loginWindow.ShowDialog() == true)
+            {
+                //MessageBox.Show("登录成功");
+            }
+        }
+
         private void MinButton_Click(object sender, RoutedEventArgs e)
         {
             WindowState = WindowState.Minimized;
@@ -460,6 +481,7 @@ namespace MusicCollection
             NormalHeight = Height;
             MainWindowGrid.Margin = new Thickness(6);
             WindowState = WindowState.Maximized;
+            SetBorderRadius();
         }
         private double NormalLeft = 0;
         private double NormalTop = 0;
@@ -480,8 +502,22 @@ namespace MusicCollection
             GridRow2.Height = GridLength.Auto;
             GridCol1.Width = GridLength.Auto;
             GridCol2.Width = GridLength.Auto;
+            SetBorderRadius();
         }
 
+        private void SetBorderRadius()
+        {
+            if (WindowState == WindowState.Maximized)
+            {
+                TopBlockBorder.CornerRadius = new CornerRadius(0, 0, 0, 0);
+                BottomBlockBorder.CornerRadius = new CornerRadius(0, 0, 0, 0);
+            }
+            else
+            {
+                TopBlockBorder.CornerRadius = new CornerRadius(10, 10, 0, 0);
+                BottomBlockBorder.CornerRadius = new CornerRadius(0, 0, 10, 10);
+            }
+        }
 
         private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
@@ -643,14 +679,7 @@ namespace MusicCollection
 
         private void CurrentMusicListButton_Click(object sender, RoutedEventArgs e)
         {
-            if (CurrentMusicListFrame.Visibility == Visibility.Visible)
-            {
-                CurrentMusicListFrame.Visibility = Visibility.Hidden;
-            }
-            else
-            {
-                CurrentMusicListFrame.Visibility = Visibility.Visible;
-            }
+            CurrentMusicListFrame.Visibility = CurrentMusicListFrame.Visibility == Visibility.Visible ? Visibility.Hidden : Visibility.Visible;
             e.Handled = true;
         }
 
@@ -712,15 +741,15 @@ namespace MusicCollection
         {
             bsp.Stop();
             notifyIcon.Dispose();
-            File.WriteAllText("Data\\CurrentMusicList.json", JsonConvert.SerializeObject(CurrentMusicList));
-            File.WriteAllText("Data\\HistoryMusicList.json", JsonConvert.SerializeObject(HistoryMusicList));
-            File.WriteAllText("Data\\PlayListCollection.json", JsonConvert.SerializeObject(PlayListCollection));
+            File.WriteAllText(EnvironmentSingle.ConfigCurrentMusicList, JsonConvert.SerializeObject(CurrentMusicList));
+            File.WriteAllText(EnvironmentSingle.ConfigHistoryMusicList, JsonConvert.SerializeObject(HistoryMusicList));
+            File.WriteAllText(EnvironmentSingle.ConfigPlayListCollection, JsonConvert.SerializeObject(PlayListCollection));
 
             LocalMusic.LocalMusicPage_Closing();
             DownLoadMusic.DownLoadMusicPage_Closing();
             Application.Current.Shutdown();
         }
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private void Window_Closing(object sender, CancelEventArgs e)
         {
             Hide();
             e.Cancel = true;
@@ -755,7 +784,7 @@ namespace MusicCollection
             SinglePlayButton.Visibility = Visibility.Hidden;
         }
 
-        private void DesktopLyricButton_Click(object sender, RoutedEventArgs e)
+        public void DesktopLyricButton_Click(object sender, RoutedEventArgs e)
         {
             if (MusicDetail.DesktopLyricWin.Visibility == Visibility.Visible)
             {
@@ -766,6 +795,7 @@ namespace MusicCollection
                 MusicDetail.DesktopLyricWin.Visibility = Visibility.Visible;
             }
         }
+
         private void ChangeLeftListBackGround(System.Windows.Controls.Image img)
         {
             if (CurrentBackGround != img)
@@ -778,10 +808,19 @@ namespace MusicCollection
                 CurrentBackGround.Visibility = Visibility.Visible;
             }
         }
+
         private void DiscoverMusicButton_Click(object sender, RoutedEventArgs e)
         {
             PageFrame.Content = DiscoverMusic;
+            DiscoverMusic.SetMyFavorite(false);
             ChangeLeftListBackGround(DiscoverMusicBackGround);
+        }
+
+        private void MyFavoriteButton_Click(object sender, RoutedEventArgs e)
+        {
+            PageFrame.Content = DiscoverMusic;
+            DiscoverMusic.SetMyFavorite(true);
+            ChangeLeftListBackGround(MyFavoriteBackGround);
         }
 
         private void RankingListButtonButton_Click(object sender, RoutedEventArgs e)
@@ -806,6 +845,7 @@ namespace MusicCollection
         private void AddNewPlayListButton_Click(object sender, RoutedEventArgs e)
         {
             InputStringWindow inputStringWindow = new InputStringWindow("添加歌单","歌单链接");
+            inputStringWindow.Owner = this;
             if (inputStringWindow.ShowDialog() == true)
             {
                 string url = inputStringWindow.InputString;
@@ -829,7 +869,7 @@ namespace MusicCollection
             }
             else if (url.Contains("xiami.com"))
             {
-                type = NetMusicType.XiaMiMusic;
+                type = NetMusicType.MiguMusic;
             }
             else
             {
@@ -853,6 +893,7 @@ namespace MusicCollection
         public bool GetStringFromInputStringWindow(string title, string subtitle, out string result)
         {
             InputStringWindow inputStringWindow = new InputStringWindow(title, subtitle);
+            inputStringWindow.Owner = this;
             if (inputStringWindow.ShowDialog() == true)
             {
                 result = inputStringWindow.InputString;

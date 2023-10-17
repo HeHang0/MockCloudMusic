@@ -17,6 +17,19 @@ namespace MusicCollection
             return r;
         }
 
+        public static string XmlDecode(string xmlStr)
+        {
+            if (string.IsNullOrEmpty(xmlStr))
+                return "";
+            xmlStr = xmlStr.Replace("&amp;", "&");
+            xmlStr = xmlStr.Replace( "&lt;", "<");
+            xmlStr = xmlStr.Replace("&gt;", ">");
+            xmlStr = xmlStr.Replace("&quot;", "\"");
+            xmlStr = xmlStr.Replace("&apos;", "\'");
+
+            return xmlStr;
+        }
+
         /// <summary> 
         /// 通过给定的文件流，判断文件的编码类型 
         /// </summary> 

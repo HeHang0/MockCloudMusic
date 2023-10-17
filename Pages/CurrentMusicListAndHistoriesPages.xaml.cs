@@ -39,6 +39,13 @@ namespace MusicCollection.Pages
             ParentWindow.HistoryMusicList.CollectionChanged += HistoryMusicList_OnCountChange;
         }
         
+        public void MusicChange(int index)
+        {
+            if(CurrentMusicListButtonHelper.Visibility == Visibility.Visible)
+            {
+                CurrentMusicOrHistoriesDataGrid.SelectedIndex = index;
+            }
+        }
 
         private void UpdateHistoriesTimeDescribe()
         {

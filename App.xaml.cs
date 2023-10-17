@@ -12,6 +12,7 @@ using Newtonsoft.Json;
 using MusicCollection.MusicManager;
 using System.Collections.ObjectModel;
 using MusicCollection.MusicAPI;
+using MusicCollection.Setting;
 
 namespace MusicCollection
 {
@@ -19,7 +20,7 @@ namespace MusicCollection
     /// App.xaml 的交互逻辑
     /// </summary>
     public partial class App : Application
-    {/*
+    {
         private static Assembly OnResolveAssembly(object sender, ResolveEventArgs args)
         {
             Assembly executingAssembly = Assembly.GetExecutingAssembly();
@@ -49,68 +50,18 @@ namespace MusicCollection
                 stream.Read(assemblyRawBytes, 0, assemblyRawBytes.Length);
                 return Assembly.Load(assemblyRawBytes);
             }
-        }*/
+        }
 
         protected override void OnStartup(StartupEventArgs e)
         {
-            CheckNecessaryFile();
+            EnvironmentSingle.CheckNecessaryFile();
             base.OnStartup(e);
-            //AppDomain.CurrentDomain.AssemblyResolve += OnResolveAssembly;
-        }
-
-        private void CheckNecessaryFile()
-        {
-            if (!Directory.Exists("AlbumImage\\"))//如果不存在就创建文件夹
-            {
-                Directory.CreateDirectory("AlbumImage\\");
-            }
-            if (!Directory.Exists("DownLoad\\"))//如果不存在就创建文件夹
-            {
-                Directory.CreateDirectory("DownLoad\\");
-            }
-            if (!Directory.Exists("DownLoad\\Music"))//如果不存在就创建文件夹
-            {
-                Directory.CreateDirectory("DownLoad\\Music");
-            }
-            if (!Directory.Exists("DownLoad\\Lyric"))//如果不存在就创建文件夹
-            {
-                Directory.CreateDirectory("DownLoad\\Lyric");
-            }
-            if (!Directory.Exists("Data\\"))//如果不存在就创建文件夹
-            {
-                Directory.CreateDirectory("Data\\");
-            }
-            if (!File.Exists("Data\\CurrentMusicList.json"))
-            {
-                File.WriteAllText("Data\\CurrentMusicList.json", JsonConvert.SerializeObject(new MusicObservableCollection<Music>()));
-            }
-            if (!File.Exists("Data\\HistoryMusicList.json"))
-            {
-                File.WriteAllText("Data\\HistoryMusicList.json", JsonConvert.SerializeObject(new MusicHistoriesCollection<MusicHistory>()));
-            }
-            if (!File.Exists("Data\\PlayListCollection.json"))
-            {
-                DataTable dt = new DataTable();
-                dt.Columns.Add("Name");
-                dt.Columns.Add("PlayList");
-                File.WriteAllText("Data\\PlayListCollection.json", JsonConvert.SerializeObject(dt));
-            }
-            if (!File.Exists("Data\\LocalMusicFolderList.json"))
-            {
-                File.WriteAllText("Data\\LocalMusicFolderList.json", JsonConvert.SerializeObject(new ObservableCollection<string>()));
-            }
-            if (!File.Exists("Data\\LocalMusicList.json"))
-            {
-                File.WriteAllText("Data\\LocalMusicList.json", JsonConvert.SerializeObject(new MusicObservableCollection<Music>()));
-            }
-            if (!File.Exists("Data\\DownLoadedList.json"))
-            {
-                File.WriteAllText("Data\\DownLoadedList.json", JsonConvert.SerializeObject(new MusicObservableCollection<Music>()));
-            }
-            if (!File.Exists("Data\\DownLoadingList.json"))
-            {
-                File.WriteAllText("Data\\DownLoadingList.json", JsonConvert.SerializeObject(new NetMusicObservableCollection<NetMusic>()));
-            }
+            AppDomain.CurrentDomain.AssemblyResolve += OnResolveAssembly;
         }
     }
 }
+//timeout /T 2 ;
+//$(SolutionDir) packages\LibZ.Bootstrap.1.2.0.0\tools\libz.exe inject-dll --assembly=$(TargetDir)\MusicCollection.exe --include=$(TargetDir)\*.dll --move=*.dll;
+//del*.xml;
+//del*.pdb;
+//del*.config;

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -26,6 +27,8 @@ namespace MusicCollection.ChildWondows
         private MainWindow ParentWindow;
         private Pages.LocalMusicPage ParentPage;
         private ObservableCollection<LocalFolderListViewModel> LocalFolderListView = new ObservableCollection<LocalFolderListViewModel>();
+        private static string MY_MUSIC_TEXT = "我的音乐";
+        private static string MY_MUSIC_FOLDER = Environment.GetFolderPath(Environment.SpecialFolder.MyMusic);
 
         public LocalMusicFolderWindow(MainWindow mwin, Pages.LocalMusicPage lmpage)
         {
@@ -41,7 +44,7 @@ namespace MusicCollection.ChildWondows
             
             foreach (var item in ParentPage.FolderList)
             {
-                LocalFolderListView.Add(new LocalFolderListViewModel(item));
+                if(Directory.Exists(item)) LocalFolderListView.Add(new LocalFolderListViewModel(item));
             }
             LocalMusicFolderListDataGrid.DataContext = LocalFolderListView;
         }
@@ -75,7 +78,7 @@ namespace MusicCollection.ChildWondows
         {
             var a = (sender as DataGridRow);
             var b = a.Item as LocalFolderListViewModel;
-            if (!(bool)b.IsChecked)
+            if (!b.IsChecked)
             {
                 b.IsChecked = true;
             }
@@ -92,7 +95,8 @@ namespace MusicCollection.ChildWondows
             {
                 if (item.IsChecked)
                 {
-                    ParentPage.FolderList.Add(item.Path);
+                    string folderPath = item.Path == MY_MUSIC_TEXT ? Environment.GetFolderPath(Environment.SpecialFolder.MyMusic) : item.Path;
+                    ParentPage.FolderList.Add(folderPath.TrimEnd('\\'));
                 }
             }
             Close();
@@ -135,7 +139,7 @@ namespace MusicCollection.ChildWondows
                 set
                 {
                     _isChecked = value;
-                    NotifyPropertyChanged();
+                    NotifyPropertyChanged("IsChecked");
                 }
             }
 
@@ -144,21 +148,28 @@ namespace MusicCollection.ChildWondows
             {
                 get
                 {
-                    if (Regex.IsMatch(_path, "C:\\\\Users\\\\([^\\\\]+)\\\\Music\\\\"))
-                    {
-                        return "我的音乐";
-                    }
-                    else
-                    {
-                        return _path;
-                    }
+                    return _path;
                 }
                 set
                 {
                     _path = value;
-                    NotifyPropertyChanged();
+                    NotifyPropertyChanged("Path");
+                    NotifyPropertyChanged("PathText");
                 }
             }
+
+            public string PathText
+            {
+                get
+                {
+                    if (_path.StartsWith(MY_MUSIC_FOLDER))
+                    {
+                        return _path.Replace(MY_MUSIC_FOLDER, MY_MUSIC_TEXT);
+                    }
+                    return _path;
+                }
+            }
+
 
             private void NotifyPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] String propertyName = "")
             {

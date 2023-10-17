@@ -1,4 +1,5 @@
-﻿using MusicCollection.MusicAPI;
+﻿using MusicCollection.ChildWindows;
+using MusicCollection.MusicAPI;
 using MusicCollection.MusicManager;
 using System;
 using System.Collections.Generic;
@@ -20,6 +21,7 @@ namespace MusicCollection.Pages
         private NetMusicType PageType = NetMusicType.CloudMusic;
         private int Offset = 0;
         private int SearchPageCount = 0;
+        private bool isMyFavorite = true;
 
         public DiscoverMusicPage(MainWindow mainWindow)
         {
@@ -27,11 +29,25 @@ namespace MusicCollection.Pages
             InitializeComponent();
         }
 
+        public void SetMyFavorite(bool isFav)
+        {
+            if(isFav != isMyFavorite) StartGetPlayListThread();
+            isMyFavorite = isFav;
+            LastPageButton.Visibility = isFav ? Visibility.Collapsed : Visibility.Visible;
+            NextPageButton.Visibility = isFav ? Visibility.Collapsed : Visibility.Visible;
+        }
+
         private void StartGetPlayListThread()
         {
-                Thread thread = new Thread(new ThreadStart(() => GetPlayList(Offset, PageType)));
-                thread.IsBackground = true;
-                thread.Start();
+            if (string.IsNullOrWhiteSpace(NetMusicHelper.NetEasyCsrfToken))
+            {
+                LoginWindow loginWindow = new LoginWindow();
+                loginWindow.Owner = ParentWindow;
+                loginWindow.ShowDialog();
+            }
+            Thread thread = new Thread(new ThreadStart(() => GetPlayList(Offset, PageType)));
+            thread.IsBackground = true;
+            thread.Start();
         }
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
@@ -53,7 +69,7 @@ namespace MusicCollection.Pages
             XiaMiMusicButton.Visibility = Visibility.Visible;
             CloudMusicButtonHelper.Visibility = Visibility.Visible;
             QQMusicButtonHelper.Visibility = Visibility.Hidden;
-            XiaMiMusicButtonHelper.Visibility = Visibility.Hidden;
+            MiguMusicButtonHelper.Visibility = Visibility.Hidden;
             PageType = NetMusicType.CloudMusic;
             Offset = 0;SearchPageCount = 0;
             StartGetPlayListThread();
@@ -70,13 +86,13 @@ namespace MusicCollection.Pages
             XiaMiMusicButton.Visibility = Visibility.Visible;
             CloudMusicButtonHelper.Visibility = Visibility.Hidden;
             QQMusicButtonHelper.Visibility = Visibility.Visible;
-            XiaMiMusicButtonHelper.Visibility = Visibility.Hidden;
+            MiguMusicButtonHelper.Visibility = Visibility.Hidden;
             PageType = NetMusicType.QQMusic;
             Offset = 0; SearchPageCount = 0;
             StartGetPlayListThread();
         }
 
-        private void XiaMiMusicButton_Click(object sender, RoutedEventArgs e)
+        private void MiguMusicButton_Click(object sender, RoutedEventArgs e)
         {
             if (CloseDataGridButton.Visibility == Visibility.Visible)
             {
@@ -87,8 +103,8 @@ namespace MusicCollection.Pages
             XiaMiMusicButton.Visibility = Visibility.Hidden;
             CloudMusicButtonHelper.Visibility = Visibility.Hidden;
             QQMusicButtonHelper.Visibility = Visibility.Hidden;
-            XiaMiMusicButtonHelper.Visibility = Visibility.Visible;
-            PageType = NetMusicType.XiaMiMusic;
+            MiguMusicButtonHelper.Visibility = Visibility.Visible;
+            PageType = NetMusicType.MiguMusic;
             Offset = 0; SearchPageCount = 0;
             StartGetPlayListThread();
         }
@@ -120,14 +136,18 @@ namespace MusicCollection.Pages
             {
                 LodingImage.Visibility = Visibility.Visible;
             }));
-            var list = NetMusicHelper.GetPlayList(Offset, PageType, out count);
-            DataTable pic = new DataTable();
-            pic.Columns.Add("Name");
-            pic.Columns.Add("ImgUrl");
-            pic.Columns.Add("Url");
-            foreach (var item in list)
+            List<Playlist> list;
+            if (isMyFavorite)
             {
-                pic.Rows.Add(item.Name, item.ImgUrl, item.Url);
+                list = NetMusicHelper.GetMyFavoritePlayList(PageType);
+                if(list.Count > 0)
+                {
+                    list.Insert(0, new Playlist(Playlist.MyDailyRecommand, Playlist.MyDailyRecommand, Playlist.MyDailyRecommand));
+                }
+            }
+            else
+            {
+                list = NetMusicHelper.GetPlayList(Offset, PageType, out count);
             }
             Dispatcher.Invoke(new Action(() =>
             {
@@ -152,7 +172,7 @@ namespace MusicCollection.Pages
                     NextPageButton.IsEnabled = true;
                 }
                 SearchPageCount = count;
-                PlayListDisplay.ItemsSource = pic.DefaultView;
+                PlayListDisplay.ItemsSource = list;
                 LodingImage.Visibility = Visibility.Hidden;
             }));
         }
@@ -160,9 +180,9 @@ namespace MusicCollection.Pages
         private void PlayListButton_Click(object sender, RoutedEventArgs e)
         {
             Button btn = sender as Button;
-            DataRowView row = btn.Tag as DataRowView;
+            var row = btn.Tag as Playlist;
             AddToMyPlayListButton.Tag = btn.DataContext;
-            Thread thread = new Thread(new ThreadStart(() => GetPlayListItems(row.Row.ItemArray[2] as string, PageType)));
+            Thread thread = new Thread(new ThreadStart(() => GetPlayListItems(row.Url, PageType)));
             thread.IsBackground = true;
             thread.Start();
         }
@@ -173,7 +193,23 @@ namespace MusicCollection.Pages
             {
                 LodingImage.Visibility = Visibility.Visible;
             }));
-            var list = NetMusicHelper.GetPlayListItems(url, PageType);
+            List<NetMusic> list = null;
+            if(pageType == NetMusicType.CloudMusic && url == Playlist.MyDailyRecommand)
+            {
+                list = NetMusicHelper.GetMyRecommendSongsFromCloudMusic();
+            }
+            else if(pageType == NetMusicType.MiguMusic && url == Playlist.MyDailyRecommand)
+            {
+                list = NetMusicHelper.GetMyRecommendSongsFromMiguMusic();
+            }
+            else if(pageType == NetMusicType.QQMusic && url == Playlist.MyDailyRecommand)
+            {
+                list = NetMusicHelper.GetMyRecommendSongsFromQQMusic();
+            }
+            else
+            {
+                list = NetMusicHelper.GetPlayListItems(url, PageType);
+            }
             Dispatcher.Invoke(new Action(() =>
             {
                 ButtonGroup.Visibility = Visibility.Hidden;
@@ -183,6 +219,7 @@ namespace MusicCollection.Pages
                 PlayAllLocalButton.Visibility = Visibility.Visible;
                 AllAddToCurrentListButton.Visibility = Visibility.Visible;
                 AddToMyPlayListButton.Visibility = Visibility.Visible;
+                AllDownloadButton.Visibility = Visibility.Visible;
                 PlayListDisplay.Visibility = Visibility.Hidden;
                 LastPageButton.Visibility = Visibility.Hidden;
                 NextPageButton.Visibility = Visibility.Hidden;
@@ -272,10 +309,40 @@ namespace MusicCollection.Pages
             }
         }
 
+        private void AllDownloadButton_Click(object sender, RoutedEventArgs e)
+        {
+            var nlist = NetMusicDataGrid.DataContext as List<NetMusic>;
+            foreach (var item in nlist)
+            {
+                ParentWindow.DownLoadMusic.DownLoadingList.Add(item);
+            }
+        }
+
         private void AddToMyPlayListButton_Click(object sender, RoutedEventArgs e)
         {
-            DataRowView row = AddToMyPlayListButton.Tag as DataRowView;
-            if (ParentWindow.PlayListCollection.Where(m => m.Name == row.Row.ItemArray[0] as string).Count() > 0)
+            string name = string.Empty;
+            string imgurl = string.Empty;
+            if(AddToMyPlayListButton.Tag is DataRowView)
+            {
+                DataRowView row = AddToMyPlayListButton.Tag as DataRowView;
+                if (ParentWindow.PlayListCollection.Where(m => m.Name == row.Row.ItemArray[0] as string).Count() > 0)
+                {
+                    return;
+                }
+                name = row.Row.ItemArray[0] as string;
+                imgurl = row.Row.ItemArray[1] as string;
+            }
+            else if(AddToMyPlayListButton.Tag is Playlist)
+            {
+                Playlist row = AddToMyPlayListButton.Tag as Playlist;
+                if (ParentWindow.PlayListCollection.Where(m => m.Name == row.Name).Count() > 0)
+                {
+                    return;
+                }
+                name = row.Name;
+                imgurl = row.ImgUrl;
+            }
+            else
             {
                 return;
             }
@@ -285,7 +352,7 @@ namespace MusicCollection.Pages
             {
                 mlist.Add(new Music(item));
             }
-            ParentWindow.PlayListCollection.Add(new PlayListCollectionModel(row.Row.ItemArray[0] as string, row.Row.ItemArray[1] as string, mlist));
+            ParentWindow.PlayListCollection.Add(new PlayListCollectionModel(name, imgurl, mlist));
         }
 
         private void CloseDataGridButton_Click(object sender, RoutedEventArgs e)
@@ -296,6 +363,7 @@ namespace MusicCollection.Pages
             PlayAllLocalButton.Visibility = Visibility.Hidden;
             AllAddToCurrentListButton.Visibility = Visibility.Hidden;
             AddToMyPlayListButton.Visibility = Visibility.Hidden;
+            AllDownloadButton.Visibility = Visibility.Hidden;
             PlayListDisplay.Visibility = Visibility.Visible;
             LastPageButton.Visibility = Visibility.Visible;
             NextPageButton.Visibility = Visibility.Visible;

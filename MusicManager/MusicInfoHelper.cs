@@ -1,4 +1,5 @@
-﻿using Shell32;
+﻿using MusicCollection.Setting;
+using Shell32;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -38,7 +39,7 @@ namespace MusicCollection.MusicManager
             }
 
             var virtualLrc = Path.GetDirectoryName(path) + "\\" + Path.GetFileNameWithoutExtension(path) + ".lrc";
-            var virtualLrc2 = "DownLoad\\Lyric\\" + Path.GetFileNameWithoutExtension(path) + ".lrc";
+            var virtualLrc2 = Path.Combine(EnvironmentSingle.DownloadLyricPath, Path.GetFileNameWithoutExtension(path) + ".lrc");
             if (File.Exists(virtualLrc))
             {
                 Info.Add(MusicInfos.LyricUrl, virtualLrc);
@@ -53,15 +54,12 @@ namespace MusicCollection.MusicManager
             }
             return Info;
         }
+
         private static string GetImage(string path)
         {
             var mp3 = path;
-            path = path.GetHashCode().ToString();
-            if (!Directory.Exists("AlbumImage\\"))//如果不存在就创建文件夹
-            {
-                Directory.CreateDirectory("AlbumImage\\");
-            }
-            var url = "AlbumImage\\" + path;
+            path = Utils.Md5Func(path);
+            var url = Path.Combine(EnvironmentSingle.AlbumImagePath, path);
             if (!File.Exists(url))
             {
                 try
@@ -82,12 +80,13 @@ namespace MusicCollection.MusicManager
                 {
                     return "";
                 }              
-            }            
-            return System.Windows.Forms.Application.StartupPath + "\\" + url; ;
+            }
+            return url;
         }
+
         private static string ReadMp3(string path)
         {
-            var url = "AlbumImage\\" + path.GetHashCode().ToString();
+            var url = Path.Combine(EnvironmentSingle.AlbumImagePath, Utils.Md5Func(path));
             if (File.Exists(url))
             {
                 return System.Windows.Forms.Application.StartupPath + "\\" + url;
@@ -158,12 +157,8 @@ namespace MusicCollection.MusicManager
 
                     MemoryStream ms = new MemoryStream(imge);
                     Image img = Image.FromStream(ms, true);
-                    if (Directory.Exists("AlbumImage\\") == false)//如果不存在就创建文件夹
-                    {
-                        Directory.CreateDirectory("AlbumImage\\");
-                    }
-                    path = path.GetHashCode().ToString();
-                    var url = "AlbumImage\\" + path;
+                    path = Utils.Md5Func(path);
+                    var url = Path.Combine(EnvironmentSingle.AlbumImagePath, path);
                     FileStream save = new FileStream(url, FileMode.Create);
                     img.Save(save, System.Drawing.Imaging.ImageFormat.Png);
                     save.Close();

@@ -5,7 +5,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:MusicCollection.Pages"
       mc:Ignorable="d" SizeChanged="Page_SizeChanged"
-      d:DesignHeight="570" d:DesignWidth="1022" Loaded="Page_Loaded"
+      d:DesignHeight="670" d:DesignWidth="1038" Loaded="Page_Loaded"
       Title="MusicDetailPage">
     <Page.Resources>
         <ResourceDictionary>
@@ -15,42 +15,86 @@
         </ResourceDictionary>
     </Page.Resources>
     <Grid>
-        <Button x:Name="HiddenButton" Style="{StaticResource AllHarfCircularButton}" Click="HiddenButton_Click" Foreground="#FF333333" HorizontalAlignment="Right" Margin="0,37,40,0" VerticalAlignment="Top" Width="40" Background="White" Height="25" BorderBrush="#FFE1E1E2">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+        <!--<Border Name="PlayBackImageBorder" Grid.ColumnSpan="2" CornerRadius="10,10,10,10" Opacity="0.6">
+            <Grid>
+                <Border	Name="myBorder" CornerRadius="10,10,10,10"/>
+                <Image Name="PlayBackImage" Source="{Binding}" Stretch="UniformToFill" VerticalAlignment="Center">
+                    <Image.OpacityMask>
+                        <VisualBrush Visual="{Binding ElementName=myBorder}"/>
+                    </Image.OpacityMask>
+                </Image>
+            </Grid>
+        </Border>-->
+        <Border Name="PlayBackImageBorder" Background="#FAFAFA" Padding="0" Margin="0" Grid.ColumnSpan="2" CornerRadius="10">
+            <Image Name="PlayBackImage" Source="{Binding}" Opacity="0.6" Stretch="UniformToFill" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <Image.Clip>
+                    <RectangleGeometry  x:Name="PlayBackImageRG"
+					RadiusX="{Binding ElementName=PlayBackImageBorder,Path=CornerRadius.TopLeft}" 
+					RadiusY="{Binding ElementName=PlayBackImageBorder,Path=CornerRadius.TopLeft}"/>
+                </Image.Clip>
+            </Image>
+        </Border>
+        <!--<Image Name="PlayBackImage" Grid.ColumnSpan="2" Source="{Binding}" Stretch="UniformToFill" VerticalAlignment="Center" Opacity="0.6" OpacityMask="White">
+            <Image.Clip>
+                <RectangleGeometry x:Name="PlayBackImageRG"
+					RadiusX="{Binding ElementName=border,Path=CornerRadius.TopLeft}" 
+					RadiusY="{Binding ElementName=border,Path=CornerRadius.TopLeft}" 
+					Rect="0,0,294,294" />
+            </Image.Clip>
+        </Image>-->
+        <Button x:Name="HiddenButton" Grid.ColumnSpan="2" Style="{StaticResource AllHarfCircularButton}" Click="HiddenButton_Click" 
+                Foreground="#FF333333" HorizontalAlignment="Right" Margin="0,50,40,0" VerticalAlignment="Top" Width="40" Background="#66FFFFFF" Height="25" BorderBrush="#66E1E1E2">
             <Image Name="PlayImage" Width="25" Height="20" Source="..\Resources\images\page_hidden.png"/>
         </Button>
-
-        <ScrollViewer Name="LyricBlock" VerticalScrollBarVisibility="Hidden"  Margin="517,105,62,56">
-            <TextBlock x:Name="LyricTextBlock" Padding="80,0" TextWrapping="Wrap"/>
+        <Label x:Name="LyricTitle" Grid.Column="1" Margin="10,80,50,100" Height="55" FontSize="20" VerticalAlignment="Top" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"></Label>
+        <ScrollViewer Grid.Column="1" Name="LyricBlock" VerticalScrollBarVisibility="Hidden"  Margin="10,135,50,100">
+            <TextBlock x:Name="LyricTextBlock" Padding="80,0" TextWrapping="Wrap" LineHeight="30" TextAlignment="Center"/>
         </ScrollViewer>
-        <Ellipse Margin="231,266,0,0" RenderTransformOrigin="0.5,0.5"  Name="Image" HorizontalAlignment="Left" Width="115" Height="115" VerticalAlignment="Top">
-            <Ellipse.Fill>
-                <ImageBrush>
-                    <ImageBrush.ImageSource>
-                        <DrawingImage>
-                            <DrawingImage.Drawing>
-                                <ImageDrawing x:Name="AlbumImage" ImageSource="{Binding}" Rect="100,200,110,100"></ImageDrawing>
-                            </DrawingImage.Drawing>
-                        </DrawingImage>
-                    </ImageBrush.ImageSource>
-                </ImageBrush>
-            </Ellipse.Fill>
-            <Ellipse.RenderTransform>
-                <RotateTransform x:Name="AlbumLogoAnimation" Angle="0"/>
-                
-            </Ellipse.RenderTransform>
-            <!--<Ellipse.Triggers>
-                <EventTrigger RoutedEvent="Loaded">
-                    <BeginStoryboard Name="AlbumLogoStoryboard">
-                        <Storyboard>
-                            <DoubleAnimation From="0" To="360" RepeatBehavior="Forever" Duration="0:0:8"
-                                             Storyboard.TargetName="AlbumLogoAnimation"
-                                             Storyboard.TargetProperty="Angle"/>
-                        </Storyboard>
-                    </BeginStoryboard>
-                </EventTrigger>
-            </Ellipse.Triggers>-->
-        </Ellipse>
-
-        <Image Name="ImageBack" HorizontalAlignment="Left" VerticalAlignment="Bottom" Source="..\Resources\images\disc.png" Margin="60,86,505,56"/>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="4*"/>
+                <RowDefinition Height="100"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="60"/>
+                <ColumnDefinition />
+                <ColumnDefinition Width="10"/>
+            </Grid.ColumnDefinitions>
+            <Grid Margin="0" Grid.Column="1" Grid.Row="1" RenderTransformOrigin="0.5,0.5">
+                <Grid.RenderTransform>
+                    <RotateTransform x:Name="AlbumLogoAnimation" Angle="0"/>
+                </Grid.RenderTransform>
+                <Ellipse Margin="0" VerticalAlignment="Center" HorizontalAlignment="Center" RenderTransformOrigin="0.5,0.5" Name="ImageCircleBorder" Width="160" Height="160" Fill="White" Opacity="0.3"/>
+                <Ellipse Margin="0" VerticalAlignment="Center" HorizontalAlignment="Center" RenderTransformOrigin="0.5,0.5" Name="ImageCircleBlackBorder" Width="155" Height="155" Fill="Black"/>
+                <Image Name="ImageBack" Source="..\Resources\images\disc.png" Margin="10" Stretch="Uniform"/>
+                <Ellipse VerticalAlignment="Center" HorizontalAlignment="Center" RenderTransformOrigin="0.5,0.5" Name="ImageCircle" Width="160" Height="160" SnapsToDevicePixels="True">
+                    <Ellipse.Fill>
+                        <ImageBrush x:Name="AlbumImage" ImageSource="{Binding}" Stretch="UniformToFill"/>
+                    </Ellipse.Fill>
+                    <!--<Ellipse.Triggers>
+                        <EventTrigger RoutedEvent="Loaded">
+                            <BeginStoryboard>
+                                <Storyboard x:Name="AlbumLogoStoryboard" Timeline.DesiredFrameRate="20">
+                                    <DoubleAnimation x:Name="AlbumLogoDoubleAnimation" From="0" To="360" RepeatBehavior="Forever" Duration="0:0:20"
+                                                     Storyboard.TargetName="AlbumLogoAnimation"
+                                                     Storyboard.TargetProperty="Angle"/>
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                    </Ellipse.Triggers>-->
+                </Ellipse>
+            </Grid>
+            <Image Name="ImagePlayNeedle" Margin="0" Grid.Column="1" Grid.Row="1" Source="..\Resources\images\play_needle.png" Stretch="Uniform" VerticalAlignment="Center"
+                       RenderTransformOrigin="0.5, 0.5" Cursor="Hand" MouseLeftButtonUp="ImagePlayNeedle_MouseLeftButtonUp" HorizontalAlignment="Center" Opacity="0.8">
+                    <Image.RenderTransform>
+                        <RotateTransform Angle="-40" />
+                    </Image.RenderTransform>
+                </Image>
+        </Grid>
     </Grid>
 </Page>

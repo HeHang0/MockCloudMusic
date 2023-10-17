@@ -56,7 +56,7 @@
             <DataGrid.Columns>
                 <DataGridCheckBoxColumn Header="选择" Width="50" IsReadOnly="True" Binding="{Binding IsChecked, Mode=TwoWay}">
                 </DataGridCheckBoxColumn>
-                <DataGridTextColumn Header="路径" IsReadOnly="True" Width="1*" Binding="{Binding Path, Mode=TwoWay}">
+                <DataGridTextColumn Header="路径" IsReadOnly="True" Width="1*" Binding="{Binding PathText, Mode=OneWay}">
                 </DataGridTextColumn>
             </DataGrid.Columns>
         </DataGrid>

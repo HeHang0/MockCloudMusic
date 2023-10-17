@@ -47,6 +47,7 @@ namespace MusicCollection.Pages
                     }
                 }
             }
+            model.ImgUrl = NetMusicHelper.GetImgFromRemote(model.ImgUrl);
             PageModel = model;
             DataContext = PageModel;
         }

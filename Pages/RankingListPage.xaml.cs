@@ -166,10 +166,10 @@ namespace MusicCollection.Pages
         {
             CloudMusicButton.Visibility = Visibility.Hidden;
             QQMusicButton.Visibility = Visibility.Visible;
-            XiaMiMusicButton.Visibility = Visibility.Visible;
+            MiguMusicButton.Visibility = Visibility.Visible;
             CloudMusicButtonHelper.Visibility = Visibility.Visible;
             QQMusicButtonHelper.Visibility = Visibility.Hidden;
-            XiaMiMusicButtonHelper.Visibility = Visibility.Hidden;
+            MiguMusicButtonHelper.Visibility = Visibility.Hidden;
             PageType = NetMusicType.CloudMusic;
             StartGetMusicListThread();
         }
@@ -178,23 +178,23 @@ namespace MusicCollection.Pages
         {
             CloudMusicButton.Visibility = Visibility.Visible;
             QQMusicButton.Visibility = Visibility.Hidden;
-            XiaMiMusicButton.Visibility = Visibility.Visible;
+            MiguMusicButton.Visibility = Visibility.Visible;
             CloudMusicButtonHelper.Visibility = Visibility.Hidden;
             QQMusicButtonHelper.Visibility = Visibility.Visible;
-            XiaMiMusicButtonHelper.Visibility = Visibility.Hidden;
+            MiguMusicButtonHelper.Visibility = Visibility.Hidden;
             PageType = NetMusicType.QQMusic;
             StartGetMusicListThread();
         }
 
-        private void XiaMiMusicButton_Click(object sender, RoutedEventArgs e)
+        private void MiguMusicButton_Click(object sender, RoutedEventArgs e)
         {
             CloudMusicButton.Visibility = Visibility.Visible;
             QQMusicButton.Visibility = Visibility.Visible;
-            XiaMiMusicButton.Visibility = Visibility.Hidden;
+            MiguMusicButton.Visibility = Visibility.Hidden;
             CloudMusicButtonHelper.Visibility = Visibility.Hidden;
             QQMusicButtonHelper.Visibility = Visibility.Hidden;
-            XiaMiMusicButtonHelper.Visibility = Visibility.Visible;
-            PageType = NetMusicType.XiaMiMusic;
+            MiguMusicButtonHelper.Visibility = Visibility.Visible;
+            PageType = NetMusicType.MiguMusic;
             StartGetMusicListThread();
         }
 

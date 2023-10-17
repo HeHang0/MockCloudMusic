@@ -62,11 +62,19 @@ namespace MusicCollection.ChildWondows
             MusicTitle.Content = ParentWindow.Title.Length > 12 ? ParentWindow.Title.Substring(0, 12) + "..." : ParentWindow.Title;
             MusicTitle.ToolTip = ParentWindow.Title;
             Activate();
+            NotifyPalyButton.Visibility = ParentWindow.PlayMusicButton.Visibility;
+            NotifyPauseButton.Visibility = ParentWindow.PauseMusicButton.Visibility;
         }
 
         private void NotifyButton_Click(object sender, RoutedEventArgs e)
         {
             ParentWindow.PlayMusicButton_Click(new object(), new RoutedEventArgs());
+            Hide();
+        }
+
+        private void NotifyLyricButton_Click(object sender, RoutedEventArgs e)
+        {
+            ParentWindow.DesktopLyricButton_Click(new object(), new RoutedEventArgs());
             Hide();
         }
 

@@ -1,5 +1,6 @@
 ﻿using MusicCollection.MusicAPI;
 using MusicCollection.MusicManager;
+using MusicCollection.Setting;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -20,7 +21,7 @@ namespace MusicCollection.Pages
     {
         private MusicObservableCollection<Music> DownLoadedList;
         public NetMusicObservableCollection<NetMusic> DownLoadingList;
-        private static string DownLoadDirectory = "DownLoad\\Music\\";
+        private static string DownLoadDirectory = EnvironmentSingle.DownloadMusicPath;
         private DispatcherTimer timer = new DispatcherTimer();
         private MainWindow ParentWindow;
         public DownLoadMusicPage(MainWindow parentWindow)
@@ -32,10 +33,10 @@ namespace MusicCollection.Pages
 
         private void Init()
         {
-            var DownLoadedListStr = File.ReadAllText("Data\\DownLoadedList.json");
+            var DownLoadedListStr = File.ReadAllText(EnvironmentSingle.ConfigDownLoadedList);
             DownLoadedList = Newtonsoft.Json.JsonConvert.DeserializeObject<MusicObservableCollection<Music>>(DownLoadedListStr);
 
-            var DownLoadingListStr = File.ReadAllText("Data\\DownLoadingList.json");
+            var DownLoadingListStr = File.ReadAllText(EnvironmentSingle.ConfigDownLoadingList);
             DownLoadingList = Newtonsoft.Json.JsonConvert.DeserializeObject<NetMusicObservableCollection<NetMusic>>(DownLoadingListStr);
             DownLoadedMusicDataGrid.DataContext = DownLoadedList;
             DownLoadingMusicDataGrid.DataContext = DownLoadingList;
@@ -57,10 +58,14 @@ namespace MusicCollection.Pages
         {
             if (!netMusic.IsDownLoading && !netMusic.IsDownLoaded)
             {
-                netMusic.IsDownLoading = true;;
+                netMusic.IsDownLoading = true;
                 Thread thread = new Thread(new ThreadStart(() => DownLoadMusic(netMusic)));
                 thread.IsBackground = true;
                 thread.Start();
+            }
+            if (netMusic.IsDownLoaded)
+            {
+                DownLoadingList.Remove(netMusic);
             }
         }
         private void DownLoadMusic(NetMusic netMusic)
@@ -133,7 +138,7 @@ namespace MusicCollection.Pages
         }
         private void DownLoadDirectoryLable_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (System.IO.Directory.Exists(DownLoadDirectory))
+            if (Directory.Exists(DownLoadDirectory))
             {
                 System.Diagnostics.Process.Start(DownLoadDirectory);
             }
@@ -186,8 +191,8 @@ namespace MusicCollection.Pages
         }
         public void DownLoadMusicPage_Closing()
         {
-            File.WriteAllText("Data\\DownLoadedList.json", Newtonsoft.Json.JsonConvert.SerializeObject(DownLoadedList));
-            File.WriteAllText("Data\\DownLoadingList.json", Newtonsoft.Json.JsonConvert.SerializeObject(DownLoadingList));
+            File.WriteAllText(EnvironmentSingle.ConfigDownLoadedList, Newtonsoft.Json.JsonConvert.SerializeObject(DownLoadedList));
+            File.WriteAllText(EnvironmentSingle.ConfigDownLoadingList, Newtonsoft.Json.JsonConvert.SerializeObject(DownLoadingList));
         }
     }
 }

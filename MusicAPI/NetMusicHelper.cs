@@ -1,13 +1,16 @@
 ﻿using HtmlAgilityPack;
 using MusicCollection.MusicManager;
+using MusicCollection.Setting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using OpenCvSharp.ML;
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Reflection;
@@ -15,16 +18,22 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Windows;
 
 namespace MusicCollection.MusicAPI
 {
     class NetMusicHelper
     {
+        public static string NetEasyCsrfToken = "";
+        public static string NetEasyMusicU = "";
+        public static string QQMusicU = "";
+        public static string MiguMusicU = "";
+
         private static readonly Dictionary<NetMusicType, string> SearchAPI = new Dictionary<NetMusicType, string>()
         {
-            { NetMusicType.CloudMusic, "http://music.163.com/api/search/pc?s={0}&offset={1}&limit=30&type=1" },
+            { NetMusicType.CloudMusic, "https://interface.music.163.com/weapi/search/get" },
             { NetMusicType.QQMusic, "http://i.y.qq.com/s.music/fcgi-bin/search_for_qq_cp?g_tk=938407465&uin=0&format=jsonp&inCharset=utf-8&outCharset=utf-8&notice=0&platform=h5&needNewCode=1&w={0}&zhidaqu=1&catZhida=1&t=0&flag=1&ie=utf-8&sem=1&aggr=0&perpage=30&n=30&p={1}&remoteplace=txt.mqq.all&_=1459991037831" },
-            { NetMusicType.XiaMiMusic, "http://api.xiami.com/web?v=2.0&app_key=1&key={0}&page={1}&limit=30&r=search/songs" }
+            { NetMusicType.MiguMusic, "https://m.music.migu.cn/migumusic/h5/search/all?text={0}&pageNo={1}&pageSize=30" }
         };
 
         private static readonly Dictionary<NetMusicType, string> LyricAPI = new Dictionary<NetMusicType, string>()
@@ -36,7 +45,7 @@ namespace MusicCollection.MusicAPI
         private static readonly Dictionary<NetMusicType, string> DownloadLinkAPI = new Dictionary<NetMusicType, string>()
         {
             { NetMusicType.CloudMusic, "http://link.hhtjim.com/163/{0}.mp3" },
-            { NetMusicType.XiaMiMusic, "https://music-api-jwzcyzizya.now.sh/api/search/song/xiami?&limit=1&page=1&key={0}-{1}-{2}/" }
+            { NetMusicType.MiguMusic, "https://music-api-jwzcyzizya.now.sh/api/search/song/xiami?&limit=1&page=1&key={0}-{1}-{2}/" }
         };
 
         private static readonly Dictionary<NetMusicType, string> PlayListHotAPI = new Dictionary<NetMusicType, string>()
@@ -44,18 +53,15 @@ namespace MusicCollection.MusicAPI
             { NetMusicType.CloudMusic, "http://music.163.com/discover/playlist/?order=hot&limit=35&offset={0}" },
             { NetMusicType.QQMusic, "https://c.y.qq.com/splcloud/fcgi-bin/fcg_get_diss_by_tag.fcg?rnd=0.4781484879517406&g_tk=732560869&loginUin=0&hostUin=0&format=jsonp&inCharset=utf8&outCharset=utf-8&notice=0&platform=yqq&needNewCode=0&categoryId=10000000&sortId=5&sin={0}&ein={1}" },
             //{ NetMusicType.XiaMiMusic, "http://www.xiami.com/collect/recommend/page/{0}" }
-            { NetMusicType.XiaMiMusic, "https://www.xiami.com/api/list/collect?_q={{\"pagingVO\":{{\"page\":{0},\"pageSize\":30}},\"dataType\":\"system\"}}&_s={1}" }
+            { NetMusicType.MiguMusic, "https://app.c.nf.migu.cn/MIGUM2.0/v1.0/template/musiclistplaza-listbytag/release?pageNumber={0}&tagId=1003449976" }
         };
         private static readonly Dictionary<NetMusicType, string> PlayListDetailAPI = new Dictionary<NetMusicType, string>()
         {
             { NetMusicType.CloudMusic, "https://music.163.com/weapi/v3/playlist/detail" },
             { NetMusicType.QQMusic, "https://i.y.qq.com/qzone-music/fcg-bin/fcg_ucc_getcdinfo_byids_cp.fcg?type=1&json=1&utf8=1&onlysong=0&nosign=1&disstid={0}&g_tk=5381&loginUin=0&hostUin=0&format=jsonp&inCharset=GB2312&outCharset=utf-8&notice=0&platform=yqq&needNewCode=0" },
             //{ NetMusicType.XiaMiMusic, "http://api.xiami.com/web?v=2.0&app_key=1&id={0}&r=collect/detail" }
-            { NetMusicType.XiaMiMusic, "https://www.xiami.com/api/collect/initialize?_q=%7B%22listId%22:{0}%7D&_s={1}" }
+            { NetMusicType.MiguMusic, "https://m.music.migu.cn/migumusic/h5/playlist/songsInfo?pageNo=1&pageSize=500&palylistId=" }
         };
-        private static string XMToken = "";
-        private static string XMTokenPre = "";
-        private static string XMTokenSig = "";
         private static string ThisWeek = Math.Abs(GetWeekOfYear(DateTime.Now) - 2).ToString().PadLeft(2);
         private static Dictionary<NetMusicType, Dictionary<RankingListType,string>> RankinListAPI = new Dictionary<NetMusicType, Dictionary<RankingListType, string>>()
         {
@@ -72,21 +78,18 @@ namespace MusicCollection.MusicAPI
                 NetMusicType.QQMusic,
                 new Dictionary<RankingListType, string>()
                 {
-                    { RankingListType.HotList, $"https://c.y.qq.com/v8/fcg-bin/fcg_v8_toplist_cp.fcg?tpl=3&page=detail&date={DateTime.Now.Year}_{ThisWeek}&topid=26&type=top&song_begin=0&song_num=100&g_tk=5381&loginUin=0&hostUin=0&format=jsonp&inCharset=utf8&outCharset=utf-8&notice=0&platform=yqq&needNewCode=0" },
+                    { RankingListType.HotList, $"https://c.y.qq.com/v8/fcg-bin/fcg_v8_toplist_cp.fcg?tpl=3&page=detail&date={DateTime.Now.AddDays(DateTime.Now.Hour < 10 ? -2 : -1).ToString("yyyy-MM-dd")}&topid=26&type=top&song_begin=0&song_num=100&g_tk=5381&loginUin=0&hostUin=0&format=jsonp&inCharset=utf8&outCharset=utf-8&notice=0&platform=yqq&needNewCode=0" },
                     { RankingListType.NewSongList, $"https://c.y.qq.com/v8/fcg-bin/fcg_v8_toplist_cp.fcg?tpl=3&page=detail&date={DateTime.Now.AddDays(DateTime.Now.Hour < 10 ? -2 : -1).ToString("yyyy-MM-dd")}&topid=27&type=top&song_begin=0&song_num=100&g_tk=5381&loginUin=0&hostUin=0&format=jsonp&inCharset=utf8&outCharset=utf-8&notice=0&platform=yqq&needNewCode=0" },
                     { RankingListType.SoarList, $"https://c.y.qq.com/v8/fcg-bin/fcg_v8_toplist_cp.fcg?tpl=3&page=detail&date={DateTime.Now.AddDays(DateTime.Now.Hour < 10 ? -2 : -1).ToString("yyyy-MM-dd")}&topid=4&type=top&song_begin=0&song_num=100&g_tk=5381&loginUin=0&hostUin=0&format=jsonp&inCharset=utf8&outCharset=utf-8&notice=0&platform=yqq&needNewCode=0" }
                 }
             },
             {
-                NetMusicType.XiaMiMusic,
+                NetMusicType.MiguMusic,
                 new Dictionary<RankingListType, string>()
                 {
-                    //{ RankingListType.HotList, "http://api.xiami.com/web?v=2.0&app_key=1&id=101&page=1&limit=100&r=rank/song-list" },
-                    //{ RankingListType.NewSongList, "http://api.xiami.com/web?v=2.0&app_key=1&id=102&page=1&limit=100&r=rank/song-list" },
-                    //{ RankingListType.SoarList, "http://api.xiami.com/web?v=2.0&app_key=1&id=103&page=1&limit=100&r=rank/song-list" }
-                    { RankingListType.HotList, "102" },
-                    { RankingListType.NewSongList, "103" },
-                    { RankingListType.SoarList, "104" }
+                    { RankingListType.HotList, "https://app.c.nf.migu.cn/MIGUM3.0/column/rank/h5/v1.0?columnId=27186466" },
+                    { RankingListType.NewSongList, "https://app.c.nf.migu.cn/MIGUM3.0/column/rank/h5/v1.0?columnId=27553319" },
+                    { RankingListType.SoarList, "https://app.c.nf.migu.cn/MIGUM3.0/column/rank/h5/v1.0?columnId=27553408" }
                 }
             }
         };
@@ -106,8 +109,8 @@ namespace MusicCollection.MusicAPI
                 case NetMusicType.QQMusic:
                     Url = GetUrlFromQQMusic(music);
                     break;
-                case NetMusicType.XiaMiMusic:
-                    Url = GetUrlFromXiaMiMusic(music);
+                case NetMusicType.MiguMusic:
+                    Url = GetUrlFromMiguMusic(music);
                     break;
             }
             if (!string.IsNullOrWhiteSpace(Url) && CheckLink(Url))
@@ -124,12 +127,13 @@ namespace MusicCollection.MusicAPI
         public static bool CheckLink(string url)
         {
             if (string.IsNullOrWhiteSpace(url)) return false;
+            if (url.EndsWith("/404")) return false;
             HttpWebRequest req = null;
             try
             {
                 req = (HttpWebRequest)WebRequest.CreateDefault(new Uri(url));
                 req.Method = "HEAD";  //这是关键        
-                req.Timeout = 5000;
+                req.Timeout = 100;
                 HttpWebResponse res = (HttpWebResponse)req.GetResponse();
                 return true;
             }
@@ -187,21 +191,17 @@ namespace MusicCollection.MusicAPI
             string LyricStr = SendDataByGET(url);
             if (!string.IsNullOrWhiteSpace(LyricStr))
             {
-                string[] LiricLine = LyricStr.Split('\n');
-                for (int i = 0; i < LiricLine.Length; i++)
+                string[] LyricLine = LyricStr.Split('\n');
+                for (int i = 0; i < LyricLine.Length; i++)
                 {
-                    if (LiricLine[i].Contains("[x-trans]"))
+                    if (LyricLine[i].Contains("[x-trans]"))
                     {
-                        var sss = Regex.Match(LiricLine[i-1], "(\\[[\\d|:|.]+\\])").Groups[1].Value;
-                        LiricLine[i] = LiricLine[i].Replace("[x-trans]", Regex.Match(LiricLine[i-1], "(\\[[\\d|:|.]+\\])").Groups[1].Value);
+                        var sss = Regex.Match(LyricLine[i-1], "(\\[[\\d|:|.]+\\])").Groups[1].Value;
+                        LyricLine[i] = LyricLine[i].Replace("[x-trans]", Regex.Match(LyricLine[i-1], "(\\[[\\d|:|.]+\\])").Groups[1].Value);
                     }
                 }
-                if (!Directory.Exists("DownLoad\\Lyric\\"))//如果不存在就创建文件夹
-                {
-                    Directory.CreateDirectory("DownLoad\\Lyric\\");
-                }
-                File.WriteAllLines($"DownLoad\\Lyric\\{music.Title} - {music.Singer}.lrc", LiricLine);
-                LyricPath = "DownLoad\\Lyric\\" + music.Title + " - " + music.Singer + ".lrc";
+                LyricPath = Path.Combine(EnvironmentSingle.DownloadLyricPath, $"{music.Title} - {music.Singer}.lrc");
+                File.WriteAllLines(LyricPath, LyricLine);
                 if (File.Exists(Path.GetFullPath(LyricPath)))
                 {
                     return Path.GetFullPath(LyricPath);
@@ -243,12 +243,8 @@ namespace MusicCollection.MusicAPI
                 var LyricBase64Str = jo["content"].ToString();
                 var LyricBytes = Convert.FromBase64String(LyricBase64Str);
                 LyricStr = Encoding.UTF8.GetString(LyricBytes);
-                if (!Directory.Exists("DownLoad\\Lyric\\"))//如果不存在就创建文件夹
-                {
-                    Directory.CreateDirectory("DownLoad\\Lyric\\");
-                }
-                File.WriteAllText($"DownLoad\\Lyric\\{music.Title} - {music.Singer}.lrc", LyricStr);
-                LyricPath = "DownLoad\\Lyric\\" + music.Title + " - " + music.Singer + ".lrc";
+                LyricPath = Path.Combine(EnvironmentSingle.DownloadLyricPath, $"{music.Title} - {music.Singer}.lrc");
+                File.WriteAllText(LyricPath, LyricStr);
                 if (File.Exists(Path.GetFullPath(LyricPath)))
                 {
                     return Path.GetFullPath(LyricPath);
@@ -279,13 +275,9 @@ namespace MusicCollection.MusicAPI
                 }
                 if (!string.IsNullOrWhiteSpace(LyricStr))
                 {
-                    string[] LiricLine = AnalyzeLyric(LyricStr, music.Origin);
-                    if (!Directory.Exists("DownLoad\\Lyric\\"))//如果不存在就创建文件夹
-                    {
-                        Directory.CreateDirectory("DownLoad\\Lyric\\");
-                    }
-                    File.WriteAllLines($"DownLoad\\Lyric\\{music.Title} - {music.Singer}.lrc", LiricLine);
-                    LyricPath = "DownLoad\\Lyric\\" + music.Title + " - " + music.Singer + ".lrc";
+                    string[] LyricLine = AnalyzeLyric(LyricStr, music.Origin);
+                    LyricPath = Path.Combine(EnvironmentSingle.DownloadLyricPath, $"{music.Title} - {music.Singer}.lrc");
+                    File.WriteAllLines(LyricPath, LyricLine);
                     if (File.Exists(Path.GetFullPath(LyricPath)))
                     {
                         return Path.GetFullPath(LyricPath);
@@ -321,8 +313,8 @@ namespace MusicCollection.MusicAPI
                 JObject jo = (JObject)JsonConvert.DeserializeObject(lyricStr);
                 lyricStr = jo["lyric"].ToString();
                 lyricStr = Encoding.UTF8.GetString(Convert.FromBase64String(lyricStr));
-                var LiricLine = lyricStr.Split('\n');
-                return LiricLine;
+                var LyricLine = lyricStr.Split('\n');
+                return LyricLine;
             }
             catch (Exception)
             {
@@ -336,12 +328,8 @@ namespace MusicCollection.MusicAPI
             {
                 JObject jo = (JObject)JsonConvert.DeserializeObject(lyricStr);
                 lyricStr = jo["lrc"]["lyric"].ToString();
-                if (!Directory.Exists("DownLoad\\Lyric\\"))//如果不存在就创建文件夹
-                {
-                    Directory.CreateDirectory("DownLoad\\Lyric\\");
-                }
-                var LiricLine = lyricStr.Split('\n');
-                return LiricLine;
+                var LyricLine = lyricStr.Split('\n');
+                return LyricLine;
             }
             catch (Exception)
             {
@@ -355,13 +343,26 @@ namespace MusicCollection.MusicAPI
             switch (type)
             {
                 case NetMusicType.CloudMusic:
-                    retString = SendDataByPOST(string.Format(SearchAPI[type], SearchStr, offset * 30));
+                    var param = AesEncrypt("{\"s\":\"" + SearchStr + "\",\"limit\":30,\"offset\":" + offset * 30 + ",\"type\":1,\"strategy\":5,\"queryCorrect\":true}", "0CoJUm6Qyw8W8jud");
+                    //param = AesEncrypt(param, "a8LWv2uAtXjzSfkQ");
+                    param = AesEncrypt(param, "t9Y0m4pdsoMznMlL");
+                    param = System.Web.HttpUtility.UrlEncode(param);
+                    //var encSecKey = "&encSecKey=2d48fd9fb8e58bc9c1f14a7bda1b8e49a3520a67a2300a1f73766caee29f2411c5350bceb15ed196ca963d6a6d0b61f3734f0a0f4a172ad853f16dd06018bc5ca8fb640eaa8decd1cd41f66e166cea7a3023bd63960e656ec97751cfc7ce08d943928e9db9b35400ff3d138bda1ab511a06fbee75585191cabe0e6e63f7350d6";
+                    var encSecKey = "&encSecKey=409afd10f2fa06173df57525287c4a1cdf6fa08bd542c6400da953704eb92dc1ad3c582e82f51a707ebfa0f6a25bcd185139fc1509d40dd97b180ed21641df55e90af4884a0b587bd25256141a9270b1b6f18908c6a626b74167e5a55a796c0f808a2eb12c33e63d34a7c4d358bab1dc661637dd1e888a1268b81a89f6136053";
+                    var paramData = "params=" + param + encSecKey;
+                    retString = CloudSendDataByPost(SearchAPI[type], paramData, false);
                     break;
                 case NetMusicType.QQMusic:
                     retString = SendDataByGET(string.Format(SearchAPI[type], SearchStr, offset + 1));
                     break;
-                case NetMusicType.XiaMiMusic:
-                    retString = SendDataByGET(string.Format(SearchAPI[type], SearchStr, offset + 1));
+                case NetMusicType.MiguMusic:
+                    Dictionary<string, string> headers = new Dictionary<string, string>()
+                    {
+                        { "by","22210ca73bf1af2ec2eace74a96ee356"},
+                        {"Referer", "https://m.music.migu.cn/v4/search" },
+                        {"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36" }
+                    };
+                    retString = SendDataByGET(string.Format(SearchAPI[type], SearchStr, offset + 1), headers);
                     break;
 
             }
@@ -388,11 +389,9 @@ namespace MusicCollection.MusicAPI
                     retStr = SendDataByGET(RankinListAPI[type][listType]);
                     list = GetQQMusicPlayListItemsFromRetStr(retStr, out name, out imgurl, true);
                     break;
-                case NetMusicType.XiaMiMusic:
-                    GetXMToken();
-                    var _p = XMTokenPre + "_xmMain_/api/billboard/getBillboardDetail_{\"billboardId\":\""+ RankinListAPI[type][listType] + "\"}";
-                    retStr = SendDataByGET(string.Format("https://www.xiami.com/api/billboard/getBillboardDetail?_q=%7B%22billboardId%22:%22{0}%22%7D&_s={1}", RankinListAPI[type][listType], GetMD5(_p).ToLower()));
-                    list = GetXiaMiMusicPlayListItemsFromRetStr(retStr);
+                case NetMusicType.MiguMusic:
+                    retStr = SendDataByGET(RankinListAPI[type][listType]);
+                    list = GetMiguMusicTopPlayListItemsFromRetStr(retStr);
                     break;
 
             }
@@ -400,23 +399,32 @@ namespace MusicCollection.MusicAPI
         }
 
 
-        private static List<NetMusic> GetXiaMiMusicPlayListItemsFromRetStr(string retStr)
+        private static List<NetMusic> GetMiguMusicTopPlayListItemsFromRetStr(string retStr)
         {
             var list = new List<NetMusic>();
             try
             {
                 JObject jo = (JObject)JsonConvert.DeserializeObject(retStr);
-                var jt = jo["result"]["data"]["billboard"]["songs"];
+                var jt = jo["data"]["columnInfo"]["contents"];
                 foreach (var item in jt)
                 {
                     var music = new NetMusic();
-                    music.Title = item["songName"].ToString();
-                    music.Album = item["albumName"].ToString();
-                    music.AlbumImageUrl = item["albumLogoS"].ToString();
-                    music.Singer = item["singers"].ToString();
-                    music.MusicID = item["songId"].ToString();
-                    music.Duration = new TimeSpan(0, 0, 0, 0, int.Parse(item["length"].ToString()));
-                    music.Origin = NetMusicType.XiaMiMusic;
+                    var mjs = item["objectInfo"];
+                    music.Title = mjs["songName"].ToString();
+                    music.Album = mjs["album"].ToString();
+                    try
+                    {
+                        music.AlbumImageUrl = mjs["albumImgs"][0]["img"].ToString();
+                    }
+                    catch (Exception)
+                    {
+                    }
+                    music.Singer = mjs["artists"][0]["name"].ToString();
+                    music.MusicID = mjs["copyrightId"].ToString();
+                    music.Remark = mjs["contentId"].ToString();
+                    TimeSpan.TryParse(mjs["length"].ToString(), out TimeSpan duration);
+                    music.Duration = duration;
+                    music.Origin = NetMusicType.MiguMusic;
                     list.Add(music);
                 }
             }
@@ -461,11 +469,8 @@ namespace MusicCollection.MusicAPI
 
 
                 Stream stream = response.GetResponseStream();
-                if (!Directory.Exists("DownLoad\\Music\\"))//如果不存在就创建文件夹
-                {
-                    Directory.CreateDirectory("DownLoad\\Music\\");
-                }
-                var path = "DownLoad\\Music\\" + netMusic.Title + " - " + netMusic.Singer + ".mp3";
+
+                var path = Path.Combine(EnvironmentSingle.DownloadMusicPath, netMusic.Title + " - " + netMusic.Singer + ".mp3");
                 if (File.Exists(Path.GetFullPath(path)))
                 {
                     stream.Close();
@@ -486,19 +491,110 @@ namespace MusicCollection.MusicAPI
             }
         }
 
-        private static string SendDataByPOST(string Url)	//读取string
+        private static Thread imageDownloadThread = null;
+        private static List<string> imageDownloadList = new List<string>();
+        private static object ImageDownloadLock = new object();
+        //Run in Main Thread
+        public static string GetImgFromRemote(string imgUrl)
+        {
+            if (File.Exists(imgUrl)) return imgUrl;
+            string hashPath = Path.Combine(EnvironmentSingle.AlbumImagePath, Utils.Md5Func(imgUrl));
+            lock (ImageDownloadLock)
+            {
+                if (imageDownloadList.Contains(imgUrl)) return imgUrl;
+                else if (File.Exists(hashPath)) return hashPath;
+            }
+            if (imgUrl.StartsWith("http")) return DownloadImage(imgUrl);
+            else return imgUrl;
+        }
+
+        private static string DownloadImage(string imgUrl)
+        {
+            lock (ImageDownloadLock)
+            {
+                if (!imageDownloadList.Contains(imgUrl)) imageDownloadList.Add(imgUrl);
+                if (imageDownloadThread == null || imageDownloadThread.ThreadState == ThreadState.Stopped)
+                {
+                    imageDownloadThread = new Thread(new ThreadStart(() => DownloadImageRemote())) { IsBackground = true };
+                    imageDownloadThread.Start();
+                }
+            }
+            return imgUrl;
+        }
+
+        private static void DownloadImageRemote()
+        {
+            int downloadCount = 0;
+            lock (ImageDownloadLock)
+            {
+                downloadCount = imageDownloadList.Count;
+            }
+            while (downloadCount > 0)
+            {
+                string imgUrl = string.Empty;
+                try
+                {
+                    lock (ImageDownloadLock)
+                    {
+                        imgUrl = imageDownloadList[0];
+                    }
+                    string hashPath = Path.Combine(EnvironmentSingle.AlbumImagePath, Utils.Md5Func(imgUrl));
+                    HttpWebRequest request = (HttpWebRequest)WebRequest.Create(imgUrl);
+                    request.Method = "GET";
+                    request.ContentType = "application/x-www-form-urlencoded";
+                    request.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.71 Safari/537.36";
+                    request.Timeout = 5000;
+                    HttpWebResponse response;
+                    response = (HttpWebResponse)request.GetResponse();
+                    Stream responseStream = response.GetResponseStream();
+                    //创建本地文件写入流
+                    Stream stream = new FileStream(hashPath + ".download", FileMode.Create);
+
+                    byte[] bArr = new byte[1024];
+                    int size = responseStream.Read(bArr, 0, (int)bArr.Length);
+                    while (size > 0)
+                    {
+                        stream.Write(bArr, 0, size);
+                        size = responseStream.Read(bArr, 0, (int)bArr.Length);
+                    }
+                    stream.Close();
+                    responseStream.Close();
+                    File.Move(hashPath + ".download", hashPath);
+                    Utils.CheckImageFileScale(hashPath);
+                }
+                catch (Exception) { }
+                lock (ImageDownloadLock)
+                {
+                    if(imageDownloadList.Count > 0)
+                    {
+                        imageDownloadList.RemoveAt(0);
+                    }
+                    downloadCount = imageDownloadList.Count;
+                }
+            }
+        }
+
+        private static string SendDataByPOST(string Url, byte[] data=null, Dictionary<string, string> headers=null)	//读取string
         {
             try
             {
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(Url);
 
-                request.Referer = "http://music.163.com/";
                 request.Method = "POST";
                 request.ContentType = "text/html;charset=UTF-8";
                 request.Timeout = 5000;
                 request.ReadWriteTimeout = 5000;
                 request.Headers.Add("Cookie", "appver=1.5.0.75771");
-
+                SetHeaders(request, headers);
+                if(string.IsNullOrEmpty(request.Referer)) request.Referer = "http://music.163.com/";
+                if (data != null)
+                {
+                    request.ContentLength = data.Length;
+                    using (var stream = request.GetRequestStream())
+                    {
+                        stream.Write(data, 0, data.Length);
+                    }
+                }
 
                 HttpWebResponse response = (HttpWebResponse)request.GetResponse();
                 Stream myResponseStream = response.GetResponseStream();
@@ -515,22 +611,35 @@ namespace MusicCollection.MusicAPI
             
         }
 
-        private static void GetXMToken()
+        private static void SetHeaders(HttpWebRequest request, Dictionary<string, string> headers = null)
         {
-            HttpWebRequest myHttpWebRequest = (HttpWebRequest)WebRequest.Create("https://www.xiami.com");
-            myHttpWebRequest.CookieContainer = new CookieContainer(); //暂存到新实例</span>  
-            myHttpWebRequest.GetResponse().Close();
-            var cookies = myHttpWebRequest.CookieContainer.GetCookies(myHttpWebRequest.RequestUri);
-            XMToken = cookies["xm_sg_tk"]?.Value ?? "";
-            XMTokenSig = cookies["xm_sg_tk.sig"]?.Value ?? "";
-            var ss = XMToken.Split('_');
-            if(ss.Length > 0)
+            if (headers == null) return;
+            foreach (var item in headers)
             {
-                XMTokenPre = ss[0];
+                if (item.Key.ToLower() == "referer")
+                {
+                    request.Referer = item.Value;
+                }
+                else if (item.Key.ToLower().Replace("-", "") == "useragent")
+                {
+                    request.UserAgent = item.Value;
+                }
+                else if (item.Key.ToLower().Replace("-", "") == "contenttype")
+                {
+                    request.ContentType = item.Value;
+                }
+                else if (item.Key.ToLower() == "accept")
+                {
+                    request.Accept = item.Value;
+                }
+                else
+                {
+                    request.Headers.Set(item.Key, item.Value);
+                }
             }
         }
 
-        private static string SendDataByGET(string Url)	//读取string
+        private static string SendDataByGET(string Url, Dictionary<string, string> headers = null)	//读取string
         {
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(Url);
             if (Url.Contains("i.y.qq.com"))
@@ -543,19 +652,34 @@ namespace MusicCollection.MusicAPI
             }
             request.Method = "GET";
             //request.ContentType = "text/html;charset=UTF-8";
-            request.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.131 Safari/537.36";
-            if (Url.Contains("xiami.com/api"))
+            request.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36";
+            SetHeaders(request, headers);
+            try
             {
-                request.Headers.Add("Cookie", $"xm_sg_tk={XMToken}; xm_sg_tk.sig={XMTokenSig}; ");
+                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                Stream myResponseStream = response.GetResponseStream();
+                string retString = string.Empty;
+                if (response.ContentEncoding?.ToLower() == "gzip")
+                {
+                    Stream gzipStream = new GZipStream(myResponseStream, CompressionMode.Decompress);
+                    StreamReader myStreamReader = new StreamReader(gzipStream, Encoding.GetEncoding("utf-8"));
+                    retString = myStreamReader.ReadToEnd();
+                    myStreamReader.Close();
+                    gzipStream.Close();
+                }
+                else
+                {
+                    StreamReader myStreamReader = new StreamReader(myResponseStream, Encoding.GetEncoding("utf-8"));
+                    retString = myStreamReader.ReadToEnd();
+                    myStreamReader.Close();
+                }
+                myResponseStream.Close();
+                return retString;
             }
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-            Stream myResponseStream = response.GetResponseStream();
-            StreamReader myStreamReader = new StreamReader(myResponseStream, Encoding.GetEncoding("utf-8"));
-            string retString = myStreamReader.ReadToEnd();
-            myStreamReader.Close();
-            myResponseStream.Close();
-
-            return retString;
+            catch (Exception)
+            {
+                return "";
+            }
         }
         private static ObservableCollection<NetMusic> GetNetMusicListBySources(string Sources, NetMusicType type, out int count)
         {
@@ -564,9 +688,9 @@ namespace MusicCollection.MusicAPI
                 case NetMusicType.CloudMusic:
                     return GetCloudMusicList(Sources, out count);
                 case NetMusicType.QQMusic:
-                    return GetQQmusicList(Sources, out count);
-                case NetMusicType.XiaMiMusic:
-                    return GetXiaMimusicList(Sources, out count);
+                    return GetQQMusicList(Sources, out count);
+                case NetMusicType.MiguMusic:
+                    return GetMiguMusicList(Sources, out count);
             }
             count = 0;
             return new ObservableCollection<NetMusic>();
@@ -585,37 +709,36 @@ namespace MusicCollection.MusicAPI
             }
         }
 
-        private static ObservableCollection<NetMusic> GetXiaMimusicList(string JsonStr, out int count)
+        private static ObservableCollection<NetMusic> GetMiguMusicList(string JsonStr, out int count)
         {
             var list = new ObservableCollection<NetMusic>();
-            try
+            JObject jo = (JObject)JsonConvert.DeserializeObject(JsonStr);
+            var jt = jo["data"]["songsData"]["items"];
+            count = int.Parse(jo["data"]["songsData"]["total"].ToString());
+            foreach (var item in jt)
             {
-                JObject jo = (JObject)JsonConvert.DeserializeObject(JsonStr);
-                var jt = jo["data"]["songs"];
-                count = int.Parse(jo["data"]["total"].ToString());
-                foreach (var item in jt)
+                var music = new NetMusic();
+                music.Title = item["name"].ToString();
+                music.Singer = item["singers"][0]["name"].ToString();
+                music.MusicID = item["copyrightId"].ToString();
+                music.Remark = item["fullSong"]["productId"].ToString();
+                music.Origin = NetMusicType.MiguMusic;
+                if(item["album"] != null && item["album"].HasValues)
                 {
-                    var music = new NetMusic();
-                    music.Title = item["song_name"].ToString();
-                    music.Singer = item["artist_name"].ToString();
-                    music.MusicID = item["song_id"].ToString();
-                    music.Album = item["album_name"].ToString();
-                    music.AlbumImageUrl = item["album_logo"].ToString();
-                    music.Origin = NetMusicType.XiaMiMusic;
-                    music.Url = item["listen_file"].ToString();
-                    music.LyricPath = item["lyric"].ToString();
-                    //music.Duration = new TimeSpan(0, 0, 0, 0, int.Parse(item["size128"].ToString()));
-                    list.Add(music);
+                    music.Album = item["album"]["name"].ToString();
                 }
-            }
-            catch (Exception)
-            {
-                count = 0;
+                if(item["largePic"] != null && item["largePic"].HasValues)
+                {
+                    music.AlbumImageUrl = item["largePic"].ToString();
+                }
+                //music.LyricPath = item["lyric"].ToString();
+                //music.Duration = new TimeSpan(0, 0, 0, 0, int.Parse(item["size128"].ToString()));
+                list.Add(music);
             }
             return list;
         }
 
-        private static ObservableCollection<NetMusic> GetQQmusicList(string jsonStr, out int count)
+        private static ObservableCollection<NetMusic> GetQQMusicList(string jsonStr, out int count)
         {
             var list = new ObservableCollection<NetMusic>();
             jsonStr = Regex.Replace(jsonStr, "^[a-zA-Z]{0,10}[C|c]allback\\(", "");
@@ -654,47 +777,44 @@ namespace MusicCollection.MusicAPI
             try
             {
                 JObject jo = (JObject)JsonConvert.DeserializeObject(JsonStr);
-                var jt = jo["result"]["songs"];
+                var jt = jo["result"]["songs"] as JArray;
                 count = int.Parse(jo["result"]["songCount"].ToString());
-                foreach (var item in jt)
+                foreach (JObject item in jt)
                 {
                     var music = new NetMusic();
                     music.Title = item["name"].ToString();
-                    music.Singer = item["artists"][0]["name"].ToString();
+                    if(item["artists"] == null)
+                    {
+                        music.Singer = item["ar"][0]["name"].ToString();
+                        music.Album = item["al"]["name"].ToString();
+                        music.AlbumImageUrl = item["al"]["picUrl"].ToString();//"picUrl": "http://p1.music.126.net/B1ePGczwQUZueJl70TITWQ==/3287539775420245.jpg"
+                        music.Duration = new TimeSpan(0, 0, 0, 0, int.Parse(item["dt"].ToString()));
+                    }
+                    else
+                    {
+                        music.Singer = item["artists"][0]["name"].ToString();
+                        music.Album = item["album"]["name"].ToString();
+                        music.AlbumImageUrl = item["album"]["picUrl"].ToString();//"picUrl": "http://p1.music.126.net/B1ePGczwQUZueJl70TITWQ==/3287539775420245.jpg"
+                        music.Duration = new TimeSpan(0,0,0,0,int.Parse(item["duration"].ToString()));
+                    }
                     music.MusicID = item["id"].ToString();
-                    music.Album = item["album"]["name"].ToString();
-                    music.AlbumImageUrl = item["album"]["picUrl"].ToString();//"picUrl": "http://p1.music.126.net/B1ePGczwQUZueJl70TITWQ==/3287539775420245.jpg"
                     music.Origin = NetMusicType.CloudMusic;
                     music.Url = "";// item["mp3Url"].ToString().Replace("m2.music.126.net", "p2.music.126.net");
-                    music.Duration = new TimeSpan(0,0,0,0,int.Parse(item["duration"].ToString()));
-                    try
+                    if (jo.ContainsKey("hMusic"))
                     {
                         music.Remark = item["hMusic"]["dfsId"].ToString();
                     }
-                    catch (Exception)
+                    else if (jo.ContainsKey("mMusic"))
                     {
-                        try
-                        {
-                            music.Remark = item["mMusic"]["dfsId"].ToString();
-                        }
-                        catch (Exception)
-                        {
-                            try
-                            {
-                                music.Remark = item["lMusic"]["dfsId"].ToString();
-                            }
-                            catch (Exception)
-                            {
-                                try
-                                {
-                                    music.Remark = item["bMusic"]["dfsId"].ToString();
-                                }
-                                catch (Exception)
-                                {
-                                    
-                                }
-                            }
-                        }
+                        music.Remark = item["mMusic"]["dfsId"].ToString();
+                    }
+                    else if (jo.ContainsKey("lMusic"))
+                    {
+                        music.Remark = item["lMusic"]["dfsId"].ToString();
+                    }
+                    else if (jo.ContainsKey("bMusic"))
+                    {
+                        music.Remark = item["bMusic"]["dfsId"].ToString();
                     }
                     list.Add(music);
                 }
@@ -713,17 +833,30 @@ namespace MusicCollection.MusicAPI
             {
                 case NetMusicType.CloudMusic:
                     retStr = SendDataByGET(string.Format(PlayListHotAPI[type], offset*35));
-                    return GetCloudMusicPlayList(retStr, out count);
+                    return GetCloudMusicHtmlPlayList(retStr, out count);
                 case NetMusicType.QQMusic:
                     retStr = SendDataByGET(string.Format(PlayListHotAPI[type], offset*35, offset * 35+34));
                     return GetQQMusicPlayList(retStr, out count);
-                case NetMusicType.XiaMiMusic:
-                    GetXMToken();
-                    var _p = XMTokenPre+"_xmMain_/api/list/collect_{\"pagingVO\":{\"page\":" + (offset + 1) + ",\"pageSize\":30},\"dataType\":\"system\"}";
-                    retStr = SendDataByGET(string.Format(PlayListHotAPI[type], offset +1, GetMD5(_p).ToLower()));
-                    return GetXimaMiMusicPlayListByJson(retStr, out count);
+                case NetMusicType.MiguMusic:
+                    retStr = SendDataByGET(string.Format(PlayListHotAPI[type], offset +1));
+                    return GetMiguMiMusicPlayList(retStr, out count);
             }
             count = 0;
+            return new List<Playlist>();
+        }
+
+        public static List<Playlist> GetMyFavoritePlayList(NetMusicType type)
+        {
+            switch (type)
+            {
+                case NetMusicType.CloudMusic:
+                    string retStr = GetUserPlaylistFromCloudMusic();
+                    return GetCloudMusicJsonPlayList(retStr);
+                case NetMusicType.QQMusic:
+                    return GetUserPlaylistFromQQMusic();
+                case NetMusicType.MiguMusic:
+                    return GetUserPlaylistFromMigu();
+            }
             return new List<Playlist>();
         }
 
@@ -735,22 +868,22 @@ namespace MusicCollection.MusicAPI
             return BitConverter.ToString(output).Replace("-", "");
         }
 
-        private static List<Playlist> GetXimaMiMusicPlayListByJson(string retStr, out int count)
+        private static List<Playlist> GetMiguMiMusicPlayList(string retStr, out int count)
         {
             count = 0;
             List<Playlist> list = new List<Playlist>();
             try
             {
                 JObject jo = (JObject)JsonConvert.DeserializeObject(retStr);
-                var jt = jo["result"]["data"];
-                int.TryParse(jt["pagingVO"]["pages"].ToString(), out count);
-                var collects = jt["collects"];
+                var jt = jo["data"]["contentItemList"];
+                count = 180;
+                var collects = jt["itemList"];
                 foreach (var item in collects)
                 {
                     var model = new Playlist();
-                    model.Name = item["collectName"].ToString();
-                    model.ImgUrl = item["collectLogo"].ToString().Replace("http://", "https://")+ "@0e_0c_0i_1o_100Q_192w.webp";
-                    model.Url = item["listId"].ToString();
+                    model.Name = item["title"].ToString();
+                    model.ImgUrl = item["imageUrl"].ToString().Replace("http://", "https://");
+                    model.Url = item["logEvent"]["contentId"].ToString();
                     list.Add(model);
                 }
             }
@@ -758,42 +891,6 @@ namespace MusicCollection.MusicAPI
             {
             }
 
-            return list;
-        }
-
-        private static List<Playlist> GetXimaMiMusicPlayList(string retStr, out int count)
-        {
-            count = 0;
-            List<Playlist> list = new List<Playlist>();
-            try
-            {
-                HtmlDocument htmlDocument = new HtmlDocument();
-                htmlDocument.LoadHtml(retStr);
-                var collection = htmlDocument.DocumentNode.SelectNodes("//div[@class='block_list clearfix']/ul/li");
-                var Sum = 0;
-                var sumStr = htmlDocument.DocumentNode.SelectSingleNode("//div[@class='all_page']/span").InnerText;
-                sumStr = Regex.Match(sumStr, "共([\\d]+)条").Groups[1].Value;
-                int.TryParse(sumStr, out Sum);
-                count = Sum / 30 + (Sum % 30 == 0 ? 0 : 1);
-                foreach (var item in collection)
-                {
-                    HtmlDocument nodeDocument = new HtmlDocument();
-                    nodeDocument.LoadHtml(item.InnerHtml);
-                    var a = nodeDocument.DocumentNode.SelectSingleNode("//div[@class='block_cover']/a");
-                    string Name = a?.GetAttributeValue("title", "");
-                    string ImgUrl = a.SelectSingleNode("//img").GetAttributeValue("src","");
-                    if (ImgUrl.StartsWith("//"))
-                    {
-                        ImgUrl = "https:" + ImgUrl;
-                    }
-                    string Url = Regex.Match(a?.GetAttributeValue("href", ""), "/collect/([\\d]+)").Groups[1].Value;
-                    list.Add(new Playlist(Name, ImgUrl, Url));
-                }
-            }
-            catch (Exception ex)
-            {
-                var s = ex;
-            }
             return list;
         }
 
@@ -827,7 +924,7 @@ namespace MusicCollection.MusicAPI
             return list;
         }
 
-        private static List<Playlist> GetCloudMusicPlayList(string retStr, out int count)
+        private static List<Playlist> GetCloudMusicHtmlPlayList(string retStr, out int count)
         {
             HtmlDocument htmlDocument = new HtmlDocument();
             htmlDocument.LoadHtml(retStr);
@@ -863,8 +960,8 @@ namespace MusicCollection.MusicAPI
                     return GetCloudMusicPlayListItems(url, out name,out imgurl);
                 case NetMusicType.QQMusic:
                     return GetQQMusicPlayListItems(url, out name, out imgurl);
-                case NetMusicType.XiaMiMusic:
-                    return GetXiaMiMusicPlayListItems(url, out name, out imgurl);
+                case NetMusicType.MiguMusic:
+                    return GetMiguMusicPlayListItems(url, out name, out imgurl);
             }
             return new List<NetMusic>();
         }
@@ -877,41 +974,53 @@ namespace MusicCollection.MusicAPI
                     return GetCloudMusicPlayListItems(url, out name, out imgurl);
                 case NetMusicType.QQMusic:
                     return GetQQMusicPlayListItems(url, out name, out imgurl);
-                case NetMusicType.XiaMiMusic:
-                    return GetXiaMiMusicPlayListItems(url, out name, out imgurl);
+                case NetMusicType.MiguMusic:
+                    return GetMiguMusicPlayListItems(url, out name, out imgurl);
             }
             name = "";imgurl = "";
             return new List<NetMusic>();
         }
 
-        private static List<NetMusic> GetXiaMiMusicPlayListItems(string pid, out string name, out string imgurl)
+        private static List<NetMusic> GetMiguMusicPlayListItems(string pid, out string name, out string imgurl)
         {
             name = ""; imgurl = "";
-            if (Regex.IsMatch(pid, "[a-zA-z]+://[^\\s]*"))
+            var url = PlayListDetailAPI[NetMusicType.MiguMusic]+pid;
+            var headers = new Dictionary<string, string>()
             {
-                pid = Regex.Match(pid, "/([\\d]+)").Groups[1].Value;
-            }
-            var _p = XMTokenPre+"_xmMain_/api/collect/initialize_{\"listId\":" + pid +"}";
-            var url = string.Format(PlayListDetailAPI[NetMusicType.XiaMiMusic], pid, GetMD5(_p).ToLower());
-            var retStr = SendDataByGET(url);
+                {"By", "22210ca73bf1af2ec2eace74a96ee356"},
+                {"Referer", "https://m.music.migu.cn/v4/music/playlist"},
+                {"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36"}
+            };
+            var retStr = SendDataByGET(url, headers);
             var list = new List<NetMusic>();
             try
             {
                 JObject jo = (JObject)JsonConvert.DeserializeObject(retStr);
-                var jt = jo["result"]["data"];
-                var collectDetail = jt["collectDetail"];
-                name = collectDetail["collectName"].ToString();
-                imgurl = collectDetail["collectLogoSmall"].ToString();
-                foreach (var item in jt["collectSongs"])
+                var jt = jo["data"];
+                foreach (var item in jt["items"])
                 {
                     var music = new NetMusic();
-                    music.Title = item["songName"].ToString();
-                    music.Singer = item["singers"].ToString();
-                    music.MusicID = item["songId"].ToString();
-                    music.Album = item["albumName"].ToString();
-                    music.AlbumImageUrl = item["albumLogo"].ToString()+ "@0e_0c_0i_1o_100Q_192w.webp";
-                    music.Origin = NetMusicType.XiaMiMusic;
-                    music.Duration = new TimeSpan(0, 0, 0, 0, int.Parse(item["length"].ToString()));
+                    music.Title = item["name"].ToString();
+                    try
+                    {
+                        music.Album = item["album"]["albumName"].ToString();
+                        music.Singer = item["singers"][0]["name"].ToString();
+                    }
+                    catch (Exception)
+                    {
+                    }
+                    music.MusicID = item["copyrightId"].ToString();
+                    music.Origin = NetMusicType.MiguMusic;
+                    try
+                    {
+                        music.Remark = item["fullSong"]["productId"].ToString();
+                        music.AlbumImageUrl = item["mediumPic"].ToString();
+                        if (music.AlbumImageUrl.StartsWith("//")) music.AlbumImageUrl = "https:" + music.AlbumImageUrl;
+                        music.Duration = TimeSpan.Parse(item["duration"].ToString());
+                    }
+                    catch (Exception)
+                    {
+                    }
                     list.Add(music);
                 }
             }
@@ -961,6 +1070,7 @@ namespace MusicCollection.MusicAPI
                     if (isRl) item = item0["data"];
                     var music = new NetMusic();
                     music.Title = item["songname"].ToString();
+                    music.Remark = item["songid"].ToString();
                     music.Singer = item["singer"][0]["name"].ToString();
                     music.MusicID = item["songmid"].ToString();
                     music.Album = item["albumname"].ToString();
@@ -1017,6 +1127,102 @@ namespace MusicCollection.MusicAPI
             return list;
         }
 
+        private static List<Playlist> GetCloudMusicJsonPlayList(string retStr)
+        {
+            JObject jo = (JObject)JsonConvert.DeserializeObject(retStr);
+            List<Playlist> list = new List<Playlist>();
+            try
+            {
+                var jt = jo["playlist"];
+                foreach (var item in jt)
+                {
+                    string name = item["name"].ToString();
+                    string imgurl = item["coverImgUrl"].ToString();
+                    string url = "https://music.163.com/#/playlist?id=" + item["id"].ToString();
+                    list.Add(new Playlist(name, imgurl, url));
+                }
+            }
+            catch (Exception)
+            {
+            }
+            return list;
+        }
+
+        private static List<Playlist> GetUserPlaylistFromQQMusic()
+        {
+            var url = "https://c.y.qq.com/rsc/fcgi-bin/fcg_get_profile_homepage.fcg?cid=205360838&reqfrom=1";
+            var headers = new Dictionary<string, string>()
+            {
+                {"cookie", QQMusicU},
+            };
+            var resultStr = SendDataByGET(url, headers);
+            List<Playlist> list = new List<Playlist>();
+            try
+            {
+                JObject jo = (JObject)JsonConvert.DeserializeObject(resultStr);
+                var myMusic = jo["data"]["mymusic"];
+                var myDiss = jo["data"]["mydiss"]["list"];
+                foreach (var item in myMusic)
+                {
+                    string name = item["title"].ToString();
+                    string imgurl = item["picurl"].ToString();
+                    string plUrl = item["id"].ToString();
+                    list.Add(new Playlist(name, imgurl, plUrl));
+                }
+                foreach (var item in myDiss)
+                {
+                    string name = item["title"].ToString();
+                    string imgurl = item["picurl"].ToString();
+                    string plUrl = item["dissid"].ToString();
+                    list.Add(new Playlist(name, imgurl, plUrl));
+                }
+            }
+            catch (Exception)
+            {
+            }
+            return list;
+        }
+
+        private static List<Playlist> GetUserPlaylistFromMigu()
+        {
+            var urlMy = "https://m.music.migu.cn/migumusic/h5/playlist/auth/getUserPlaylist";
+            var urlCollection = "https://m.music.migu.cn/migumusic/h5/collection/auth/getCollectedSongLists?pageNo=1&pageSize=30";
+            var headers = new Dictionary<string, string>()
+            {
+                {"by", "22210ca73bf1af2ec2eace74a96ee356"},
+                {"Referer", "https://m.music.migu.cn/v4/my/collect"},
+                {"Cookie", MiguMusicU},
+                {"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36"},
+            };
+            List<string> resultStrs = new List<string>()
+            {
+                SendDataByGET(urlMy, headers), SendDataByGET(urlCollection, headers)
+            };
+            List<Playlist> list = new List<Playlist>();
+            foreach (var retStr in resultStrs)
+            {
+                try
+                {
+                    JObject jo = (JObject)JsonConvert.DeserializeObject(retStr);
+                    var jt = jo["data"] is JArray ? jo["data"] : jo["data"]["items"];
+                    foreach (var item in jt)
+                    {
+                        string name = item["playListName"].ToString();
+                        string imgurl = item["image"].ToString();
+                        if (imgurl.StartsWith("//")) imgurl = "https:" + imgurl;
+                        string plUrl = item["playListId"].ToString();
+                        list.Add(new Playlist(name, imgurl, plUrl));
+                    }
+                }
+                catch (Exception)
+                {
+                }
+            }
+            return list;
+        }
+
+
+
         private static string CloudSendDataByPost(string Url, string paramData, bool IsUrl = true)
         {
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(Url);
@@ -1029,20 +1235,22 @@ namespace MusicCollection.MusicAPI
             //request.ReadWriteTimeout = 5000;
             request.UserAgent = "Mozilla/5.0 (iPad; CPU OS 11_0 like Mac OS X) AppleWebKit/604.1.34 (KHTML, like Gecko) Version/11.0 Mobile/15A5341f Safari/604.1";
 
-            request.Headers.Add("Cookie", "os=ios;");
+            request.Headers.Add("Cookie", $"os=ios;MUSIC_U={NetEasyMusicU}");
+            //request.Headers.Add("Cookie", $"MUSIC_U=f3f3e2c4f16db349c6bce0e815e03298d4cfd233212b6b417f539b0c6faf7bc6993166e004087dd3d78b6050a17a35e705925a4e6992f61dfe3f0151024f9e31;");
             var a = Encoding.UTF8.GetBytes(paramData);
             request.ContentLength = a.Length;
-            using (Stream reqStream = request.GetRequestStream())
-            {
-                reqStream.Write(a, 0, a.Length);
-            }
 
             try
             {
+                using (Stream reqStream = request.GetRequestStream())
+                {
+                    reqStream.Write(a, 0, a.Length);
+                }
                 HttpWebResponse response = (HttpWebResponse)request.GetResponse();
                 Stream myResponseStream = response.GetResponseStream();
                 StreamReader myStreamReader = new StreamReader(myResponseStream, Encoding.GetEncoding("utf-8"));
                 string retString = myStreamReader.ReadToEnd();
+                CheckCloudMusicCookie(response.Headers.GetValues("Set-Cookie"));
                 myStreamReader.Close();
                 myResponseStream.Close();
                 if (IsUrl)
@@ -1064,6 +1272,33 @@ namespace MusicCollection.MusicAPI
 
             return "";
         }
+
+        private static void CheckCloudMusicCookie(string[] cookies)
+        {
+            if (cookies == null) return;
+            foreach (string cookie in cookies)
+            {
+                if (cookie.StartsWith("__csrf="))
+                {
+                    var value = Regex.Match(cookie, "__csrf=([0-9a-zA-Z]+)").Groups[1].Value;
+                    if(value != NetEasyCsrfToken)
+                    {
+                        NetEasyCsrfToken = value;
+                        File.WriteAllText(EnvironmentSingle.NetEasyCsrfTokenPath, NetEasyCsrfToken);
+                    }
+                }
+                else if (cookie.StartsWith("MUSIC_U="))
+                {
+                    var value = Regex.Match(cookie, "MUSIC_U=([0-9a-zA-Z]+)").Groups[1].Value;
+                    if (value != NetEasyMusicU)
+                    {
+                        NetEasyMusicU = value;
+                        File.WriteAllText(EnvironmentSingle.NetEasyMusicUPath, NetEasyMusicU);
+                    }
+                }
+            }
+        }
+
         private static string GetUrlFromCloudMusic(Music music)
         {
             string Url = GetNewUrlFromCloudMusic("http://music.163.com/song/media/outer/url?id=" + music.MusicID);
@@ -1105,53 +1340,346 @@ namespace MusicCollection.MusicAPI
             }
             return Url;
         }
-        private static string GetUrlFromQQMusic(Music music)
+
+        public static List<NetMusic> GetMyRecommendSongsFromCloudMusic()
         {
-            var Url = "";
-            //var retStr = SendDataByGET("http://base.music.qq.com/fcgi-bin/fcg_musicexpress.fcg?json=3&guid=4935867420&g_tk=938407465&loginUin=0&hostUin=0&format=jsonp&inCharset=GB2312&outCharset=GB2312&notice=0&platform=yqq&needNewCode=0");
+            var param = AesEncrypt($"{{\"offset\":\"0\",\"total\":\"true\",\"csrf_token\":\"{NetEasyCsrfToken}\"}}", "0CoJUm6Qyw8W8jud");
+            param = AesEncrypt(param, "a8LWv2uAtXjzSfkQ");
+            param = System.Web.HttpUtility.UrlEncode(param);
+            var encSecKey = "&encSecKey=2d48fd9fb8e58bc9c1f14a7bda1b8e49a3520a67a2300a1f73766caee29f2411c5350bceb15ed196ca963d6a6d0b61f3734f0a0f4a172ad853f16dd06018bc5ca8fb640eaa8decd1cd41f66e166cea7a3023bd63960e656ec97751cfc7ce08d943928e9db9b35400ff3d138bda1ab511a06fbee75585191cabe0e6e63f7350d6";
+            var url = "https://music.163.com/weapi/v2/discovery/recommend/songs?csrf_token=";
+            var paramData = "params=" + param + encSecKey;
+            var result = CloudSendDataByPost(url, paramData, false);
+            return GetCloudMusicMyRecommendList(result);
+        }
+
+        public static List<NetMusic> GetMyRecommendSongsFromQQMusic()
+        {
+            var url = "https://c.y.qq.com/node/musicmac/v6/index.html";
+            var headers = new Dictionary<string, string>()
+            {
+                {"Cookie", QQMusicU},
+            };
+            var retStr = SendDataByGET(url, headers);
             try
             {
-                    //Url = $"http://ws.stream.qqmusic.qq.com/C100{music.MusicID}.m4a?fromtag=0&guid=126548448";
+                var recommendId = Regex.Match(retStr, "data-rid=\"([\\d]+)\"[\\s]*[\\S]+[\\s]*今日私享").Groups[1].Value;
+                if (!string.IsNullOrWhiteSpace(recommendId))
+                {
+                    return GetPlayListItems(recommendId, NetMusicType.QQMusic);
+                }
+            }
+            catch (Exception)
+            {
+            }
+            return new List<NetMusic>();
+        }
+
+        public static List<NetMusic> GetMyRecommendSongsFromMiguMusic()
+        {
+            var url = "https://app.c.nf.migu.cn/MIGUM3.0/v1.0/template/todayRecommendList/release?actionId=1&actionSong=&index=&templateVersion=6";
+            var headers = new Dictionary<string, string>()
+            {
+                {"by", "22210ca73bf1af2ec2eace74a96ee356"},
+                {"Referer", "https://m.music.migu.cn/v4/my/collect"},
+                {"Cookie", MiguMusicU},
+                {"IMEI", "000000"},
+                {"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36"},
+            };
+            var retStr = SendDataByGET(url, headers);
+            var list = new List<NetMusic>();
+            try
+            {
+                JObject jo = (JObject)JsonConvert.DeserializeObject(retStr);
+                var jt = jo["data"]["recommendData"]["data"];
+                foreach (var item in jt)
+                {
+                    NetMusic music = new NetMusic
+                    {
+                        Title = item["songName"].ToString(),
+                        Singer = item["singerList"][0]["name"].ToString(),
+                        MusicID = item["copyrightId"].ToString(),
+                        Album = item["album"].ToString(),
+                        AlbumImageUrl = item["img3"].ToString(),
+                        Origin = NetMusicType.MiguMusic,
+                        Duration = new TimeSpan(0, 0, 0, int.Parse(item["duration"].ToString()), 0),
+                        Remark = item["contentId"].ToString(),
+                    };
+                    list.Add(music);
+                }
+            }
+            catch (Exception)
+            {
+            }
+            return list;
+        }
+
+        private static List<NetMusic> GetCloudMusicMyRecommendList(string JsonStr)
+        {
+            var list = new List<NetMusic>();
+            try
+            {
+                JObject jo = (JObject)JsonConvert.DeserializeObject(JsonStr);
+                var jt = jo["data"]["dailySongs"];
+                foreach (var item in jt)
+                {
+                    NetMusic music = new NetMusic
+                    {
+                        Title = item["name"].ToString(),
+                        Singer = item["artists"][0]["name"].ToString(),
+                        MusicID = item["id"].ToString(),
+                        Album = item["album"]["name"].ToString(),
+                        AlbumImageUrl = item["album"]["picUrl"].ToString(),//"picUrl": "http://p1.music.126.net/B1ePGczwQUZueJl70TITWQ==/3287539775420245.jpg"
+                        Origin = NetMusicType.CloudMusic,
+                        Url = "",// item["mp3Url"].ToString().Replace("m2.music.126.net", "p2.music.126.net");
+                        Duration = new TimeSpan(0, 0, 0, 0, int.Parse(item["duration"].ToString()))
+                    };
+                    try
+                    {
+                        music.Remark = item["hMusic"]["dfsId"].ToString();
+                    }
+                    catch (Exception)
+                    {
+                        try
+                        {
+                            music.Remark = item["mMusic"]["dfsId"].ToString();
+                        }
+                        catch (Exception)
+                        {
+                            try
+                            {
+                                music.Remark = item["lMusic"]["dfsId"].ToString();
+                            }
+                            catch (Exception)
+                            {
+                                try
+                                {
+                                    music.Remark = item["bMusic"]["dfsId"].ToString();
+                                }
+                                catch (Exception)
+                                {
+
+                                }
+                            }
+                        }
+                    }
+                    list.Add(music);
+                }
+            }
+            catch (Exception)
+            {
+            }
+            return list;
+        }
+
+        public static string GetUserPlaylistFromCloudMusic()
+        {
+            var param = AesEncrypt($"{{\"uid\":\"75679234\",\"wordwrap\":\"7\",\"offset\":\"0\",\"total\":\"true\",\"limit\":\"36\",\"csrf_token\":\"{NetEasyCsrfToken}\"}}", "0CoJUm6Qyw8W8jud");
+            param = AesEncrypt(param, "a8LWv2uAtXjzSfkQ");
+            param = System.Web.HttpUtility.UrlEncode(param);
+            var encSecKey = "&encSecKey=2d48fd9fb8e58bc9c1f14a7bda1b8e49a3520a67a2300a1f73766caee29f2411c5350bceb15ed196ca963d6a6d0b61f3734f0a0f4a172ad853f16dd06018bc5ca8fb640eaa8decd1cd41f66e166cea7a3023bd63960e656ec97751cfc7ce08d943928e9db9b35400ff3d138bda1ab511a06fbee75585191cabe0e6e63f7350d6";
+            var url = "https://music.163.com/weapi/user/playlist?csrf_token=";
+            var paramData = "params=" + param + encSecKey;
+            var result = CloudSendDataByPost(url, paramData, false);
+            return result;
+        }
+
+        public static string GetUnikeyFromCloudMusic()
+        {
+            var param = AesEncrypt("{\"type\":\"1\",\"csrf_token\":\"\"}", "0CoJUm6Qyw8W8jud");
+            param = AesEncrypt(param, "a8LWv2uAtXjzSfkQ");
+            param = System.Web.HttpUtility.UrlEncode(param);
+            var encSecKey = "&encSecKey=2d48fd9fb8e58bc9c1f14a7bda1b8e49a3520a67a2300a1f73766caee29f2411c5350bceb15ed196ca963d6a6d0b61f3734f0a0f4a172ad853f16dd06018bc5ca8fb640eaa8decd1cd41f66e166cea7a3023bd63960e656ec97751cfc7ce08d943928e9db9b35400ff3d138bda1ab511a06fbee75585191cabe0e6e63f7350d6";
+            var url = "https://music.163.com/weapi/login/qrcode/unikey?csrf_token=";
+            var paramData = "params=" + param + encSecKey;
+            try
+            {
+                var result = CloudSendDataByPost(url, paramData, false);
+                JObject jo = (JObject)JsonConvert.DeserializeObject(result);
+                jo.TryGetValue("unikey", out JToken jValue);
+                return jValue != null ? jValue.ToString() : "";
+            }
+            catch (Exception)
+            {
+                return "";
+            }
+        }
+
+        public static int GetLoginStateFromCloudMusic(string unikey)
+        {
+            var param = AesEncrypt("{\"key\":\"" + unikey + "\",\"type\":\"1\",\"csrf_token\":\"\"}", "0CoJUm6Qyw8W8jud");
+            param = AesEncrypt(param, "a8LWv2uAtXjzSfkQ");
+            param = System.Web.HttpUtility.UrlEncode(param);
+            var encSecKey = "&encSecKey=2d48fd9fb8e58bc9c1f14a7bda1b8e49a3520a67a2300a1f73766caee29f2411c5350bceb15ed196ca963d6a6d0b61f3734f0a0f4a172ad853f16dd06018bc5ca8fb640eaa8decd1cd41f66e166cea7a3023bd63960e656ec97751cfc7ce08d943928e9db9b35400ff3d138bda1ab511a06fbee75585191cabe0e6e63f7350d6";
+            var url = "https://music.163.com/weapi/login/qrcode/client/login?csrf_token=";
+            var paramData = "params=" + param + encSecKey;
+            var resultStr = CloudSendDataByPost(url, paramData, false);
+
+            JObject jo = (JObject)JsonConvert.DeserializeObject(resultStr);
+            jo.TryGetValue("code", out JToken jValue);
+            int code = 0;
+            if (jValue != null)
+            {
+                int.TryParse(jValue.ToString(), out code);
+            }
+            return code;
+        }
+
+        public static User GetAccountFromCloudMusic()
+        {
+            var param = AesEncrypt($"{{\"csrf_token\":\"{NetEasyCsrfToken}\"}}", "0CoJUm6Qyw8W8jud");
+            param = AesEncrypt(param, "a8LWv2uAtXjzSfkQ");
+            param = System.Web.HttpUtility.UrlEncode(param);
+            var encSecKey = "&encSecKey=2d48fd9fb8e58bc9c1f14a7bda1b8e49a3520a67a2300a1f73766caee29f2411c5350bceb15ed196ca963d6a6d0b61f3734f0a0f4a172ad853f16dd06018bc5ca8fb640eaa8decd1cd41f66e166cea7a3023bd63960e656ec97751cfc7ce08d943928e9db9b35400ff3d138bda1ab511a06fbee75585191cabe0e6e63f7350d6";
+            var url = "https://music.163.com/weapi/w/nuser/account/get?csrf_token=";
+            var paramData = "params=" + param + encSecKey;
+            var resultStr = CloudSendDataByPost(url, paramData, false);
+            try
+            {
+                JObject jo = (JObject)JsonConvert.DeserializeObject(resultStr);
+                var profile = jo.GetValue("profile");
+                return new User(profile["userId"].ToString(), profile["nickname"].ToString(), profile["avatarUrl"].ToString());
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        private static readonly string MiguPublicKey = "MIGeMA0GCSqGSIb3DQEBAQUAA4GMADCBiAKBgEsxO1eMxBy4Oa+Nls8KNhrqXBCAyjRrzTZjBCYSQygansdaZNNBs/2Uj9fnHs/ff1XyYhCuTtzqAs+vJyvMBvCfTwrPN0F6lbmY/+lwEsuAhlqrBdCnRjshosP89Qm0hSDBti1LtBkcE4yLE/f4BWEDCrCdYzDgOrpmNrz3zabZAgMBAAE=";
+        private static readonly string MiguPrivateKey = @"-----BEGIN RSA PRIVATE KEY-----
+MIICWwIBAAKBgEsxO1eMxBy4Oa+Nls8KNhrqXBCAyjRrzTZjBCYSQygansdaZNNB
+s/2Uj9fnHs/ff1XyYhCuTtzqAs+vJyvMBvCfTwrPN0F6lbmY/+lwEsuAhlqrBdCn
+RjshosP89Qm0hSDBti1LtBkcE4yLE/f4BWEDCrCdYzDgOrpmNrz3zabZAgMBAAEC
+gYAQRExUOm3K0MgaBIWVsN3XoM/d+h7EjHXOyEkDe3vv1yJ2ekXJtjMcLuGXkbaG
+vhEsJM22Uh9Zh36oM3pD7VWqyKRh9XkN1kbYdB7/eXXB6xOFa7Obxk1gm5MMf5CT
+uEUrgzJwlV+IyPO3EXJ34fnH7hIRMHG4PIscrHD+sqpi6QJBAIrHiH374O2+CR6f
+A6tm3YXc+ACdlLO2Z8Dx/Zkm74Dp4F6K7zTWazk7z/AbiR02jVZ0JLqsQCiDTy7g
+ylB/5n8CQQCKtCtKEDxE9325CxDgx+RJN0w3xKetDMH9kYlZWWZ91lXLm0RN06Md
+qR2LvUsPNoHGMRWSkKYkGelBj745gLanAkEAhRDzUBFOR8caSXEg/J0iNPN+HGD8
+LyDr9PZTOiE6LnqR9zTyTdB2eSdfpxNP8mHXPZkZiqAU2IOnTgSeGHe6kwJATsVh
+bE9qGvS+9q7dJ/r9n8MCyw0o+LMtHHdhnFeUSFTIJriIAvb1ROv9NpYLIZmf+9F2
+YeU6JXh9qtkafAeoMwJAK6L1JLDwkm6xhuPxuO97Y7NsMjKwWFW7FWn/it48nXia
+eZ74Qmm+6d+nLEccUdpoxyRkEe/ZIc+FswOLu/P71Q==
+-----END RSA PRIVATE KEY-----";
+        private static readonly RSACryptoServiceProvider MiguRSA = CodecHelper.PemDecodeX509PrivateKey(CodecHelper.PemUnpack(MiguPrivateKey));
+        public static User GetAccountFromMigu(string cookie)
+        {
+            if (string.IsNullOrWhiteSpace(cookie)) return null;
+            var url = "https://m.music.migu.cn/migumusic/h5/user/auth/getUserInfo?publicKey="+WebUtility.UrlEncode(MiguPublicKey);
+            var headers = new Dictionary<string, string>()
+            {
+                {"By", "22210ca73bf1af2ec2eace74a96ee356"},
+                {"Referer", "https://m.music.migu.cn/v4/my"},
+                {"Cookie", cookie},
+                {"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36"},
+            };
+            var resultStr = SendDataByGET(url, headers);
+            try
+            {
+                JObject jo = (JObject)JsonConvert.DeserializeObject(resultStr);
+                string encryptedData = jo.GetValue("aesKey").ToString();
+                byte[] encryptedBytes = Convert.FromBase64String(encryptedData);
+                byte[] decryptedBytes = MiguRSA.Decrypt(encryptedBytes, false);
+                string aesKey = Encoding.UTF8.GetString(decryptedBytes);
+                var jsonStr = CodecHelper.AESDecode(jo.GetValue("data").ToString(), aesKey);
+                jo = (JObject)JsonConvert.DeserializeObject(jsonStr);
+                var profile = jo.GetValue("data");
+                var avatar = profile["avatar"]["smallAvatar"].ToString();
+                if (avatar.StartsWith("//")) avatar = "https:" + avatar;
+                var user = new User(profile["userId"].ToString(), profile["nickName"].ToString(), avatar);
+                MiguMusicU = cookie;
+                File.WriteAllText(EnvironmentSingle.MiguMusicUPath, cookie);
+                return user;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        public static User GetAccountFromQQMusic(string cookie)
+        {
+            if(string.IsNullOrWhiteSpace(cookie)) return null;
+            var url = "https://c.y.qq.com/rsc/fcgi-bin/fcg_get_profile_homepage.fcg?cid=205360838&reqfrom=1";
+            var headers = new Dictionary<string, string>()
+            {
+                {"cookie", cookie},
+            };
+            var resultStr = SendDataByGET(url, headers);
+            try
+            {
+                JObject jo = (JObject)JsonConvert.DeserializeObject(resultStr);
+                var creator = jo.GetValue("data")["creator"];
+                var user = new User(creator["encrypt_uin"].ToString(), creator["nick"].ToString(), creator["headpic"].ToString());
+                QQMusicU = cookie;
+                File.WriteAllText(EnvironmentSingle.QQMusicUPath, cookie);
+                return user;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        private static string GetUrlFromQQMusic(Music music)
+        {
+            var MusicUrl = "";
+            try
+            {
                 var t = DateTime.Now.Millisecond;
                 var guid = ((int)Math.Abs((int)Math.Round(2147483647 * new Random().NextDouble()) * t % 1e10)).ToString();
                 string callback = "getplaysongvkey" + (new Random().NextDouble() + "").Replace("0.", "");
                 string data = $"{{\"req\":{{\"module\":\"CDN.SrfCdnDispatchServer\",\"method\":\"GetCdnDispatch\",\"param\":{{\"guid\":\"{guid}\",\"calltype\":0,\"userip\":\"\"}}}},\"req_0\":{{\"module\":\"vkey.GetVkeyServer\",\"method\":\"CgiGetVkey\",\"param\":{{\"guid\":\"{guid}\",\"songmid\":[\"{music.MusicID}\"],\"songtype\":[0],\"uin\":\"0\",\"loginflag\":1,\"platform\":\"20\"}}}},\"comm\":{{\"uin\":0,\"format\":\"json\",\"ct\":20,\"cv\":0}}}}";
                 data = System.Web.HttpUtility.UrlEncode(data);
-                Url = $"https://u.y.qq.com/cgi-bin/musicu.fcg?callback={callback}&g_tk=5381&jsonpCallback={callback}&loginUin=0&hostUin=0&format=jsonp&inCharset=utf8&outCharset=utf-8&notice=0&platform=yqq&needNewCode=0&data={data}";
-                var retStr = SendDataByGET(Url).Substring(callback.Length+1);
+                var remoteUrl = $"https://u.y.qq.com/cgi-bin/musicu.fcg?callback={callback}&g_tk=5381&jsonpCallback={callback}&loginUin=0&hostUin=0&format=jsonp&inCharset=utf8&outCharset=utf-8&notice=0&platform=yqq&needNewCode=0&data={data}";
+                
+                var retStr = SendDataByGET(remoteUrl).Substring(callback.Length+1);
                 JObject jo = (JObject)JsonConvert.DeserializeObject(retStr.Substring(0,retStr.Length-1));
-                Url = "http://dl.stream.qqmusic.qq.com/"+ jo["req_0"]["data"]["midurlinfo"][0]["purl"];
+                var purl = jo["req_0"]["data"]["midurlinfo"][0]["purl"].ToString();
+                if (!string.IsNullOrWhiteSpace(purl))
+                {
+                    MusicUrl = "http://dl.stream.qqmusic.qq.com/" + purl;
+                }
             }
             catch (Exception)
             {
             }
-            return Url;
+            //if (string.IsNullOrWhiteSpace(MusicUrl))
+            //{
+            //    var remoteUrl = $"https://u6.y.qq.com/cgi-bin/musics.fcg?sign=zzcc6801c0rxecgkqtqjki1grnwdv0xfxud841cd7059f";
+            //    var headers = new Dictionary<string, string>()
+            //    {
+            //        {"content-type", "application/x-www-form-urlencoded"},
+            //        {"Referer", "https://i.y.qq.com/"},
+            //        {"User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1"}
+            //    };
+            //    var data = Encoding.UTF8.GetBytes($"{{\"req_0\":{{\"module\":\"music.trackInfo.UniformRuleCtrl\",\"method\":\"GetTrackInfo\",\"param\":{{\"ids\":[{music.Remark}],\"types\":[0]}},\"comm\":{{\"g_tk\":5381,\"uin\":0,\"format\":\"json\",\"platform\":\"h5\"}}");
+            //    var retStr = SendDataByPOST(remoteUrl, data, headers);
+            //    Console.WriteLine(retStr);
+            //}
+            return MusicUrl;
         }
-        private static string GetUrlFromXiaMiMusic(Music music)
+        private static string GetUrlFromMiguMusic(Music music)
         {
-            //var retStr = SendDataByGET($"http://api.xiami.com/web?v=2.0&app_key=1&id={music.MusicID}&r=song/detail");
-            var _p = XMTokenPre + "_xmMain_/api/song/getPlayInfo_{\"songIds\":[" + music.MusicID + "]}";
-            var retStr = SendDataByGET($"https://www.xiami.com/api/song/getPlayInfo?_q=%7B%22songIds%22:["+music.MusicID+"]%7D&_s="+ GetMD5(_p).ToLower());
+            Dictionary<string, string> headers = new Dictionary<string, string>()
+            {
+                { "channel", "014000D" }
+            };
+            var retStr = SendDataByGET($"https://c.musicapp.migu.cn/MIGUM3.0/strategy/listen-url/v2.4?contentId={music.Remark}&copyrightId={music.MusicID}&resourceType=2&netType=01&toneFlag=PQ&scene=&lowerQualityContentId={music.MusicID}", headers);
             try
             {
                 JObject jo = (JObject)JsonConvert.DeserializeObject(retStr);
-                JToken songPlayInfos = jo["result"]["data"]["songPlayInfos"][0]["playInfos"];
-                foreach (var item in songPlayInfos)
+                JToken songPlayInfos = jo["data"];
+                music.Path = songPlayInfos["url"].ToString();
+                music.Duration = new TimeSpan(0, 0, 0, int.Parse(songPlayInfos["song"]["duration"].ToString()), 0);
+                music.LyricPath = songPlayInfos["lrcUrl"].ToString();
+                music.Album = songPlayInfos["song"]["album"].ToString();
+                music.AlbumImageUrl = songPlayInfos["song"]["img1"].ToString();
+                if (music.AlbumImageUrl.StartsWith("/"))
                 {
-                    var listenFile = item["listenFile"].ToString();
-                    if(listenFile.Length > 0)
-                    {
-                        music.Path = listenFile;
-                        break;
-                    }
+                    music.AlbumImageUrl = "http://d.musicapp.migu.cn" + music.AlbumImageUrl;
                 }
-                //music.Album = item["album_name"].ToString();
-                //music.AlbumImageUrl = item["logo"].ToString();
-                ////music.Origin = NetMusicType.XiaMiMusic;
-                //music.Path = item["listen_file"].ToString();
-                //music.LyricPath = item["lyric"].ToString();
-                //string secondstr = Regex.Match(music.LyricPath, "/([\\d]{2,4})/").Groups[1].Value;
-                //music.Duration = new TimeSpan(0, 0, 0, int.Parse(secondstr), 0);
             }
             catch (Exception)
             {
@@ -1203,17 +1731,19 @@ namespace MusicCollection.MusicAPI
         {
             HttpWebRequest httpReq = (HttpWebRequest)WebRequest.Create(url);
             httpReq.AllowAutoRedirect = false;
-            using(HttpWebResponse httpRes = (HttpWebResponse)httpReq.GetResponse())
+            try
             {
-                try
+                using (HttpWebResponse httpRes = (HttpWebResponse)httpReq.GetResponse())
                 {
-                    url = Regex.Replace(httpRes.Headers["Location"], "^http","https");
-                }
-                catch (Exception)
-                {
-                    url = "";
+                    url = Regex.Replace(httpRes.Headers["Location"], "^http", "https");
                 }
             }
+            catch (Exception)
+            {
+                url = "";
+            }
+
+            if (url.EndsWith("404")) return "";
 
             return url;
         }
@@ -1231,7 +1761,7 @@ namespace MusicCollection.MusicAPI
     }
     public enum NetMusicType
     {
-        LocalMusic,CloudMusic, QQMusic, XiaMiMusic, BaiduMusic, KuwoMusic, KuGouMusic
+        LocalMusic,CloudMusic, QQMusic, MiguMusic
     }
     public enum RankingListType
     {

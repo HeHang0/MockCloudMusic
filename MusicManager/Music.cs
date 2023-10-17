@@ -28,6 +28,7 @@ namespace MusicCollection.MusicManager
             LyricPath = music.LyricPath;
             MusicID = music.MusicID;
             Origin = music.Origin;
+            Remark = music.Remark;
         }
         public Music(NetMusic music)
         {
@@ -40,6 +41,7 @@ namespace MusicCollection.MusicManager
             Duration = music.Duration;
             Origin = music.Origin;
             MusicID = music.MusicID;
+            Remark = music.Remark;
         }
 
         public Music(string path)
@@ -116,6 +118,10 @@ namespace MusicCollection.MusicManager
         /// 音乐ID
         /// </summary>
         public string MusicID { get; set; }
+        /// <summary>
+        /// Remark
+        /// </summary>
+        public string Remark { get; set; }
         /// <summary>
         /// 音乐是否可播放
         /// </summary>
